@@ -1,5 +1,5 @@
 # ONNX to Pytorch
-[![CircleCI](https://circleci.com/gh/Talmaj/onnx2pytorch.svg?style=shield&circle-token=68dcb1fcf9acf2d5de3c1160d6c1f81e25b88f35)](https://app.circleci.com/pipelines/github/Talmaj/onnx2pytorch)
+[![CircleCI](https://circleci.com/gh/ToriML/onnx2pytorch.svg?style=shield)](https://app.circleci.com/pipelines/github/ToriML/onnx2pytorch)
 
 A library to transform ONNX model to Pytorch. This library enables use of Pytorch 
 backend and all of its great features for manipulation of neural networks.
