@@ -2,7 +2,8 @@
 from setuptools import setup, find_packages
 
 try:
-    long_description = open("README.rst").read()
+    with open("README.md", "r", encoding="utf-8") as f:
+        long_description = f.read()
 except IOError:
     long_description = ""
 
@@ -18,10 +19,12 @@ setup(
     packages=PACKAGES,
     install_requires=["torch>=1.4.0", "onnx>=1.6.0"],
     long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/ToriML/onnx2pytorch",
     classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
     ],
+    python_requires=">=3.6",
 )
