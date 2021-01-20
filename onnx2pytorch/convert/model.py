@@ -30,10 +30,29 @@ class InitParameters(dict):
 
 
 class ConvertModel(nn.Module):
-    def __init__(self, onnx_model: onnx.ModelProto, batch_dim=0):
+    def __init__(self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False):
+        """
+        Convert onnx model to pytorch.
+
+        Parameters
+        ----------
+        onnx_model: onnx.ModelProto
+            Loaded onnx model.
+        batch_dim: int
+            Dimension of the batch.
+        experimental: bool
+            Experimental implementation allows batch_size > 1. However,
+            batchnorm layers could potentially produce false outputs.
+
+        Returns
+        -------
+        model: torch.nn.Module
+            A converted pytorch model.
+        """
         super().__init__()
         self.onnx_model = onnx_model
         self.batch_dim = batch_dim
+        self.experimental = experimental
         self.mapping = {}
         for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
@@ -42,11 +61,15 @@ class ConvertModel(nn.Module):
         self.init_parameters = InitParameters(
             {tensor.name: tensor for tensor in self.onnx_model.graph.initializer}
         )
-        # set output ids
-        # self.output_ids = set(node.output[0] for node in onnx_model.graph.node)
+
+        if experimental:
+            warnings.warn(
+                "Using experimental implementation that allows 'batch_size > 1'."
+                "Batchnorm layers could potentially produce false outputs."
+            )
 
     def forward(self, *input):
-        if input[0].shape[self.batch_dim] > 1:
+        if not self.experimental and input[0].shape[self.batch_dim] > 1:
             raise NotImplementedError(
                 "Input with larger batch size than 1 not supported yet."
             )
