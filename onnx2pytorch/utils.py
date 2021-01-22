@@ -3,7 +3,11 @@ import io
 import torch
 import numpy as np
 import onnx
-import onnxruntime as ort
+
+try:
+    import onnxruntime as ort
+except ImportError:
+    ort = None
 
 
 def value_wrapper(value):
@@ -124,6 +128,8 @@ def get_activation_value(onnx_model, inputs, activation_names):
     value: list[np.ndarray]
         Value of the activation with activation_name.
     """
+    assert ort is not None, "onnxruntime needed. pip install onnxruntime"
+
     if not isinstance(activation_names, (list, tuple)):
         activation_names = [activation_names]
 
@@ -152,6 +158,8 @@ def get_activation_value(onnx_model, inputs, activation_names):
 
 def get_inputs_sample(onnx_model, to_torch=False):
     """Get inputs sample from onnx model."""
+    assert ort is not None, "onnxruntime needed. pip install onnxruntime"
+
     sess = ort.InferenceSession(onnx_model.SerializeToString())
     inputs = sess.get_inputs()
     input_names = [x.name for x in inputs]

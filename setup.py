@@ -12,7 +12,7 @@ PACKAGES = find_packages(exclude=("tests.*", "tests"))
 
 setup(
     name="onnx2pytorch",
-    version="0.1.0",
+    version="0.1.1",
     description="Library to transform onnx model to pytorch.",
     license="apache-2.0",
     author="Talmaj Marinc",
