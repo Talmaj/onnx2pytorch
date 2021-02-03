@@ -41,6 +41,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_layer(node, "Conv", params)
         elif node.op_type == "Relu":
             op = nn.ReLU(inplace=True)
+        elif node.op_type == "LeakyRelu":
+            op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
         elif node.op_type == "Sigmoid":
             op = nn.Sigmoid()
         elif node.op_type == "MaxPool":
