@@ -2,6 +2,7 @@ from functools import partial
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from onnx import numpy_helper
 
 from onnx2pytorch.convert.attribute import extract_attributes
@@ -12,6 +13,7 @@ from onnx2pytorch.convert.layer import (
 )
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
+from onnx2pytorch.operations.resize import Resize
 from onnx2pytorch.utils import value_wrapper
 
 
@@ -138,6 +140,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_layer(node, "ConvTranspose", params)
         elif node.op_type == "Identity":
             op = nn.Identity()
+        elif node.op_type == "Resize":
+            op = Resize(**extract_attributes(node))
         elif node.op_type == "OneHot":
             op = OneHot(**extract_attributes(node))
         elif node.op_type == "Pad":
@@ -148,6 +152,10 @@ def convert_operations(onnx_model, batch_dim=0):
             op = OperatorWrapper(torch.tanh)
         elif node.op_type == "Erf":
             op = OperatorWrapper(torch.erf)
+        elif node.op_type == "Log":
+            op = OperatorWrapper(torch.log)
+        elif node.op_type == "Exp":
+            op = OperatorWrapper(torch.exp)
         else:
             op = getattr(torch, node.op_type.lower(), None)
             if op is None:

@@ -1,3 +1,5 @@
+import warnings
+
 import onnx
 from onnx import numpy_helper
 
@@ -95,6 +97,18 @@ def extract_attributes(node):
             kwargs["weight_multiplier"] = extract_attr_values(attr)
         elif attr.name == "beta":
             kwargs["bias_multiplier"] = extract_attr_values(attr)
+        elif attr.name == "coordinate_transformation_mode":
+            arg = extract_attr_values(attr)
+            if arg == "align_corners":
+                kwargs["align_corners"] = True
+            else:
+                warnings.warn(
+                    "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
+                    "Result might differ.".format(arg)
+                )
+        elif node.op_type == "Resize":
+            # These parameters are not used, warn in Resize operator
+            kwargs[attr.name] = extract_attr_values(attr)
         elif attr.name == "auto_pad":
             value = extract_attr_values(attr)
             if value == "NOTSET":
