@@ -2,6 +2,7 @@ import torch
 import pytest
 import numpy as np
 from torch import nn
+from onnx.backend.test.case.node.pad import pad_impl
 
 from onnx2pytorch.helpers import to_onnx
 from onnx2pytorch.utils import (
@@ -9,6 +10,7 @@ from onnx2pytorch.utils import (
     get_selection,
     assign_values_to_dim,
     get_activation_value,
+    extract_padding_params,
 )
 
 
@@ -98,3 +100,29 @@ def test_get_activation_value_2():
     values = get_activation_value(onnx_model, inp, activation_names)
     assert values[0].shape == (1, 3, 8, 8)
     assert values[1].shape == (1, 1, 6, 6)
+
+
+@pytest.mark.parametrize(
+    "pads, output",
+    [
+        ([1, 1, 1, 1], [1, 1]),
+        ([0, 0, 0, 0], [0, 0]),
+        ([1, 0], nn.ConstantPad1d([1, 0], 0)),
+        ([1, 2], nn.ConstantPad1d([1, 2], 0)),
+        ([1, 1, 0, 0], nn.ConstantPad2d([1, 0, 1, 0], 0)),
+        ([1, 1, 1, 0, 0, 0], nn.ConstantPad3d([1, 0, 1, 0, 1, 0], 0)),
+    ],
+)
+def test_extract_padding_params(pads, output):
+    out = extract_padding_params(pads)
+    if isinstance(output, nn.Module):
+        s = len(pads) // 2
+        inp = np.random.rand(*s * [3])
+        expected_out = pad_impl(inp, np.array(pads), "constant", 0)
+        infered_out = out(torch.from_numpy(inp)).numpy()
+        assert (expected_out == infered_out).all()
+        assert output._get_name() == out._get_name()
+        assert output.padding == out.padding
+        assert output.value == out.value
+    else:
+        assert out == output

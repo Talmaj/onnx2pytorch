@@ -93,7 +93,11 @@ class ConvertModel(nn.Module):
             # if first layer choose input as in_activations
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
-            if isinstance(op, (nn.Linear, _ConvNd, _BatchNorm)):
+            layer_types = (nn.Linear, _ConvNd, _BatchNorm)
+            if isinstance(op, layer_types) or (
+                isinstance(op, nn.Sequential)
+                and any(isinstance(x, layer_types) for x in op.modules())
+            ):
                 in_activations = [
                     activations[in_op_id]
                     for in_op_id in node.input

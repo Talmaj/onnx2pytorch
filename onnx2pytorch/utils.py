@@ -26,22 +26,26 @@ def is_symmetric(params):
     Check if parameters are symmetric, all values [2,2,2,2].
     Then we can use only [2,2].
     """
-    assert len(params) // 2 == len(params) / 2, "Non even numer of parameters."
+    assert len(params) // 2 == len(params) / 2, "Non even number of parameters."
     idx = len(params) // 2
     for i in range(0, idx):
-        assert params[i] == params[idx + i], "Both sides should be the same."
+        if params[i] != params[idx + i]:
+            return False
     return True
 
 
-def to_pytorch_params(params):
+def extract_padding_params(params):
     """
-    Padding in onnx is different than in pytorch. That is why we need to
-    check if they are symmetric and cut half.
+    Padding params in onnx are different than in pytorch. That is why we need to
+    check if they are symmetric and cut half or return a padding layer.
     """
     if is_symmetric(params):
         return params[: len(params) // 2]
     else:
-        raise ValueError("Parameters need to be symmetric to work with pytorch.")
+        pad_dim = len(params) // 2
+        pad_layer = getattr(torch.nn, "ConstantPad{}d".format(pad_dim))
+        pads = np.array(params).reshape(-1, pad_dim).T.flatten().tolist()
+        return pad_layer(pads, 0)
 
 
 def get_selection(indices, dim):

@@ -1,7 +1,7 @@
 import onnx
 from onnx import numpy_helper
 
-from onnx2pytorch.utils import to_pytorch_params
+from onnx2pytorch.utils import extract_padding_params
 
 TENSOR_PROTO_MAPPING = dict([i[::-1] for i in onnx.TensorProto.DataType.items()])
 
@@ -54,7 +54,7 @@ def extract_attributes(node):
         elif attr.name == "kernel_shape":
             kwargs["kernel_size"] = extract_attr_values(attr)
         elif attr.name == "pads":
-            kwargs["padding"] = to_pytorch_params(extract_attr_values(attr))
+            kwargs["padding"] = extract_padding_params(extract_attr_values(attr))
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "axis" and node.op_type == "Flatten":

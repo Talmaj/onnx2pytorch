@@ -45,6 +45,7 @@ def convert_layer(node, layer_type, params=None):
         )
 
     if params:
+        pad_layer = None
         weight, bias = extract_params(params)
         kwargs["bias"] = bias is not None
         kwargs["in_channels"] = weight.dims[1] * kwargs.get("groups", 1)
@@ -56,9 +57,15 @@ def convert_layer(node, layer_type, params=None):
                 kwargs["in_channels"],
             )
 
+        # if padding is a layer, remove from kwargs and prepend later
+        if isinstance(kwargs["padding"], nn.Module):
+            pad_layer = kwargs.pop("padding")
+
         # initialize layer and load weights
         layer = layer(**kwargs)
         load_params(layer, weight, bias)
+        if pad_layer is not None:
+            layer = nn.Sequential(pad_layer, layer)
     else:
         # initialize operations without parameters (MaxPool, AvgPool, etc.)
         layer = layer(**kwargs)
