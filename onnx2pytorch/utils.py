@@ -177,13 +177,20 @@ def get_activation_value(onnx_model, inputs, activation_names):
     return sess.run(None, inputs)
 
 
+def get_inputs_names(onnx_model):
+    param_names = set([x.name for x in onnx_model.graph.initializer])
+    input_names = [x.name for x in onnx_model.graph.input]
+    input_names = [x for x in input_names if x not in param_names]
+    return input_names
+
+
 def get_inputs_sample(onnx_model, to_torch=False):
     """Get inputs sample from onnx model."""
     assert ort is not None, "onnxruntime needed. pip install onnxruntime"
 
     sess = ort.InferenceSession(onnx_model.SerializeToString())
     inputs = sess.get_inputs()
-    input_names = [x.name for x in inputs]
+    input_names = get_inputs_names(onnx_model)
     input_tensors = [
         np.abs(np.random.rand(*get_shape(x)).astype(get_type(x))) for x in inputs
     ]
