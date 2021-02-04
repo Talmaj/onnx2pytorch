@@ -3,7 +3,10 @@ import warnings
 import onnx
 from onnx import numpy_helper
 
-from onnx2pytorch.utils import extract_padding_params
+from onnx2pytorch.utils import (
+    extract_padding_params_for_conv_layer,
+    extract_padding_params,
+)
 
 TENSOR_PROTO_MAPPING = dict([i[::-1] for i in onnx.TensorProto.DataType.items()])
 
@@ -56,7 +59,12 @@ def extract_attributes(node):
         elif attr.name == "kernel_shape":
             kwargs["kernel_size"] = extract_attr_values(attr)
         elif attr.name == "pads":
-            kwargs["padding"] = extract_padding_params(extract_attr_values(attr))
+            params = extract_attr_values(attr)
+            if node.op_type == "Pad":
+                kwargs["padding"] = extract_padding_params(params)
+            else:
+                # Works for Conv, MaxPooling and other layers from convert_layer func
+                kwargs["padding"] = extract_padding_params_for_conv_layer(params)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "axis" and node.op_type == "Flatten":
@@ -97,6 +105,10 @@ def extract_attributes(node):
             kwargs["weight_multiplier"] = extract_attr_values(attr)
         elif attr.name == "beta":
             kwargs["bias_multiplier"] = extract_attr_values(attr)
+        elif attr.name == "starts":
+            kwargs["starts"] = extract_attr_values(attr)
+        elif attr.name == "ends":
+            kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "coordinate_transformation_mode":
             arg = extract_attr_values(attr)
             if arg == "align_corners":
