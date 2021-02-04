@@ -1,8 +1,11 @@
 import warnings
 
+import torch
 from torch.nn import functional as F
 
 from onnx2pytorch.operations.base import Operator
+
+empty_tensor = torch.Tensor([])
 
 
 class Resize(Operator):
@@ -15,17 +18,17 @@ class Resize(Operator):
             )
         super().__init__()
 
-    def forward(self, inp, roi, scales, sizes):
+    def forward(self, inp, roi=empty_tensor, scales=empty_tensor, sizes=empty_tensor):
         if roi.nelement() > 0:
-            warnings.warn("Pytorch's interpolate uses no roi. " "Result might differ.")
+            warnings.warn("Pytorch's interpolate uses no roi. Result might differ.")
 
-        scales = scales.tolist()
-        sizes = sizes.tolist()
+        scales = list(scales)
+        sizes = list(sizes)
         shape = list(inp.shape)
         if shape[:2] == sizes[:2]:
             sizes = sizes[2:]  # Pytorch's interpolate takes only H and W params
-        elif shape[:2] == sizes[:2]:
-            sizes = sizes[2:]
+        elif scales[:2] == [1, 1]:
+            scales = scales[2:]
         elif len(scales) == 0 and len(sizes) == 0:
             raise ValueError("One of the two, scales or sizes, needs to be defined.")
         else:
@@ -49,3 +52,10 @@ class Resize(Operator):
             mode=self.mode,
             align_corners=self.align_corners,
         )
+
+
+class Upsample(Resize):
+    """Deprecated onnx operator."""
+
+    def forward(self, inp, scales):
+        return super().forward(inp, torch.tensor([]), scales, torch.tensor([]))
