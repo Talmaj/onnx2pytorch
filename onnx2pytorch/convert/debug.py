@@ -6,6 +6,9 @@ from onnx2pytorch.utils import get_activation_value
 
 def debug_model_conversion(onnx_model, inputs, pred_act, node, rtol=1e-3, atol=1e-4):
     """Compare if the activations of pytorch are the same as from onnxruntime."""
+    if not isinstance(inputs, list):
+        raise TypeError("inputs should be in a list.")
+
     if not all(isinstance(x, np.ndarray) for x in inputs):
         inputs = [x.detach().numpy() for x in inputs]
 
