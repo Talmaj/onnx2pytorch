@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from onnx import numpy_helper
 
-from onnx2pytorch.operations import BatchNormUnsafe
+from onnx2pytorch.operations import BatchNormUnsafe, InstanceNormUnsafe
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
 
@@ -81,6 +81,21 @@ def convert_batch_norm_layer(node, params):
     # initialize layer and load weights
     layer = layer(**kwargs)
     key = ["weight", "bias", "running_mean", "running_var"]
+    for key, value in zip(key, params):
+        getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
+
+    return layer
+
+
+def convert_instance_norm_layer(node, params):
+    kwargs = extract_attributes(node)
+    # Skips input dimension check, not possible before forward pass
+    layer = InstanceNormUnsafe
+
+    kwargs["num_features"] = params[0].dims[0]
+    # initialize layer and load weights
+    layer = layer(**kwargs)
+    key = ["weight", "bias"]
     for key, value in zip(key, params):
         getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
 
