@@ -1,7 +1,8 @@
 # ONNX to PyTorch
-[![GitHub License](https://img.shields.io/badge/License-Apache-2.svg)](https://opensource.org/licenses/Apache-2.0)
+![PyPI - License](https://img.shields.io/pypi/l/onnx2pytorch?color)
 [![CircleCI](https://circleci.com/gh/ToriML/onnx2pytorch.svg?style=shield)](https://app.circleci.com/pipelines/github/ToriML/onnx2pytorch)
 [![Downloads](https://pepy.tech/badge/onnx2pytorch)](https://pepy.tech/project/onnx2pytorch)
+![PyPI](https://img.shields.io/pypi/v/onnx2pytorch)
 
 A library to transform ONNX model to PyTorch. This library enables use of PyTorch 
 backend and all of its great features for manipulation of neural networks.
