@@ -10,6 +10,7 @@ from onnx2pytorch.utils import (
     get_selection,
     assign_values_to_dim,
     get_activation_value,
+    extract_padding_params_for_conv_layer,
     extract_padding_params,
 )
 
@@ -113,8 +114,8 @@ def test_get_activation_value_2():
         ([1, 1, 1, 0, 0, 0], nn.ConstantPad3d([1, 0, 1, 0, 1, 0], 0)),
     ],
 )
-def test_extract_padding_params(pads, output):
-    out = extract_padding_params(pads)
+def test_extract_padding_params_for_conv_layer(pads, output):
+    out = extract_padding_params_for_conv_layer(pads)
     if isinstance(output, nn.Module):
         s = len(pads) // 2
         inp = np.random.rand(*s * [3])
@@ -126,3 +127,22 @@ def test_extract_padding_params(pads, output):
         assert output.value == out.value
     else:
         assert out == output
+
+
+@pytest.fixture
+def weight():
+    return torch.rand(1, 3, 10, 10)
+
+
+@pytest.mark.parametrize(
+    "onnx_pads, torch_pads",
+    [
+        ([2, 2], [2, 2]),
+        ([1, 2, 1, 2], [2, 2, 1, 1]),
+        ([1, 2, 3, 4, 1, 2, 3, 4], [4, 4, 3, 3, 2, 2, 1, 1]),
+        ([0, 0, 1, 2, 0, 0, 1, 2], [2, 2, 1, 1]),
+    ],
+)
+def test_extract_padding_params(weight, onnx_pads, torch_pads):
+    out_pads = extract_padding_params(onnx_pads)
+    assert out_pads == torch_pads

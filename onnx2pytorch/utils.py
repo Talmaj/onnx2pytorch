@@ -35,6 +35,21 @@ def is_symmetric(params):
 
 
 def extract_padding_params(params):
+    """Extract padding parameters fod Pad layers."""
+    pad_dim = len(params) // 2
+    pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
+
+    # Some padding modes do not support padding in batch and channel dimension.
+    # If batch and channel dimension have no padding, discard.
+    if (pads[:4] == 0).all():
+        pads = pads[4:]
+    pads = pads.tolist()
+    # Reverse, because for pytorch first two numbers correspond to last dimension, etc.
+    pads.reverse()
+    return pads
+
+
+def extract_padding_params_for_conv_layer(params):
     """
     Padding params in onnx are different than in pytorch. That is why we need to
     check if they are symmetric and cut half or return a padding layer.
@@ -44,8 +59,8 @@ def extract_padding_params(params):
     else:
         pad_dim = len(params) // 2
         pad_layer = getattr(torch.nn, "ConstantPad{}d".format(pad_dim))
-        pads = np.array(params).reshape(-1, pad_dim).T.flatten().tolist()
-        return pad_layer(pads, 0)
+        pads = extract_padding_params(params)[::-1]
+        return pad_layer(pads, value=0)
 
 
 def get_selection(indices, dim):
