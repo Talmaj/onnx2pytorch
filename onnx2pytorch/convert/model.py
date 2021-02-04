@@ -11,6 +11,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.linear import Identity
 
 from onnx2pytorch.operations import Split
+from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.operations import convert_operations
 
 
@@ -30,7 +31,9 @@ class InitParameters(dict):
 
 
 class ConvertModel(nn.Module):
-    def __init__(self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False):
+    def __init__(
+        self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False, debug=True
+    ):
         """
         Convert onnx model to pytorch.
 
@@ -53,6 +56,7 @@ class ConvertModel(nn.Module):
         self.onnx_model = onnx_model
         self.batch_dim = batch_dim
         self.experimental = experimental
+        self.debug = debug
         self.mapping = {}
         for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
@@ -125,6 +129,15 @@ class ConvertModel(nn.Module):
                 activations[out_op_id] = op(in_activations[0])
             else:
                 activations[out_op_id] = op(*in_activations)
+
+            if self.debug:
+                # compare if the activations of pytorch are the same as from onnxruntime
+                debug_model_conversion(
+                    self.onnx_model,
+                    [activations[x] for x in input_names],
+                    activations[out_op_id],
+                    node,
+                )
 
         # collect all outputs
         outputs = [activations[x.name] for x in self.onnx_model.graph.output]

@@ -126,6 +126,7 @@ def get_activation_value(onnx_model, inputs, activation_names):
     onnx_model: onnx.ModelProto
     inputs: list[np.ndarray]
     activation_names: list[str]
+        Can be retrieved from onnx node: list(node.output)
 
     Returns
     -------
@@ -133,6 +134,7 @@ def get_activation_value(onnx_model, inputs, activation_names):
         Value of the activation with activation_name.
     """
     assert ort is not None, "onnxruntime needed. pip install onnxruntime"
+    assert all(isinstance(x, np.ndarray) for x in inputs)
 
     if not isinstance(activation_names, (list, tuple)):
         activation_names = [activation_names]
