@@ -20,10 +20,17 @@ pytorch_model = ConvertModel(onnx_model)
 ```
 
 Currently supported and tested models from [onnx_zoo](https://github.com/onnx/models):
-- MobileNet
-- ResNet
-- ShuffleNet
-- Bert
+- [MobileNet](https://github.com/onnx/models/tree/master/vision/classification/mobilenet)
+- [ResNet](https://github.com/onnx/models/tree/master/vision/classification/resnet)
+- [ShuffleNet_V2](https://github.com/onnx/models/tree/master/vision/classification/shufflenet)
+- [BERT-Squad](https://github.com/onnx/models/tree/master/text/machine_comprehension/bert-squad)
+- [EfficientNet-Lite4](https://github.com/onnx/models/tree/master/vision/classification/efficientnet-lite4)
+- [Fast Neural Style Transfer](https://github.com/onnx/models/tree/master/vision/style_transfer/fast_neural_style)
+- [Super Resolution](https://github.com/onnx/models/tree/master/vision/super_resolution/sub_pixel_cnn_2016)
+- [YOLOv4](https://github.com/onnx/models/tree/master/vision/object_detection_segmentation/yolov4)
+  (Not exactly the same, nearest neighbour interpolation in pytorch differs)
+- [U-net](https://pytorch.org/hub/mateuszbuda_brain-segmentation-pytorch_unet/)
+  (Converted from pytorch to onnx and then back)
 
 ## Limitations
 Known current version limitations are:
@@ -50,3 +57,13 @@ Install it into pre-commit hook to always commit nicely formatted code:
 ### Testing
 [Pytest](https://docs.pytest.org/en/latest/) and [tox](https://tox.readthedocs.io/en/latest/).  
 ```tox```
+#### Test fixtures
+To test the complete conversion of an onnx model download pre-trained models: 
+```./download_fixtures.sh```  
+Use flag `--all` to download more models.
+Add any custom models to `./fixtures` folder to test their conversion.
+
+### Debugging
+Set `ConvertModel(..., debug=True)` to compare each converted
+activation from pytorch with the activation from onnxruntime.  
+This helps identify where in the graph the activations start to differ.
