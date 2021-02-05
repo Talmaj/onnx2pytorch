@@ -15,9 +15,8 @@ def inp():
         (None, (2, 2)),
         (0, (2, 1, 2)),
         (2, (1, 2, 2)),
-        # TODO implement for the examples below
-        # (-2, (1, 2, 2)),
-        # (torch.tensor([0, 2]), (2, 2)),
+        (-2, (1, 2, 2)),
+        (torch.tensor([0, 2]), (2, 2)),
     ],
 )
 def test_squeeze(inp, dim, exp_shape):

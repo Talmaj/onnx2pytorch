@@ -8,10 +8,13 @@ from torch import nn
 from torch.jit import TracerWarning
 from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.batchnorm import _BatchNorm
+from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
 
 from onnx2pytorch.operations import Split
+from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.operations import convert_operations
+from onnx2pytorch.utils import get_inputs_names
 
 
 class InitParameters(dict):
@@ -30,7 +33,9 @@ class InitParameters(dict):
 
 
 class ConvertModel(nn.Module):
-    def __init__(self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False):
+    def __init__(
+        self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False, debug=False
+    ):
         """
         Convert onnx model to pytorch.
 
@@ -53,6 +58,7 @@ class ConvertModel(nn.Module):
         self.onnx_model = onnx_model
         self.batch_dim = batch_dim
         self.experimental = experimental
+        self.debug = debug
         self.mapping = {}
         for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
@@ -61,6 +67,8 @@ class ConvertModel(nn.Module):
         self.init_parameters = InitParameters(
             {tensor.name: tensor for tensor in self.onnx_model.graph.initializer}
         )
+
+        self.input_names = get_inputs_names(onnx_model)
 
         if experimental:
             warnings.warn(
@@ -74,8 +82,7 @@ class ConvertModel(nn.Module):
                 "Input with larger batch size than 1 not supported yet."
             )
         # TODO figure out how to store only necessary activations.
-        input_names = [x.name for x in self.onnx_model.graph.input]
-        activations = dict(zip(input_names, input))
+        activations = dict(zip(self.input_names, input))
 
         for node in self.onnx_model.graph.node:
             # Identifying the layer ids and names
@@ -93,7 +100,11 @@ class ConvertModel(nn.Module):
             # if first layer choose input as in_activations
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
-            if isinstance(op, (nn.Linear, _ConvNd, _BatchNorm)):
+            layer_types = (nn.Linear, _ConvNd, _BatchNorm, _InstanceNorm)
+            if isinstance(op, layer_types) or (
+                isinstance(op, nn.Sequential)
+                and any(isinstance(x, layer_types) for x in op.modules())
+            ):
                 in_activations = [
                     activations[in_op_id]
                     for in_op_id in node.input
@@ -121,6 +132,15 @@ class ConvertModel(nn.Module):
                 activations[out_op_id] = op(in_activations[0])
             else:
                 activations[out_op_id] = op(*in_activations)
+
+            if self.debug:
+                # compare if the activations of pytorch are the same as from onnxruntime
+                debug_model_conversion(
+                    self.onnx_model,
+                    [activations[x] for x in self.input_names],
+                    activations[out_op_id],
+                    node,
+                )
 
         # collect all outputs
         outputs = [activations[x.name] for x in self.onnx_model.graph.output]

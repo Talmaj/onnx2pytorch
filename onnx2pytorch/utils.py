@@ -26,22 +26,41 @@ def is_symmetric(params):
     Check if parameters are symmetric, all values [2,2,2,2].
     Then we can use only [2,2].
     """
-    assert len(params) // 2 == len(params) / 2, "Non even numer of parameters."
+    assert len(params) // 2 == len(params) / 2, "Non even number of parameters."
     idx = len(params) // 2
     for i in range(0, idx):
-        assert params[i] == params[idx + i], "Both sides should be the same."
+        if params[i] != params[idx + i]:
+            return False
     return True
 
 
-def to_pytorch_params(params):
+def extract_padding_params(params):
+    """Extract padding parameters fod Pad layers."""
+    pad_dim = len(params) // 2
+    pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
+
+    # Some padding modes do not support padding in batch and channel dimension.
+    # If batch and channel dimension have no padding, discard.
+    if (pads[:4] == 0).all():
+        pads = pads[4:]
+    pads = pads.tolist()
+    # Reverse, because for pytorch first two numbers correspond to last dimension, etc.
+    pads.reverse()
+    return pads
+
+
+def extract_padding_params_for_conv_layer(params):
     """
-    Padding in onnx is different than in pytorch. That is why we need to
-    check if they are symmetric and cut half.
+    Padding params in onnx are different than in pytorch. That is why we need to
+    check if they are symmetric and cut half or return a padding layer.
     """
     if is_symmetric(params):
         return params[: len(params) // 2]
     else:
-        raise ValueError("Parameters need to be symmetric to work with pytorch.")
+        pad_dim = len(params) // 2
+        pad_layer = getattr(torch.nn, "ConstantPad{}d".format(pad_dim))
+        pads = extract_padding_params(params)[::-1]
+        return pad_layer(pads, value=0)
 
 
 def get_selection(indices, dim):
@@ -122,6 +141,7 @@ def get_activation_value(onnx_model, inputs, activation_names):
     onnx_model: onnx.ModelProto
     inputs: list[np.ndarray]
     activation_names: list[str]
+        Can be retrieved from onnx node: list(node.output)
 
     Returns
     -------
@@ -129,6 +149,7 @@ def get_activation_value(onnx_model, inputs, activation_names):
         Value of the activation with activation_name.
     """
     assert ort is not None, "onnxruntime needed. pip install onnxruntime"
+    assert all(isinstance(x, np.ndarray) for x in inputs)
 
     if not isinstance(activation_names, (list, tuple)):
         activation_names = [activation_names]
@@ -156,13 +177,20 @@ def get_activation_value(onnx_model, inputs, activation_names):
     return sess.run(None, inputs)
 
 
+def get_inputs_names(onnx_model):
+    param_names = set([x.name for x in onnx_model.graph.initializer])
+    input_names = [x.name for x in onnx_model.graph.input]
+    input_names = [x for x in input_names if x not in param_names]
+    return input_names
+
+
 def get_inputs_sample(onnx_model, to_torch=False):
     """Get inputs sample from onnx model."""
     assert ort is not None, "onnxruntime needed. pip install onnxruntime"
 
     sess = ort.InferenceSession(onnx_model.SerializeToString())
     inputs = sess.get_inputs()
-    input_names = [x.name for x in inputs]
+    input_names = get_inputs_names(onnx_model)
     input_tensors = [
         np.abs(np.random.rand(*get_shape(x)).astype(get_type(x))) for x in inputs
     ]

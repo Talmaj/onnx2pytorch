@@ -1,5 +1,6 @@
 from .add import Add
 from .batchnorm import BatchNormUnsafe
+from .instancenorm import InstanceNormUnsafe
 from .cast import Cast
 from .constant import ConstantOfShape
 from .flatten import Flatten
@@ -12,10 +13,12 @@ from .shape import Shape
 from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
+from .resize import Resize, Upsample
 
 __all__ = [
     "Add",
     "BatchNormUnsafe",
+    "InstanceNormUnsafe",
     "Cast",
     "ConstantOfShape",
     "Flatten",
@@ -28,4 +31,6 @@ __all__ = [
     "Slice",
     "Split",
     "Squeeze",
+    "Resize",
+    "Upsample",
 ]

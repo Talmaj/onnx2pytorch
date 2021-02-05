@@ -2,6 +2,7 @@ from functools import partial
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from onnx import numpy_helper
 
 from onnx2pytorch.convert.attribute import extract_attributes
@@ -9,9 +10,11 @@ from onnx2pytorch.convert.layer import (
     convert_layer,
     convert_linear_layer,
     convert_batch_norm_layer,
+    convert_instance_norm_layer,
 )
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
+from onnx2pytorch.operations import Resize, Upsample
 from onnx2pytorch.utils import value_wrapper
 
 
@@ -41,6 +44,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_layer(node, "Conv", params)
         elif node.op_type == "Relu":
             op = nn.ReLU(inplace=True)
+        elif node.op_type == "LeakyRelu":
+            op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
         elif node.op_type == "Sigmoid":
             op = nn.Sigmoid()
         elif node.op_type == "MaxPool":
@@ -54,6 +59,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op.feature_dim = batch_dim + 1  # Necessary for transformers
         elif node.op_type == "BatchNormalization":
             op = convert_batch_norm_layer(node, params=params)
+        elif node.op_type == "InstanceNormalization":
+            op = convert_instance_norm_layer(node, params=params)
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
@@ -75,7 +82,7 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
         elif node.op_type == "Slice":
-            op = Slice()
+            op = Slice(**extract_attributes(node))
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
         elif node.op_type == "Where":
@@ -136,6 +143,10 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_layer(node, "ConvTranspose", params)
         elif node.op_type == "Identity":
             op = nn.Identity()
+        elif node.op_type == "Resize":
+            op = Resize(**extract_attributes(node))
+        elif node.op_type == "Upsample":
+            op = Upsample(**extract_attributes(node))
         elif node.op_type == "OneHot":
             op = OneHot(**extract_attributes(node))
         elif node.op_type == "Pad":
@@ -146,6 +157,10 @@ def convert_operations(onnx_model, batch_dim=0):
             op = OperatorWrapper(torch.tanh)
         elif node.op_type == "Erf":
             op = OperatorWrapper(torch.erf)
+        elif node.op_type == "Log":
+            op = OperatorWrapper(torch.log)
+        elif node.op_type == "Exp":
+            op = OperatorWrapper(torch.exp)
         else:
             op = getattr(torch, node.op_type.lower(), None)
             if op is None:
