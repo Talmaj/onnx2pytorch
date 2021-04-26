@@ -44,8 +44,8 @@ def convert_layer(node, layer_type, params=None):
             "Unexpected length of kernel_size dimension: {}".format(kernel_size_length)
         )
 
+    pad_layer = None
     if params:
-        pad_layer = None
         weight, bias = extract_params(params)
         kwargs["bias"] = bias is not None
         kwargs["in_channels"] = weight.dims[1] * kwargs.get("groups", 1)
@@ -64,11 +64,16 @@ def convert_layer(node, layer_type, params=None):
         # initialize layer and load weights
         layer = layer(**kwargs)
         load_params(layer, weight, bias)
-        if pad_layer is not None:
-            layer = nn.Sequential(pad_layer, layer)
     else:
         # initialize operations without parameters (MaxPool, AvgPool, etc.)
+
+        # if padding is a layer, remove from kwargs and prepend later
+        if isinstance(kwargs["padding"], nn.Module):
+            pad_layer = kwargs.pop("padding")
         layer = layer(**kwargs)
+
+    if pad_layer is not None:
+        layer = nn.Sequential(pad_layer, layer)
 
     return layer
 
