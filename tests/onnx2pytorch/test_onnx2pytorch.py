@@ -42,7 +42,7 @@ def test_onnx2pytorch2onnx(onnx_model, onnx_model_outputs, onnx_inputs):
         export_params=True,
         opset_version=11,
         do_constant_folding=True,
-        input_names=onnx_inputs.keys(),
+        input_names=list(onnx_inputs.keys()),
     )
 
     # for some reason the following check fails the circleci with segmentation fault
@@ -55,4 +55,4 @@ def test_onnx2pytorch2onnx(onnx_model, onnx_model_outputs, onnx_inputs):
 
     for output, onnx_model_output in zip(outputs, onnx_model_outputs):
         print("mse", ((onnx_model_output - output) ** 2).sum() / onnx_model_output.size)
-        np.testing.assert_allclose(onnx_model_output, output, atol=1e-5, rtol=1e-5)
+        np.testing.assert_allclose(onnx_model_output, output, atol=1e-5, rtol=1e-3)
