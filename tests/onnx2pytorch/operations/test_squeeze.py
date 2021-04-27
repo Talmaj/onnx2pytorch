@@ -20,5 +20,5 @@ def inp():
     ],
 )
 def test_squeeze(inp, dim, exp_shape):
-    op = Squeeze(dim)
+    op = Squeeze(opset_version=11, dim=dim)
     assert tuple(op(inp).shape) == exp_shape
