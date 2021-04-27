@@ -1,5 +1,6 @@
 from .add import Add
 from .batchnorm import BatchNormUnsafe
+from .expand import Expand
 from .instancenorm import InstanceNormUnsafe
 from .cast import Cast
 from .constant import ConstantOfShape
@@ -18,6 +19,7 @@ from .resize import Resize, Upsample
 __all__ = [
     "Add",
     "BatchNormUnsafe",
+    "Expand",
     "InstanceNormUnsafe",
     "Cast",
     "ConstantOfShape",

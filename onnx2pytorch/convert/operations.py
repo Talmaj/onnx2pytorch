@@ -73,6 +73,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Reshape(shape)
         elif node.op_type == "Shape":
             op = Shape()
+        elif node.op_type == "Expand":
+            op = Expand()
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
         elif node.op_type == "Squeeze":
