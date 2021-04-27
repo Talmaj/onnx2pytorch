@@ -83,6 +83,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = partial(torch.unsqueeze, **extract_attributes(node))
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
+        elif node.op_type == "Range":
+            op = Range()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
         elif node.op_type == "Cast":

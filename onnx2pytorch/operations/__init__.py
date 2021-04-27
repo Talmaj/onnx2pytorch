@@ -9,6 +9,7 @@ from .gather import Gather
 from .onehot import OneHot
 from .pad import Pad
 from .pooling import GlobalAveragePool
+from .range import Range
 from .reshape import Reshape
 from .shape import Shape
 from .slice import Slice
@@ -28,6 +29,7 @@ __all__ = [
     "OneHot",
     "Pad",
     "GlobalAveragePool",
+    "Range",
     "Reshape",
     "Shape",
     "Slice",
