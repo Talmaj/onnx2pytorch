@@ -34,7 +34,7 @@ class InitParameters(dict):
 
 class ConvertModel(nn.Module):
     def __init__(
-        self, onnx_model: onnx.ModelProto, batch_dim=0, opset_version=13, experimental=False, debug=False
+        self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False, debug=False
     ):
         """
         Convert onnx model to pytorch.
@@ -45,8 +45,6 @@ class ConvertModel(nn.Module):
             Loaded onnx model.
         batch_dim: int
             Dimension of the batch.
-        opset_version: int
-            Opset version number of the onnx model.
         experimental: bool
             Experimental implementation allows batch_size > 1. However,
             batchnorm layers could potentially produce false outputs.
@@ -59,11 +57,10 @@ class ConvertModel(nn.Module):
         super().__init__()
         self.onnx_model = onnx_model
         self.batch_dim = batch_dim
-        self.opset_version = opset_version
         self.experimental = experimental
         self.debug = debug
         self.mapping = {}
-        for op_id, op_name, op in convert_operations(onnx_model, batch_dim, opset_version):
+        for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
 

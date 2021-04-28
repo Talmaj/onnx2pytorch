@@ -18,7 +18,7 @@ from onnx2pytorch.operations import Resize, Upsample
 from onnx2pytorch.utils import value_wrapper
 
 
-def convert_operations(onnx_model, batch_dim=0, opset_version=13):
+def convert_operations(onnx_model, batch_dim=0):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
@@ -35,6 +35,7 @@ def convert_operations(onnx_model, batch_dim=0, opset_version=13):
     iterator: (op_id, op_name, op)
     """
     weights = {tensor.name: tensor for tensor in onnx_model.graph.initializer}
+    opset_version = onnx_model.opset_import[0].version
 
     for i, node in enumerate(onnx_model.graph.node):
         # extract only useful inputs

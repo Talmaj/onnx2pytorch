@@ -68,7 +68,7 @@ def convert_layer(node, layer_type, params=None):
         # initialize operations without parameters (MaxPool, AvgPool, etc.)
 
         # if padding is a layer, remove from kwargs and prepend later
-        if isinstance(kwargs["padding"], nn.Module):
+        if "padding" in kwargs and isinstance(kwargs["padding"], nn.Module):
             pad_layer = kwargs.pop("padding")
         layer = layer(**kwargs)
 

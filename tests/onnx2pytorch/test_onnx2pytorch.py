@@ -30,7 +30,7 @@ def test_onnx2pytorch2onnx(onnx_model, onnx_model_outputs, onnx_inputs):
     """Test that conversion works both ways."""
     torch_inputs = [torch.from_numpy(x) for x in onnx_inputs.values()]
 
-    model = convert.ConvertModel(onnx_model, opset_version=13)
+    model = convert.ConvertModel(onnx_model)
     model.eval()
     model.cpu()
 
