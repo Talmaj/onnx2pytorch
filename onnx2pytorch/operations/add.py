@@ -31,7 +31,7 @@ class Add(Operator):
         if is_constant(input[0]):
             input = sorted(input, key=lambda x: -len(x.shape))
         # Reorder input so that the broadcasted matrix is last
-        elif all(x == 1 for x in input[0].shape):
+        elif any(x == 1 for x in input[0].shape):
             input = sorted(input, key=lambda x: -sum(x.shape))
         out = input[0].clone()
         for inp in input[1:]:
