@@ -126,7 +126,9 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "Sqrt":
             op = torch.sqrt
         elif node.op_type == "Softmax":
-            op = nn.Softmax(**extract_attributes(node))
+            kwargs = dict(dim=-1)
+            kwargs.update(extract_attributes(node))
+            op = nn.Softmax(**kwargs)
         elif node.op_type == "Transpose":
             op = partial(torch.Tensor.permute, **extract_attributes(node))
         elif node.op_type == "Split":

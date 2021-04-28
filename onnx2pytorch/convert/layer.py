@@ -58,7 +58,7 @@ def convert_layer(node, layer_type, params=None):
             )
 
         # if padding is a layer, remove from kwargs and prepend later
-        if isinstance(kwargs["padding"], nn.Module):
+        if "padding" in kwargs and isinstance(kwargs["padding"], nn.Module):
             pad_layer = kwargs.pop("padding")
 
         # initialize layer and load weights

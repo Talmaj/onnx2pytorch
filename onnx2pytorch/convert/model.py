@@ -60,6 +60,7 @@ class ConvertModel(nn.Module):
         self.experimental = experimental
         self.debug = debug
         self.mapping = {}
+        self.device = None
         for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
@@ -119,6 +120,8 @@ class ConvertModel(nn.Module):
                     else self.init_parameters.get(in_op_id, input[0])
                     for in_op_id in node.input
                 ]
+            if self.device is not None:
+                in_activations = [act.to(self.device) for act in in_activations]
 
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
@@ -147,3 +150,7 @@ class ConvertModel(nn.Module):
         if len(outputs) == 1:
             outputs = outputs[0]
         return outputs
+
+    def to(self, device):
+        super(ConvertModel, self).to(device=device)
+        self.device = device
