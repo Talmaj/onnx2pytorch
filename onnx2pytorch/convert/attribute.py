@@ -118,6 +118,8 @@ def extract_attributes(node):
                     "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
                     "Result might differ.".format(arg)
                 )
+        elif attr.name == "noop_with_empty_axes":
+            kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
         elif node.op_type == "Resize":
             # These parameters are not used, warn in Resize operator
             kwargs[attr.name] = extract_attr_values(attr)

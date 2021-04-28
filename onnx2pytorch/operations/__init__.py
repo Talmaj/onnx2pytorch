@@ -10,6 +10,7 @@ from .onehot import OneHot
 from .pad import Pad
 from .pooling import GlobalAveragePool
 from .range import Range
+from .reducesum import ReduceSum
 from .reshape import Reshape
 from .shape import Shape
 from .slice import Slice
@@ -31,6 +32,7 @@ __all__ = [
     "Pad",
     "GlobalAveragePool",
     "Range",
+    "ReduceSum",
     "Reshape",
     "Shape",
     "Slice",
