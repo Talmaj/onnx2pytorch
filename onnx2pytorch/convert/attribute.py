@@ -67,6 +67,10 @@ def extract_attributes(node):
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
+        elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
+            raise NotImplementedError(
+                "ConvTranspose with dynamic padding not implemented."
+            )
         elif attr.name == "axis" and node.op_type == "Flatten":
             kwargs["start_dim"] = extract_attr_values(attr)
         elif attr.name == "axis" or attr.name == "axes":

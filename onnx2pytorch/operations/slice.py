@@ -24,11 +24,15 @@ class Slice(nn.Module):
 
         # If axes=None set them to (0, 1, 2, ...)
         if axes is None:
-            axes = tuple(range(len(starts)))
+            axes = tuple(torch.arange(len(starts)))
         if steps is None:
-            steps = tuple(1 for _ in axes)
+            steps = tuple(torch.tensor(1) for _ in axes)
 
         selection = [slice(None) for _ in range(max(axes) + 1)]
         for i, axis in enumerate(axes):
-            selection[axis] = slice(starts[i], ends[i], steps[i])
+            selection[axis] = slice(
+                starts[i].to(dtype=torch.long, device=input.device),
+                ends[i].to(dtype=torch.long, device=input.device),
+                steps[i].to(dtype=torch.long, device=input.device)
+            )
         return input.__getitem__(selection)

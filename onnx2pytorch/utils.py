@@ -35,7 +35,7 @@ def is_symmetric(params):
 
 
 def extract_padding_params(params):
-    """Extract padding parameters fod Pad layers."""
+    """Extract padding parameters for Pad layers."""
     pad_dim = len(params) // 2
     pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
 
