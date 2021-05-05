@@ -14,12 +14,12 @@ class Squeeze(Operator):
         if self.opset_version < 13:
             dims = self.dim
         else:
-            dims = torch.Size(axes)
+            dims = axes
 
         if dims is None:
             return torch.squeeze(input)
         elif isinstance(dims, int):
-            return torch.squeeze(input, dim=self.dim)
+            return torch.squeeze(input, dim=dims)
         else:
             for dim in sorted(dims, reverse=True):
                 input = torch.squeeze(input, dim=dim)
