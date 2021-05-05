@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn
 from onnx import numpy_helper
@@ -22,9 +23,9 @@ def extract_params(params):
 
 def load_params(layer, weight, bias):
     """Load weight and bias to a given layer from onnx format."""
-    layer.weight.data = torch.from_numpy(numpy_helper.to_array(weight))
+    layer.weight.data = torch.from_numpy(np.copy(numpy_helper.to_array(weight)))
     if bias is not None:
-        layer.bias.data = torch.from_numpy(numpy_helper.to_array(bias))
+        layer.bias.data = torch.from_numpy(np.copy(numpy_helper.to_array(bias)))
 
 
 def convert_layer(node, layer_type, params=None):
@@ -85,9 +86,9 @@ def convert_batch_norm_layer(node, params):
     kwargs["num_features"] = params[0].dims[0]
     # initialize layer and load weights
     layer = layer(**kwargs)
-    keys = ["weight", "bias", "running_mean", "running_var"]
-    for key, value in zip(keys, params):
-        getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
+    key = ["weight", "bias", "running_mean", "running_var"]
+    for key, value in zip(key, params):
+        getattr(layer, key).data = torch.from_numpy(np.copy(numpy_helper.to_array(value)))
 
     return layer
 
@@ -100,9 +101,9 @@ def convert_instance_norm_layer(node, params):
     kwargs["num_features"] = params[0].dims[0]
     # initialize layer and load weights
     layer = layer(**kwargs)
-    keys = ["weight", "bias"]
-    for key, value in zip(keys, params):
-        getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
+    key = ["weight", "bias"]
+    for key, value in zip(key, params):
+        getattr(layer, key).data = torch.from_numpy(np.copy(numpy_helper.to_array(value)))
 
     return layer
 

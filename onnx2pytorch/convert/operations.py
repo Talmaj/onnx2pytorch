@@ -1,5 +1,6 @@
 from functools import partial
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -70,7 +71,7 @@ def convert_operations(onnx_model, batch_dim=0):
             shape = list(
                 filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
             )
-            shape = numpy_helper.to_array(shape[0]) if shape else None
+            shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
             op = Reshape(shape)
         elif node.op_type == "Shape":
             op = Shape()
@@ -100,7 +101,7 @@ def convert_operations(onnx_model, batch_dim=0):
             op = torch.true_divide
         elif node.op_type == "MatMul":
             if params:
-                weight = torch.from_numpy(numpy_helper.to_array(params[0]))
+                weight = torch.from_numpy(np.copy(numpy_helper.to_array(params[0])))
                 op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
                 op.weight.data = weight.t()
 
@@ -112,7 +113,7 @@ def convert_operations(onnx_model, batch_dim=0):
                     if par_name in weights
                 ]
                 if next_params and next_node.op_type == "Add":
-                    bias = torch.from_numpy(numpy_helper.to_array(next_params[0]))
+                    bias = torch.from_numpy(np.copy(numpy_helper.to_array(next_params[0])))
                     op.bias = nn.Parameter(bias)
                     node.output.pop()
                     node.output.extend(next_node.output)
