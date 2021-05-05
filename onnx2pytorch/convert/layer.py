@@ -58,7 +58,7 @@ def convert_layer(node, layer_type, params=None):
             )
 
         # if padding is a layer, remove from kwargs and prepend later
-        if isinstance(kwargs["padding"], nn.Module):
+        if "padding" in kwargs and isinstance(kwargs["padding"], nn.Module):
             pad_layer = kwargs.pop("padding")
 
         # initialize layer and load weights
@@ -85,8 +85,8 @@ def convert_batch_norm_layer(node, params):
     kwargs["num_features"] = params[0].dims[0]
     # initialize layer and load weights
     layer = layer(**kwargs)
-    key = ["weight", "bias", "running_mean", "running_var"]
-    for key, value in zip(key, params):
+    keys = ["weight", "bias", "running_mean", "running_var"]
+    for key, value in zip(keys, params):
         getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
 
     return layer
@@ -100,8 +100,8 @@ def convert_instance_norm_layer(node, params):
     kwargs["num_features"] = params[0].dims[0]
     # initialize layer and load weights
     layer = layer(**kwargs)
-    key = ["weight", "bias"]
-    for key, value in zip(key, params):
+    keys = ["weight", "bias"]
+    for key, value in zip(keys, params):
         getattr(layer, key).data = torch.from_numpy(numpy_helper.to_array(value))
 
     return layer
