@@ -101,6 +101,8 @@ def extract_attributes(node):
             kwargs["transpose_activation"] = bool(extract_attr_values(attr))
         elif attr.name == "alpha" and node.op_type == "LeakyRelu":
             kwargs["negative_slope"] = extract_attr_values(attr)
+        elif attr.name == "alpha" and node.op_type == "Elu":
+            kwargs["alpha"] = extract_attr_values(attr)
         elif attr.name == "alpha":
             kwargs["weight_multiplier"] = extract_attr_values(attr)
         elif attr.name == "beta":
