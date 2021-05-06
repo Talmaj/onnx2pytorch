@@ -18,5 +18,6 @@ def test_expand_dim_unchanged():
     new_shape = [3, 4]
     exp = torch.cat([inp] * 4, dim=1)
     exp_shape = (3, 4)
-    assert tuple(op(inp, new_shape).shape) == exp_shape
-    assert torch.equal(op(inp, new_shape), exp)
+    ret = op(inp, new_shape)
+    assert tuple(ret.shape) == exp_shape
+    assert torch.equal(ret, exp)
