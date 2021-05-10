@@ -3,13 +3,14 @@ from torch import nn
 
 from onnx2pytorch.operations.base import Operator
 
+
 class Unsqueeze(Operator):
     def __init__(self, opset_version, dim=None):
         self.opset_version = opset_version
         self.dim = dim
         super().__init__()
 
-    def forward(self, data: torch.Tensor, axes: torch.Tensor=None):
+    def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
         if self.opset_version < 13:
             dims = self.dim
         else:
@@ -22,4 +23,3 @@ class Unsqueeze(Operator):
             for dim in sorted(dims, reverse=True):
                 data = torch.unsqueeze(data, dim=dim)
             return data
-
