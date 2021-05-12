@@ -10,7 +10,7 @@ class Squeeze(Operator):
         self.dim = dim
         super().__init__()
 
-    def forward(self, input: torch.Tensor, axes: torch.Tensor=None):
+    def forward(self, input: torch.Tensor, axes: torch.Tensor = None):
         if self.opset_version < 13:
             dims = self.dim
         else:

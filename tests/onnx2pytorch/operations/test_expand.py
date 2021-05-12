@@ -3,6 +3,7 @@ import pytest
 
 from onnx2pytorch.operations.expand import Expand
 
+
 def test_expand_dim_changed():
     op = Expand()
     inp = torch.reshape(torch.arange(0, 3, dtype=torch.float32), [3, 1])
@@ -11,6 +12,7 @@ def test_expand_dim_changed():
     exp_shape = (2, 3, 6)
     assert tuple(op(inp, new_shape).shape) == exp_shape
     assert torch.equal(op(inp, new_shape), exp)
+
 
 def test_expand_dim_unchanged():
     op = Expand()
