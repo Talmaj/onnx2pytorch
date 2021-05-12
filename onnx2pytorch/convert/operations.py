@@ -20,7 +20,7 @@ from onnx2pytorch.utils import value_wrapper
 
 def convert_operations(onnx_model, batch_dim=0):
     """
-    Convert onnx model operations. Yields onnx's operator_id, opeartor_name and
+    Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
 
     Parameters
@@ -35,6 +35,7 @@ def convert_operations(onnx_model, batch_dim=0):
     iterator: (op_id, op_name, op)
     """
     weights = {tensor.name: tensor for tensor in onnx_model.graph.initializer}
+    opset_version = onnx_model.opset_import[0].version
 
     for i, node in enumerate(onnx_model.graph.node):
         # extract only useful inputs
@@ -46,6 +47,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = nn.ReLU(inplace=True)
         elif node.op_type == "LeakyRelu":
             op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
+        elif node.op_type == "Elu":
+            op = nn.ELU(**extract_attributes(node), inplace=True)
         elif node.op_type == "Sigmoid":
             op = nn.Sigmoid()
         elif node.op_type == "MaxPool":
@@ -73,14 +76,18 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Reshape(shape)
         elif node.op_type == "Shape":
             op = Shape()
+        elif node.op_type == "Expand":
+            op = Expand()
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
         elif node.op_type == "Squeeze":
-            op = Squeeze(**extract_attributes(node))
+            op = Squeeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Unsqueeze":
-            op = partial(torch.unsqueeze, **extract_attributes(node))
+            op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
+        elif node.op_type == "Range":
+            op = Range()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
         elif node.op_type == "Cast":
@@ -161,6 +168,14 @@ def convert_operations(onnx_model, batch_dim=0):
             op = OperatorWrapper(torch.log)
         elif node.op_type == "Exp":
             op = OperatorWrapper(torch.exp)
+        elif node.op_type == "Reciprocal":
+            op = OperatorWrapper(torch.reciprocal)
+        elif node.op_type == "And":
+            op = OperatorWrapper(torch.logical_and)
+        elif node.op_type == "Or":
+            op = OperatorWrapper(torch.logical_or)
+        elif node.op_type == "Not":
+            op = OperatorWrapper(torch.logical_not)
         else:
             op = getattr(torch, node.op_type.lower(), None)
             if op is None:
