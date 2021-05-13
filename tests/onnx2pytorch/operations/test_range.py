@@ -3,6 +3,7 @@ import pytest
 
 from onnx2pytorch.operations.range import Range
 
+
 @pytest.mark.parametrize(
     "start, limit, delta, expected",
     [

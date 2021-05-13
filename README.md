@@ -52,7 +52,7 @@ The Uncompromising Code Formatter: [Black](https://github.com/psf/black)
 ```black {source_file_or_directory}```  
 
 Install it into pre-commit hook to always commit nicely formatted code:  
-```pre-commmit install```
+```pre-commit install```
 
 ### Testing
 [Pytest](https://docs.pytest.org/en/latest/) and [tox](https://tox.readthedocs.io/en/latest/).  

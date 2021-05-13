@@ -23,6 +23,7 @@ def test_squeeze_v11(inp, dim, exp_shape):
     op = Squeeze(opset_version=11, dim=dim)
     assert tuple(op(inp).shape) == exp_shape
 
+
 @pytest.mark.parametrize(
     "dim, exp_shape",
     [
