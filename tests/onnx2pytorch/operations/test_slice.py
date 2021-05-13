@@ -42,6 +42,39 @@ def test_slice_2(x, init):
 
 
 @pytest.mark.parametrize("init", [True, False])
+def test_slice_neg_axes(x, init):
+    starts = torch.tensor([1], dtype=torch.int64)
+    ends = torch.tensor([4], dtype=torch.int64)
+    axes = torch.tensor([-1], dtype=torch.int64)
+    steps = torch.tensor([2], dtype=torch.int64)
+    y = x[:, :, 1:4:2]
+
+    if init:
+        op = Slice(axes, starts, ends, steps)
+        assert torch.equal(op(x), y)
+    else:
+        op = Slice()
+        assert torch.equal(op(x, starts, ends, axes, steps), y)
+
+
+@pytest.mark.parametrize("init", [True, False])
+def test_slice_neg_axes_2(x, init):
+    print(x.shape)
+    starts = torch.tensor([1], dtype=torch.int64)
+    ends = torch.tensor([4], dtype=torch.int64)
+    axes = torch.tensor([-2], dtype=torch.int64)
+    steps = torch.tensor([2], dtype=torch.int64)
+    y = x[:, 1:4:2]
+
+    if init:
+        op = Slice(axes, starts, ends, steps)
+        assert torch.equal(op(x), y)
+    else:
+        op = Slice()
+        assert torch.equal(op(x, starts, ends, axes, steps), y)
+
+
+@pytest.mark.parametrize("init", [True, False])
 def test_slice_default_axes(x, init):
     starts = torch.tensor([1, 2], dtype=torch.int64)
     ends = torch.tensor([9, 5], dtype=torch.int64)

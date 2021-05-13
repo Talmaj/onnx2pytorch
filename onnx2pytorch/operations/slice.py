@@ -28,6 +28,8 @@ class Slice(nn.Module):
         if steps is None:
             steps = tuple(1 for _ in axes)
 
+        axes = [input.ndim + x if x < 0 else x for x in axes]
+
         selection = [slice(None) for _ in range(max(axes) + 1)]
         for i, axis in enumerate(axes):
             selection[axis] = slice(starts[i], ends[i], steps[i])
