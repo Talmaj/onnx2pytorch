@@ -24,7 +24,7 @@ class InitParameters(dict):
     def __getitem__(self, item):
         return super().__getitem__(item)
 
-    def get(self, item, default, device=None):
+    def get(self, item, default):
         if item in self:
             return self[item]
         else:
@@ -118,7 +118,7 @@ class ConvertModel(nn.Module):
                     activations[in_op_id] if in_op_id in activations
                     # if in_op_id not in activations neither in parameters then
                     # it must be the initial input
-                    else self.init_parameters.get(in_op_id, input[0], self.device)
+                    else self.init_parameters.get(in_op_id, input[0])
                     for in_op_id in node.input
                 ]
 
