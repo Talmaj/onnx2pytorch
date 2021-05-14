@@ -35,6 +35,6 @@ class Slice(nn.Module):
             selection[axis] = slice(
                 starts[i].to(dtype=torch.long, device=input.device),
                 ends[i].to(dtype=torch.long, device=input.device),
-                steps[i].to(dtype=torch.long, device=input.device)
+                steps[i].to(dtype=torch.long, device=input.device),
             )
         return input.__getitem__(selection)

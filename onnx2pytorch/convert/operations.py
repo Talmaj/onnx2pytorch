@@ -115,7 +115,9 @@ def convert_operations(onnx_model, batch_dim=0):
                     if par_name in weights
                 ]
                 if next_params and next_node.op_type == "Add":
-                    bias = torch.from_numpy(np.copy(numpy_helper.to_array(next_params[0])))
+                    bias = torch.from_numpy(
+                        np.copy(numpy_helper.to_array(next_params[0]))
+                    )
                     op.bias = nn.Parameter(bias)
                     node.output.pop()
                     node.output.extend(next_node.output)

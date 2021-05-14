@@ -88,7 +88,9 @@ def convert_batch_norm_layer(node, params):
     layer = layer(**kwargs)
     key = ["weight", "bias", "running_mean", "running_var"]
     for key, value in zip(key, params):
-        getattr(layer, key).data = torch.from_numpy(np.copy(numpy_helper.to_array(value)))
+        getattr(layer, key).data = torch.from_numpy(
+            np.copy(numpy_helper.to_array(value))
+        )
 
     return layer
 
@@ -103,7 +105,9 @@ def convert_instance_norm_layer(node, params):
     layer = layer(**kwargs)
     key = ["weight", "bias"]
     for key, value in zip(key, params):
-        getattr(layer, key).data = torch.from_numpy(np.copy(numpy_helper.to_array(value)))
+        getattr(layer, key).data = torch.from_numpy(
+            np.copy(numpy_helper.to_array(value))
+        )
 
     return layer
 
