@@ -12,6 +12,7 @@ from onnx2pytorch.convert.layer import (
     convert_linear_layer,
     convert_batch_norm_layer,
     convert_instance_norm_layer,
+    convert_lstm_layer,
 )
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
@@ -65,6 +66,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_batch_norm_layer(node, params=params)
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
+        elif node.op_type == "LSTM":
+            op = convert_lstm_layer(node, weights, params=params)
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
@@ -81,6 +84,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Expand()
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
+        elif node.op_type == "ScatterND":
+            op = ScatterND()
         elif node.op_type == "Squeeze":
             op = Squeeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Unsqueeze":
@@ -91,6 +96,10 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Range()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
+        elif node.op_type == "Tile":
+            op = Tile()
+        elif node.op_type == "TopK":
+            op = TopK()
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
         elif node.op_type == "Where":
@@ -123,7 +132,9 @@ def convert_operations(onnx_model, batch_dim=0):
                     node.output.extend(next_node.output)
                     onnx_model.graph.node.pop(i + 1)  # remove next node
             else:
-                op = torch.matmul
+                op = MatMul()
+                print(op)
+                print(type(op))
         elif node.op_type == "Sub":
             op = torch.sub
         elif node.op_type == "Pow":

@@ -7,6 +7,10 @@ from onnx2pytorch.operations import BatchNormUnsafe, InstanceNormUnsafe
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
 
+def _deserialize_to_torch(onnx_param):
+    return torch.from_numpy(np.copy(numpy_helper.to_array(onnx_param)))
+
+
 def extract_params(params):
     """Extract weights and biases."""
     param_length = len(params)
@@ -23,9 +27,9 @@ def extract_params(params):
 
 def load_params(layer, weight, bias):
     """Load weight and bias to a given layer from onnx format."""
-    layer.weight.data = torch.from_numpy(np.copy(numpy_helper.to_array(weight)))
+    layer.weight.data = _deserialize_to_torch(weight)
     if bias is not None:
-        layer.bias.data = torch.from_numpy(np.copy(numpy_helper.to_array(bias)))
+        layer.bias.data = _deserialize_to_torch(bias)
 
 
 def convert_layer(node, layer_type, params=None):
@@ -88,9 +92,7 @@ def convert_batch_norm_layer(node, params):
     layer = layer(**kwargs)
     keys = ["weight", "bias", "running_mean", "running_var"]
     for key, value in zip(keys, params):
-        getattr(layer, key).data = torch.from_numpy(
-            np.copy(numpy_helper.to_array(value))
-        )
+        getattr(layer, key).data = _deserialize_to_torch(value)
 
     return layer
 
@@ -105,9 +107,7 @@ def convert_instance_norm_layer(node, params):
     layer = layer(**kwargs)
     keys = ["weight", "bias"]
     for key, value in zip(keys, params):
-        getattr(layer, key).data = torch.from_numpy(
-            np.copy(numpy_helper.to_array(value))
-        )
+        getattr(layer, key).data = _deserialize_to_torch(value)
 
     return layer
 
@@ -146,4 +146,148 @@ def convert_linear_layer(node, params):
     if layer.bias is not None:
         layer.bias.data *= dc.get("bias_multiplier")
 
+    return layer
+
+
+def extract_and_load_params_lstm(node, weights):
+    param_length = len(params)
+    print(f"num LSTM params: {param_length}")
+    X = None
+    W = None
+    R = None
+    B = None
+    sequence_lens = None
+    initial_h = None
+    initial_c = None
+    P = None
+
+    for par_ix, par_name in enumerate(node.input):
+        if par_ix == 0:
+            X = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 1:
+            W = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 2:
+            R = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 3:
+            if par_name != "":
+                B = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 4:
+            if par_name != "":
+                sequence_lens = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 5:
+            if par_name != "":
+                initial_h = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 6:
+            if par_name != "":
+                initial_c = _deserialize_to_torch(weights[par_name])
+        elif par_ix == 7:
+            if par_name != "":
+                P = _deserialize_to_torch(weights[par_name])
+    return (X, W, R, B, sequence_lens, initial_h, initial_c, P)
+
+
+class Wrapped1LayerLSTM(nn.Module):
+    def __init__(self, lstm_module):
+        self.lstm = lstm_module
+
+    def forward(self, input, h_0=None, c_0=None):
+        (seq_len, batch, input_size) = input.shape
+        num_layers = 1
+        (num_directions, _, hidden_size) = h_0.shape
+        output, (h_n, c_n) = self.lstm(input, h_0, c_0)
+
+        # Y has shape (seq_length, num_directions, batch_size, hidden_size)
+        Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
+        # Y_h has shape (num_directions, batch_size, hidden_size)
+        Y_h = output.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
+        # Y_c has shape (num_directions, batch_size, hidden_size)
+        Y_c = output.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
+        return (Y, Y_h, Y_c)
+
+
+def convert_lstm_layer(node, weights):
+    """Convert LSTM layer from onnx node and params."""
+    params_tuple = extract_params_lstm(node, weights)
+    (X, W, R, B, sequence_lens, initial_h, initial_c, P) = params_tuple
+    if initial_h is not None:
+        raise NotImplementedError("LSTM initial_h not yet implemented.")
+    if initial_c is not None:
+        raise NotImplementedError("LSTM initial_c not yet implemented.")
+    if P is not None:
+        raise NotImplementedError("LSTM P not yet implemented.")
+
+    dc = dict(
+        activation_alpha=None,
+        activation_beta=None,
+        activations=None,
+        clip=None,
+        direction="forward",
+        hidden_size=None,
+        input_forget=0,
+        layout=0,
+    )
+    dc.update(extract_attributes(node))
+    if dc["activation_alpha"] is not None:
+        raise NotImplementedError(
+            "LSTM activation_alpha {}.".format(dc["activation_alpha"])
+        )
+    if dc["activation_beta"] is not None:
+        raise NotImplementedError(
+            "LSTM activation_beta {}.".format(dc["activation_beta"])
+        )
+    if dc["activations"] is not None:
+        # TODO allow if torch-compatible activations are set explicitly
+        raise NotImplementedError("LSTM activations {}.".format(dc["activations"]))
+    if dc["clip"] is not None:
+        raise NotImplementedError("LSTM clip {}".format(dc["clip"]))
+    if dc["direction"] not in ("forward", "bidirectional"):
+        raise ValueError("LSTM direction {}.".format(dc["direction"]))
+    if dc["hidden_size"] is None:
+        raise ValueError("LSTM hidden_size is None.")
+    if dc["input_forget"] != 0:
+        raise NotImplementedError("LSTM input_forget {}.".format(dc["input_forget"]))
+    if dc["layout"] != 0:
+        raise NotImplementedError(
+            "LSTM not implemented for layout={}".format(dc["layout"])
+        )
+
+    kwargs = {
+        "input_size": W.shape[2],
+        "hidden_size": dc["hidden_size"],
+        "num_layers": 1,
+        "bias": True,
+        "batch_first": False,
+        "dropout": 0,
+        "bidirectional": dc["direction"] == "bidirectional",
+        "proj_size": 0,
+    }
+    lstm_layer = nn.LSTM(**kwargs)
+
+    input_size = dc["input_size"]
+    hidden_size = dc["hidden_size"]
+    num_directions = (dc["direction"] == "bidirectional") + 1
+    num_layers = 1
+    getattr(lstm_layer, "weight_ih_l0").data = W.transpose(0, 1).view(
+        4 * hidden_size, num_directions, input_size
+    )
+    getattr(lstm_layer, "weight_hh_l0").data = R.transpose(0, 1).view(
+        4 * hidden_size, num_directions, hidden_size
+    )
+    if kwargs["bidirectional"]:
+        WbRb = B[0, :]
+        Wb = WbRb[0, 0 : 4 * hidden_size]
+        Rb = WbRb[0, 4 * hidden_size :]
+        WBbRBb = B[1, :]
+        WBb = WBbRBb[0, 0 : 4 * hidden_size]
+        RBb = WBbRBb[0, 4 * hidden_size :]
+        getattr(lstm_layer, "bias_ih_l0").data = Wb  # XXX torch.LSTM is ambiguous
+        getattr(lstm_layer, "bias_hh_l0").data = Rb  # XXX torch.LSTM is ambiguous
+    else:
+        WbRb = B[0, :]
+        Wb = WbRb[0, 0 : 4 * hidden_size]
+        Rb = WbRb[0, 4 * hidden_size :]
+        getattr(lstm_layer, "bias_ih_l0").data = Wb
+        getattr(lstm_layer, "bias_hh_l0").data = Rb
+
+    layer = Wrapped1LayerLSTM(lstm_layer)
     return layer

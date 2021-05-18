@@ -14,6 +14,7 @@ from torch.nn.modules.linear import Identity
 
 from onnx2pytorch.operations import Split
 from onnx2pytorch.convert.debug import debug_model_conversion
+from onnx2pytorch.convert.layer import Wrapped1LayerLSTM
 from onnx2pytorch.convert.operations import convert_operations
 from onnx2pytorch.utils import get_inputs_names
 
@@ -103,9 +104,16 @@ class ConvertModel(nn.Module):
             # if first layer choose input as in_activations
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
-            layer_types = (nn.Linear, _ConvNd, _BatchNorm, _InstanceNorm)
+            layer_types = (
+                nn.LSTM,
+                nn.Linear,
+                _ConvNd,
+                _BatchNorm,
+                _InstanceNorm,
+            )
+            composite_types = (nn.Sequential, _Wrapped1LayerLSTM)
             if isinstance(op, layer_types) or (
-                isinstance(op, nn.Sequential)
+                isinstance(op, composite_types)
                 and any(isinstance(x, layer_types) for x in op.modules())
             ):
                 in_activations = [

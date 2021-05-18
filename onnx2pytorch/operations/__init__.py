@@ -6,6 +6,7 @@ from .cast import Cast
 from .constant import ConstantOfShape
 from .flatten import Flatten
 from .gather import Gather
+from .matmul import MatMul
 from .onehot import OneHot
 from .pad import Pad
 from .pooling import GlobalAveragePool
@@ -28,6 +29,7 @@ __all__ = [
     "ConstantOfShape",
     "Flatten",
     "Gather",
+    "MatMul",
     "OneHot",
     "Pad",
     "GlobalAveragePool",
