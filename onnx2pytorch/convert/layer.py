@@ -150,8 +150,6 @@ def convert_linear_layer(node, params):
 
 
 def extract_and_load_params_lstm(node, weights):
-    param_length = len(params)
-    print(f"num LSTM params: {param_length}")
     X = None
     W = None
     R = None
@@ -163,51 +161,57 @@ def extract_and_load_params_lstm(node, weights):
 
     for par_ix, par_name in enumerate(node.input):
         if par_ix == 0:
-            X = _deserialize_to_torch(weights[par_name])
+            if par_name in weights:
+                X = _deserialize_to_torch(weights[par_name])
         elif par_ix == 1:
-            W = _deserialize_to_torch(weights[par_name])
+            if par_name in weights:
+                W = _deserialize_to_torch(weights[par_name])
         elif par_ix == 2:
-            R = _deserialize_to_torch(weights[par_name])
+            if par_name in weights:
+                R = _deserialize_to_torch(weights[par_name])
         elif par_ix == 3:
-            if par_name != "":
+            if par_name != "" and par_name in weights:
                 B = _deserialize_to_torch(weights[par_name])
         elif par_ix == 4:
-            if par_name != "":
+            if par_name != "" and par_name in weights:
                 sequence_lens = _deserialize_to_torch(weights[par_name])
         elif par_ix == 5:
-            if par_name != "":
+            if par_name != "" and par_name in weights:
                 initial_h = _deserialize_to_torch(weights[par_name])
         elif par_ix == 6:
-            if par_name != "":
+            if par_name != "" and par_name in weights:
                 initial_c = _deserialize_to_torch(weights[par_name])
         elif par_ix == 7:
-            if par_name != "":
+            if par_name != "" and par_name in weights:
                 P = _deserialize_to_torch(weights[par_name])
     return (X, W, R, B, sequence_lens, initial_h, initial_c, P)
 
 
 class Wrapped1LayerLSTM(nn.Module):
     def __init__(self, lstm_module):
+        super().__init__()
         self.lstm = lstm_module
 
-    def forward(self, input, h_0=None, c_0=None):
+    def forward(self, input, h_0c_0=None):
+        (h_0, c_0) = h_0c_0
         (seq_len, batch, input_size) = input.shape
         num_layers = 1
-        (num_directions, _, hidden_size) = h_0.shape
-        output, (h_n, c_n) = self.lstm(input, h_0, c_0)
+        num_directions = self.lstm.bidirectional + 1
+        hidden_size = self.lstm.hidden_size
+        output, (h_n, c_n) = self.lstm(input, (h_0, c_0))
 
         # Y has shape (seq_length, num_directions, batch_size, hidden_size)
         Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
         # Y_h has shape (num_directions, batch_size, hidden_size)
-        Y_h = output.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
+        Y_h = h_n.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
         # Y_c has shape (num_directions, batch_size, hidden_size)
-        Y_c = output.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
-        return (Y, Y_h, Y_c)
+        Y_c = c_n.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
+        return Y, Y_h, Y_c
 
 
 def convert_lstm_layer(node, weights):
     """Convert LSTM layer from onnx node and params."""
-    params_tuple = extract_params_lstm(node, weights)
+    params_tuple = extract_and_load_params_lstm(node, weights)
     (X, W, R, B, sequence_lens, initial_h, initial_c, P) = params_tuple
     if initial_h is not None:
         raise NotImplementedError("LSTM initial_h not yet implemented.")
@@ -259,35 +263,113 @@ def convert_lstm_layer(node, weights):
         "batch_first": False,
         "dropout": 0,
         "bidirectional": dc["direction"] == "bidirectional",
-        "proj_size": 0,
     }
     lstm_layer = nn.LSTM(**kwargs)
 
-    input_size = dc["input_size"]
-    hidden_size = dc["hidden_size"]
-    num_directions = (dc["direction"] == "bidirectional") + 1
+    input_size = kwargs["input_size"]
+    hidden_size = kwargs["hidden_size"]
+    num_directions = kwargs["bidirectional"] + 1
     num_layers = 1
-    getattr(lstm_layer, "weight_ih_l0").data = W.transpose(0, 1).view(
-        4 * hidden_size, num_directions, input_size
-    )
-    getattr(lstm_layer, "weight_hh_l0").data = R.transpose(0, 1).view(
-        4 * hidden_size, num_directions, hidden_size
-    )
     if kwargs["bidirectional"]:
-        WbRb = B[0, :]
-        Wb = WbRb[0, 0 : 4 * hidden_size]
-        Rb = WbRb[0, 4 * hidden_size :]
-        WBbRBb = B[1, :]
-        WBb = WBbRBb[0, 0 : 4 * hidden_size]
-        RBb = WBbRBb[0, 4 * hidden_size :]
-        getattr(lstm_layer, "bias_ih_l0").data = Wb  # XXX torch.LSTM is ambiguous
-        getattr(lstm_layer, "bias_hh_l0").data = Rb  # XXX torch.LSTM is ambiguous
+        # Set input-hidden weights
+        W_iofc = W.transpose(0, 1).view(4 * hidden_size, num_directions, input_size)
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            W_ifco = torch.cat(
+                tensors=(
+                    W_iofc[0:hidden_size, dir_dim, :],
+                    W_iofc[2 * hidden_size : 4 * hidden_size, dir_dim, :],
+                    W_iofc[hidden_size : 2 * hidden_size, dir_dim, :],
+                ),
+                dim=0,
+            )
+            getattr(lstm_layer, "weight_ih_l0{}".format(dir_str)).data = W_ifco
+
+        # Set hidden-hidden weights
+        R_iofc = R.transpose(0, 1).view(4 * hidden_size, num_directions, hidden_size)
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            R_ifco = torch.cat(
+                tensors=(
+                    R_iofc[0:hidden_size, dir_dim, :],
+                    R_iofc[2 * hidden_size : 4 * hidden_size, dir_dim, :],
+                    R_iofc[hidden_size : 2 * hidden_size, dir_dim, :],
+                ),
+                dim=0,
+            )
+            getattr(lstm_layer, "weight_hh_l0{}".format(dir_str)).data = R_ifco
+
+        # Set input-hidden biases
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            Wb_iofc = B[dir_dim, 0 : 4 * hidden_size]
+            Wb_ifco = torch.cat(
+                tensors=(
+                    Wb_iofc[0:hidden_size],
+                    Wb_iofc[2 * hidden_size : 4 * hidden_size],
+                    Wb_iofc[hidden_size : 2 * hidden_size],
+                ),
+                dim=0,
+            )
+            getattr(lstm_layer, "bias_ih_l0{}".format(dir_str)).data = Wb_ifco
+
+        # Set hidden-hidden biases
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            Rb_iofc = B[dir_dim, 4 * hidden_size :]
+            Rb_ifco = torch.cat(
+                tensors=(
+                    Rb_iofc[0:hidden_size],
+                    Rb_iofc[2 * hidden_size : 4 * hidden_size],
+                    Rb_iofc[hidden_size : 2 * hidden_size],
+                ),
+                dim=0,
+            )
+            getattr(lstm_layer, "bias_hh_l0{}".format(dir_str)).data = Rb_ifco
     else:
-        WbRb = B[0, :]
-        Wb = WbRb[0, 0 : 4 * hidden_size]
-        Rb = WbRb[0, 4 * hidden_size :]
-        getattr(lstm_layer, "bias_ih_l0").data = Wb
-        getattr(lstm_layer, "bias_hh_l0").data = Rb
+        # Set input-hidden weights
+        W_iofc = W.transpose(0, 1).view(4 * hidden_size, input_size)
+        W_ifco = torch.cat(
+            tensors=(
+                W_iofc[0:hidden_size, :],
+                W_iofc[2 * hidden_size : 4 * hidden_size, :],
+                W_iofc[hidden_size : 2 * hidden_size, :],
+            ),
+            dim=0,
+        )
+        getattr(lstm_layer, "weight_ih_l0").data = W_ifco
+
+        # Set hidden-hidden weights
+        R_iofc = R.transpose(0, 1).view(4 * hidden_size, hidden_size)
+        R_ifco = torch.cat(
+            tensors=(
+                R_iofc[0:hidden_size, :],
+                R_iofc[2 * hidden_size : 4 * hidden_size, :],
+                R_iofc[hidden_size : 2 * hidden_size, :],
+            ),
+            dim=0,
+        )
+        getattr(lstm_layer, "weight_hh_l0").data = R_ifco
+
+        # Set input-hidden biases
+        Wb_iofc = B[0, 0 : 4 * hidden_size]
+        Wb_ifco = torch.cat(
+            tensors=(
+                Wb_iofc[0:hidden_size],
+                Wb_iofc[2 * hidden_size : 4 * hidden_size],
+                Wb_iofc[hidden_size : 2 * hidden_size],
+            ),
+            dim=0,
+        )
+        getattr(lstm_layer, "bias_ih_l0").data = Wb_ifco
+
+        # Set hidden-hidden biases
+        Rb_iofc = B[0, 4 * hidden_size :]
+        Rb_ifco = torch.cat(
+            tensors=(
+                Rb_iofc[0:hidden_size],
+                Rb_iofc[2 * hidden_size : 4 * hidden_size],
+                Rb_iofc[hidden_size : 2 * hidden_size],
+            ),
+            dim=0,
+        )
+        getattr(lstm_layer, "bias_hh_l0").data = Rb_ifco
 
     layer = Wrapped1LayerLSTM(lstm_layer)
     return layer

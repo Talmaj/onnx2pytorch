@@ -111,7 +111,8 @@ class ConvertModel(nn.Module):
                 _BatchNorm,
                 _InstanceNorm,
             )
-            composite_types = (nn.Sequential, _Wrapped1LayerLSTM)
+            composite_types = (nn.Sequential, Wrapped1LayerLSTM)
+            multioutput_types = (Split, Wrapped1LayerLSTM)
             if isinstance(op, layer_types) or (
                 isinstance(op, composite_types)
                 and any(isinstance(x, layer_types) for x in op.modules())
@@ -133,7 +134,7 @@ class ConvertModel(nn.Module):
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
                 activations[out_op_id] = op(in_activations)
-            elif isinstance(op, Split):
+            elif isinstance(op, multioutput_types):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
             elif isinstance(op, Identity):

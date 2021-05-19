@@ -67,7 +67,7 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
         elif node.op_type == "LSTM":
-            op = convert_lstm_layer(node, weights, params=params)
+            op = convert_lstm_layer(node, weights)
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
