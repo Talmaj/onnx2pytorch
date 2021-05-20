@@ -20,6 +20,10 @@ from onnx2pytorch.operations import Resize, Upsample
 from onnx2pytorch.utils import value_wrapper
 
 
+def _deserialize_to_torch(onnx_param):
+    return torch.from_numpy(np.copy(numpy_helper.to_array(onnx_param)))
+
+
 def convert_operations(onnx_model, batch_dim=0):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
@@ -71,7 +75,9 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
-            op = value_wrapper(torch.from_numpy(extract_attributes(node)["constant"]))
+            op = value_wrapper(
+                torch.from_numpy(np.copy(extract_attributes(node)["constant"]))
+            )
         elif node.op_type == "Reshape":
             shape = list(
                 filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
@@ -112,7 +118,7 @@ def convert_operations(onnx_model, batch_dim=0):
             op = torch.true_divide
         elif node.op_type == "MatMul":
             if params:
-                weight = torch.from_numpy(np.copy(numpy_helper.to_array(params[0])))
+                weight = _deserialize_to_torch(params[0])
                 op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
                 op.weight.data = weight.t()
 
@@ -124,9 +130,7 @@ def convert_operations(onnx_model, batch_dim=0):
                     if par_name in weights
                 ]
                 if next_params and next_node.op_type == "Add":
-                    bias = torch.from_numpy(
-                        np.copy(numpy_helper.to_array(next_params[0]))
-                    )
+                    bias = _deserialize_to_torch(next_params[0])
                     op.bias = nn.Parameter(bias)
                     node.output.pop()
                     node.output.extend(next_node.output)

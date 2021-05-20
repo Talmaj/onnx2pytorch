@@ -6,6 +6,7 @@ from .cast import Cast
 from .constant import ConstantOfShape
 from .flatten import Flatten
 from .gather import Gather
+from .lstm import Wrapped1LayerLSTM
 from .matmul import MatMul
 from .onehot import OneHot
 from .pad import Pad
@@ -43,4 +44,5 @@ __all__ = [
     "Resize",
     "Unsqueeze",
     "Upsample",
+    "Wrapped1LayerLSTM",
 ]

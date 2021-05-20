@@ -3,7 +3,11 @@ import torch
 from torch import nn
 from onnx import numpy_helper
 
-from onnx2pytorch.operations import BatchNormUnsafe, InstanceNormUnsafe
+from onnx2pytorch.operations import (
+    BatchNormUnsafe,
+    InstanceNormUnsafe,
+    Wrapped1LayerLSTM,
+)
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
 
@@ -185,28 +189,6 @@ def extract_and_load_params_lstm(node, weights):
             if par_name != "" and par_name in weights:
                 P = _deserialize_to_torch(weights[par_name])
     return (X, W, R, B, sequence_lens, initial_h, initial_c, P)
-
-
-class Wrapped1LayerLSTM(nn.Module):
-    def __init__(self, lstm_module):
-        super().__init__()
-        self.lstm = lstm_module
-
-    def forward(self, input, h_0c_0=None):
-        (h_0, c_0) = h_0c_0
-        (seq_len, batch, input_size) = input.shape
-        num_layers = 1
-        num_directions = self.lstm.bidirectional + 1
-        hidden_size = self.lstm.hidden_size
-        output, (h_n, c_n) = self.lstm(input, (h_0, c_0))
-
-        # Y has shape (seq_length, num_directions, batch_size, hidden_size)
-        Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
-        # Y_h has shape (num_directions, batch_size, hidden_size)
-        Y_h = h_n.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
-        # Y_c has shape (num_directions, batch_size, hidden_size)
-        Y_c = c_n.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
-        return Y, Y_h, Y_c
 
 
 def convert_lstm_layer(node, weights):
