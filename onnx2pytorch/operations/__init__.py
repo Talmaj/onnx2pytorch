@@ -14,6 +14,7 @@ from .pooling import GlobalAveragePool
 from .range import Range
 from .reducesum import ReduceSum
 from .reshape import Reshape
+from .scatternd import ScatterND
 from .shape import Shape
 from .slice import Slice
 from .split import Split
@@ -37,6 +38,7 @@ __all__ = [
     "Range",
     "ReduceSum",
     "Reshape",
+    "ScatterND",
     "Shape",
     "Slice",
     "Split",
