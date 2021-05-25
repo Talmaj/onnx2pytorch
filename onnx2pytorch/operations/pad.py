@@ -14,7 +14,7 @@ class Pad(Operator):
         if self.padding is not None:
             pads = self.padding
         elif pads is not None:
-            pads = extract_padding_params(pads)
+            pads = extract_padding_params(list(pads))
         else:
             raise TypeError("forward() missing 1 required positional argument: 'pads'")
         return F.pad(input, list(pads), mode=self.mode, value=value)
