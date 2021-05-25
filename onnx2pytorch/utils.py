@@ -37,6 +37,8 @@ def is_symmetric(params):
 def extract_padding_params(params):
     """Extract padding parameters for Pad layers."""
     pad_dim = len(params) // 2
+    if pad_dim == 0:
+        return []
     pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
 
     # Some padding modes do not support padding in batch and channel dimension.
