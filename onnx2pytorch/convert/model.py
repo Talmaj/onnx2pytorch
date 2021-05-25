@@ -165,3 +165,4 @@ class ConvertModel(nn.Module):
         for op_id in self.init_parameters:
             if self.init_parameters[op_id].device != device:
                 self.init_parameters[op_id] = self.init_parameters[op_id].to(device)
+        return self
