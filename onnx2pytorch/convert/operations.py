@@ -115,7 +115,7 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "Mul":
             op = torch.mul
         elif node.op_type == "Div":
-            op = torch.true_divide
+            op = Div()
         elif node.op_type == "MatMul":
             if params:
                 weight = _deserialize_to_torch(params[0])
@@ -137,8 +137,6 @@ def convert_operations(onnx_model, batch_dim=0):
                     onnx_model.graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
-                print(op)
-                print(type(op))
         elif node.op_type == "Sub":
             op = torch.sub
         elif node.op_type == "Pow":

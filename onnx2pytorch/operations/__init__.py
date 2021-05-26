@@ -1,5 +1,6 @@
 from .add import Add
 from .batchnorm import BatchNormUnsafe
+from .div import Div
 from .expand import Expand
 from .instancenorm import InstanceNormUnsafe
 from .cast import Cast
@@ -25,6 +26,7 @@ from .unsqueeze import Unsqueeze
 __all__ = [
     "Add",
     "BatchNormUnsafe",
+    "Div",
     "Expand",
     "InstanceNormUnsafe",
     "Cast",
