@@ -51,7 +51,7 @@ def test_single_layer_lstm(
     onnx_lstm = onnx.ModelProto.FromString(bitstream_data)
     o2p_lstm = ConvertModel(onnx_lstm, experimental=True)
     with torch.no_grad():
-        o2p_output, o2p_h_n, o2p_c_n = o2p_lstm(input, (h_0, c_0))
+        o2p_output, o2p_h_n, o2p_c_n = o2p_lstm(input, h_0, c_0)
     assert torch.equal(o2p_output, output)
     assert torch.equal(o2p_h_n, h_n)
     assert torch.equal(o2p_c_n, c_n)

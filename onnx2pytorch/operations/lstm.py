@@ -4,16 +4,15 @@ from torch import nn
 class Wrapped1LayerLSTM(nn.Module):
     """Wraps a 1-layer nn.LSTM to match the API of an ONNX LSTM.
 
-    As currently implemented, it expects the h_0/c_0 inputs as
-    in PyTorch (as a tuple) but returns them separately.
+    It expects h_0 and c_0 as separate inputs rather than as a tuple,
+    and returns h_n and c_n as separate outputs rather than as a tuple.
     """
 
     def __init__(self, lstm_module: nn.LSTM):
         super().__init__()
         self.lstm = lstm_module
 
-    def forward(self, input, h_0c_0=None):
-        (h_0, c_0) = h_0c_0
+    def forward(self, input, h_0=None, c_0=None):
         (seq_len, batch, input_size) = input.shape
         num_layers = 1
         num_directions = self.lstm.bidirectional + 1
