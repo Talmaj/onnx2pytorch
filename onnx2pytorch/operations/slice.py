@@ -64,4 +64,8 @@ class Slice(nn.Module):
                 flip_dims.append(axis)
             else:
                 selection[axis] = raw_slice
-        return torch.flip(input.__getitem__(selection), flip_dims)
+        if len(flip_dims) > 0:
+            return torch.flip(input.__getitem__(selection), flip_dims)
+        else:
+            # For torch < 1.8.1, torch.flip cannot handle empty dims
+            return input.__getitem__(selection)
