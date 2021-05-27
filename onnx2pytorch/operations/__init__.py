@@ -15,12 +15,13 @@ from .pooling import GlobalAveragePool
 from .range import Range
 from .reducesum import ReduceSum
 from .reshape import Reshape
+from .resize import Resize, Upsample
 from .scatternd import ScatterND
 from .shape import Shape
 from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
-from .resize import Resize, Upsample
+from .topk import TopK
 from .unsqueeze import Unsqueeze
 
 __all__ = [
@@ -40,12 +41,13 @@ __all__ = [
     "Range",
     "ReduceSum",
     "Reshape",
+    "Resize",
     "ScatterND",
     "Shape",
     "Slice",
     "Split",
     "Squeeze",
-    "Resize",
+    "TopK",
     "Unsqueeze",
     "Upsample",
     "Wrapped1LayerLSTM",
