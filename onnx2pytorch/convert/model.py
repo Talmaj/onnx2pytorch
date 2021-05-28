@@ -11,6 +11,7 @@ from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
+from torch.nn.modules.pooling import _MaxPoolNd
 
 from onnx2pytorch.operations import Split
 from onnx2pytorch.convert.debug import debug_model_conversion
@@ -112,7 +113,7 @@ class ConvertModel(nn.Module):
                 _InstanceNorm,
             )
             composite_types = (nn.Sequential, Wrapped1LayerLSTM)
-            multioutput_types = (Split, Wrapped1LayerLSTM)
+            multioutput_types = (_MaxPoolNd, Split, Wrapped1LayerLSTM)
             if isinstance(op, layer_types) or (
                 isinstance(op, composite_types)
                 and any(isinstance(x, layer_types) for x in op.modules())
@@ -130,6 +131,10 @@ class ConvertModel(nn.Module):
                     else self.init_parameters.get(in_op_id, input[0])
                     for in_op_id in node.input
                 ]
+
+            # TODO: this is only needed because some ops are apparently sending
+            # activations back to the CPU. These ops should be fixed.
+            in_activations = [in_act.to(self.device) for in_act in in_activations]
 
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
@@ -149,7 +154,7 @@ class ConvertModel(nn.Module):
                 debug_model_conversion(
                     self.onnx_model,
                     [activations[x] for x in self.input_names],
-                    activations[out_op_id],
+                    [activations[out_op_id] for out_op_id in node.output],
                     node,
                 )
 
