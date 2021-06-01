@@ -42,6 +42,13 @@ class Slice(nn.Module):
         if steps is None:
             steps = self.steps
 
+        if isinstance(starts, (tuple, list)):
+            starts = torch.tensor(starts)
+        if isinstance(ends, (tuple, list)):
+            ends = torch.tensor(ends)
+        if isinstance(steps, (tuple, list)):
+            steps = torch.tensor(steps)
+
         # If axes=None set them to (0, 1, 2, ...)
         if axes is None:
             axes = tuple(torch.arange(len(starts)))
