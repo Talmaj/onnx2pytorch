@@ -17,9 +17,12 @@ class ReduceSum(nn.Module):
             dims = self.dim
         else:
             dims = axes
-        if dims is None and self.noop_with_empty_axes:
-            return data
-        elif isinstance(dims, int):
+        if dims is None:
+            if self.noop_with_empty_axes:
+                return data
+            else:
+                dims = tuple(range(data.ndim))
+        if isinstance(dims, int):
             return torch.sum(data, dim=dims, keepdim=self.keepdim)
         else:
             return torch.sum(data, dim=tuple(list(dims)), keepdim=self.keepdim)
