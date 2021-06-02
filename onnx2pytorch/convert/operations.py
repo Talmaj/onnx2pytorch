@@ -1,5 +1,6 @@
 from functools import partial
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -11,11 +12,16 @@ from onnx2pytorch.convert.layer import (
     convert_linear_layer,
     convert_batch_norm_layer,
     convert_instance_norm_layer,
+    convert_lstm_layer,
 )
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
 from onnx2pytorch.operations import Resize, Upsample
 from onnx2pytorch.utils import value_wrapper
+
+
+def _deserialize_to_torch(onnx_param):
+    return torch.from_numpy(np.copy(numpy_helper.to_array(onnx_param)))
 
 
 def convert_operations(onnx_model, batch_dim=0):
@@ -64,15 +70,19 @@ def convert_operations(onnx_model, batch_dim=0):
             op = convert_batch_norm_layer(node, params=params)
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
+        elif node.op_type == "LSTM":
+            op = convert_lstm_layer(node, weights)
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
-            op = value_wrapper(torch.from_numpy(extract_attributes(node)["constant"]))
+            op = value_wrapper(
+                torch.from_numpy(np.copy(extract_attributes(node)["constant"]))
+            )
         elif node.op_type == "Reshape":
             shape = list(
                 filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
             )
-            shape = numpy_helper.to_array(shape[0]) if shape else None
+            shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
             op = Reshape(shape)
         elif node.op_type == "Shape":
             op = Shape()
@@ -80,6 +90,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Expand()
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
+        elif node.op_type == "ScatterND":
+            op = ScatterND()
         elif node.op_type == "Squeeze":
             op = Squeeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Unsqueeze":
@@ -90,19 +102,23 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Range()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
+        elif node.op_type == "Tile":
+            op = Tile()
+        elif node.op_type == "TopK":
+            op = TopK()
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
         elif node.op_type == "Where":
-            op = torch.where
+            op = Where()
         elif node.op_type == "Equal":
             op = torch.eq
         elif node.op_type == "Mul":
             op = torch.mul
         elif node.op_type == "Div":
-            op = torch.true_divide
+            op = Div()
         elif node.op_type == "MatMul":
             if params:
-                weight = torch.from_numpy(numpy_helper.to_array(params[0]))
+                weight = _deserialize_to_torch(params[0])
                 op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
                 op.weight.data = weight.t()
 
@@ -114,13 +130,13 @@ def convert_operations(onnx_model, batch_dim=0):
                     if par_name in weights
                 ]
                 if next_params and next_node.op_type == "Add":
-                    bias = torch.from_numpy(numpy_helper.to_array(next_params[0]))
+                    bias = _deserialize_to_torch(next_params[0])
                     op.bias = nn.Parameter(bias)
                     node.output.pop()
                     node.output.extend(next_node.output)
                     onnx_model.graph.node.pop(i + 1)  # remove next node
             else:
-                op = torch.matmul
+                op = MatMul()
         elif node.op_type == "Sub":
             op = torch.sub
         elif node.op_type == "Pow":
@@ -128,7 +144,9 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "Sqrt":
             op = torch.sqrt
         elif node.op_type == "Softmax":
-            op = nn.Softmax(**extract_attributes(node))
+            kwargs = dict(dim=-1)
+            kwargs.update(extract_attributes(node))
+            op = nn.Softmax(**kwargs)
         elif node.op_type == "Transpose":
             op = partial(torch.Tensor.permute, **extract_attributes(node))
         elif node.op_type == "Split":
@@ -142,6 +160,8 @@ def convert_operations(onnx_model, batch_dim=0):
             kwargs = dict(keepdim=True)
             kwargs.update(extract_attributes(node))
             op = partial(torch.mean, **kwargs)
+        elif node.op_type == "ReduceSum":
+            op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Add":
             op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
         elif node.op_type == "GlobalAveragePool":

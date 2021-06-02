@@ -1,6 +1,7 @@
 from functools import partial
 import warnings
 
+import numpy as np
 import onnx
 import torch
 from onnx import numpy_helper
@@ -10,9 +11,11 @@ from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
+from torch.nn.modules.pooling import _MaxPoolNd
 
 from onnx2pytorch.operations import Split
 from onnx2pytorch.convert.debug import debug_model_conversion
+from onnx2pytorch.convert.layer import Wrapped1LayerLSTM
 from onnx2pytorch.convert.operations import convert_operations
 from onnx2pytorch.utils import get_inputs_names
 
@@ -21,9 +24,7 @@ class InitParameters(dict):
     """Use for parameters that are hidden."""
 
     def __getitem__(self, item):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", TracerWarning)
-            return torch.from_numpy(numpy_helper.to_array(super().__getitem__(item)))
+        return super().__getitem__(item)
 
     def get(self, item, default):
         if item in self:
@@ -60,12 +61,16 @@ class ConvertModel(nn.Module):
         self.experimental = experimental
         self.debug = debug
         self.mapping = {}
+        self.device = None
         for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
 
         self.init_parameters = InitParameters(
-            {tensor.name: tensor for tensor in self.onnx_model.graph.initializer}
+            {
+                tensor.name: torch.from_numpy(np.copy(numpy_helper.to_array(tensor)))
+                for tensor in self.onnx_model.graph.initializer
+            }
         )
 
         self.input_names = get_inputs_names(onnx_model)
@@ -100,9 +105,17 @@ class ConvertModel(nn.Module):
             # if first layer choose input as in_activations
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
-            layer_types = (nn.Linear, _ConvNd, _BatchNorm, _InstanceNorm)
+            layer_types = (
+                nn.LSTM,
+                nn.Linear,
+                _ConvNd,
+                _BatchNorm,
+                _InstanceNorm,
+            )
+            composite_types = (nn.Sequential, Wrapped1LayerLSTM)
+            multioutput_types = (_MaxPoolNd, Split, Wrapped1LayerLSTM)
             if isinstance(op, layer_types) or (
-                isinstance(op, nn.Sequential)
+                isinstance(op, composite_types)
                 and any(isinstance(x, layer_types) for x in op.modules())
             ):
                 in_activations = [
@@ -115,15 +128,18 @@ class ConvertModel(nn.Module):
                     activations[in_op_id] if in_op_id in activations
                     # if in_op_id not in activations neither in parameters then
                     # it must be the initial input
-                    # TODO loading parameters in forward func might be very slow!
                     else self.init_parameters.get(in_op_id, input[0])
                     for in_op_id in node.input
                 ]
 
+            # TODO: this is only needed because some ops are apparently sending
+            # activations back to the CPU. These ops should be fixed.
+            in_activations = [in_act.to(self.device) for in_act in in_activations]
+
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
                 activations[out_op_id] = op(in_activations)
-            elif isinstance(op, Split):
+            elif isinstance(op, multioutput_types):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
             elif isinstance(op, Identity):
@@ -138,7 +154,7 @@ class ConvertModel(nn.Module):
                 debug_model_conversion(
                     self.onnx_model,
                     [activations[x] for x in self.input_names],
-                    activations[out_op_id],
+                    [activations[out_op_id] for out_op_id in node.output],
                     node,
                 )
 
@@ -147,3 +163,11 @@ class ConvertModel(nn.Module):
         if len(outputs) == 1:
             outputs = outputs[0]
         return outputs
+
+    def to(self, device):
+        super(ConvertModel, self).to(device=device)
+        self.device = device
+        for op_id in self.init_parameters:
+            if self.init_parameters[op_id].device != device:
+                self.init_parameters[op_id] = self.init_parameters[op_id].to(device)
+        return self

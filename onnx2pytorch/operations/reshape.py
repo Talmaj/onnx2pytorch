@@ -44,7 +44,6 @@ class Reshape(Operator):
             if len(c) < len(shape) and shape[0] == 1:
                 c = torch.cat((torch.tensor([1]), c))
             shape = (c * torch.tensor(shape)).to(int)
-
         return torch.reshape(input, tuple(shape))
 
     def set_input_indices(self, input):

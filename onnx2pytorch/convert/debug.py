@@ -10,13 +10,18 @@ def debug_model_conversion(onnx_model, inputs, pred_act, node, rtol=1e-3, atol=1
         raise TypeError("inputs should be in a list.")
 
     if not all(isinstance(x, np.ndarray) for x in inputs):
-        inputs = [x.detach().numpy() for x in inputs]
+        inputs = [x.detach().cpu().numpy() for x in inputs]
 
     exp_act = get_activation_value(onnx_model, inputs, list(node.output))
     if isinstance(pred_act, list):
+        assert len(exp_act) == len(pred_act)
         for a, b in zip(exp_act, pred_act):
-            assert torch.allclose(torch.from_numpy(a), b, rtol=rtol, atol=atol)
+            exp = torch.from_numpy(a).cpu()
+            pred = b.cpu()
+            assert torch.equal(torch.tensor(exp.shape), torch.tensor(pred.shape))
+            assert torch.allclose(exp, pred, rtol=rtol, atol=atol)
     else:
-        a = torch.from_numpy(exp_act[0])
-        b = pred_act
-        assert torch.allclose(a, b, rtol=rtol, atol=atol)
+        exp = torch.from_numpy(exp_act[0]).cpu()
+        pred = pred_act.cpu()
+        assert torch.equal(torch.tensor(exp.shape), torch.tensor(pred.shape))
+        assert torch.allclose(exp, pred, rtol=rtol, atol=atol)

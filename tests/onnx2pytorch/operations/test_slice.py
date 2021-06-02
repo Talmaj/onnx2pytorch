@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import pytest
 
@@ -102,3 +103,20 @@ def test_slice_default_steps(x, init):
     else:
         op = Slice()
         assert torch.equal(op(x, starts, ends, axes), y)
+
+
+@pytest.mark.parametrize("init", [True, False])
+def test_slice_neg_steps(x, init):
+    starts = torch.tensor([20, 10, 4], dtype=torch.int64)
+    ends = torch.tensor([0, 0, 1], dtype=torch.int64)
+    axes = torch.tensor([0, 1, 2], dtype=torch.int64)
+    steps = torch.tensor([-1, -3, -2], dtype=torch.int64)
+    y = torch.tensor(np.copy(x.numpy()[20:0:-1, 10:0:-3, 4:1:-2]))
+
+    if init:
+        op = Slice(axes, starts=starts, ends=ends, steps=steps)
+        print(op, flush=True)
+        assert torch.equal(op(x), y)
+    else:
+        op = Slice()
+        assert torch.equal(op(x, starts, ends, axes, steps), y)

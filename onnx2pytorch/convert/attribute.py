@@ -67,6 +67,10 @@ def extract_attributes(node):
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
+        elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
+            raise NotImplementedError(
+                "ConvTranspose with dynamic padding not implemented."
+            )
         elif attr.name == "axis" and node.op_type == "Flatten":
             kwargs["start_dim"] = extract_attr_values(attr)
         elif attr.name == "axis" or attr.name == "axes":
@@ -120,6 +124,30 @@ def extract_attributes(node):
                     "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
                     "Result might differ.".format(arg)
                 )
+        elif attr.name == "noop_with_empty_axes":
+            kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
+        elif attr.name == "largest":
+            kwargs["largest"] = extract_attr_values(attr)
+        elif attr.name == "sorted":
+            kwargs["sorted"] = extract_attr_values(attr)
+        elif attr.name == "repeats":
+            kwargs["repeats"] = extract_attr_values(attr)
+        elif attr.name == "activation_alpha":
+            kwargs["activation_alpha"] = extract_attr_values(attr)
+        elif attr.name == "activation_beta":
+            kwargs["activation_beta"] = extract_attr_values(attr)
+        elif attr.name == "activations":
+            kwargs["activations"] = extract_attr_values(attr)
+        elif attr.name == "clip":
+            kwargs["clip"] = extract_attr_values(attr)
+        elif attr.name == "direction":
+            kwargs["direction"] = extract_attr_values(attr)
+        elif attr.name == "hidden_size":
+            kwargs["hidden_size"] = extract_attr_values(attr)
+        elif attr.name == "input_forget":
+            kwargs["input_forget"] = extract_attr_values(attr)
+        elif attr.name == "layout":
+            kwargs["layout"] = extract_attr_values(attr)
         elif node.op_type == "Resize":
             # These parameters are not used, warn in Resize operator
             kwargs[attr.name] = extract_attr_values(attr)
