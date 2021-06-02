@@ -23,6 +23,7 @@ from .split import Split
 from .squeeze import Squeeze
 from .topk import TopK
 from .unsqueeze import Unsqueeze
+from .where import Where
 
 __all__ = [
     "Add",
@@ -50,5 +51,6 @@ __all__ = [
     "TopK",
     "Unsqueeze",
     "Upsample",
+    "Where",
     "Wrapped1LayerLSTM",
 ]
