@@ -25,6 +25,25 @@ class Reshape(Operator):
         shape = shape if shape is not None else self.shape
         # This raises RuntimeWarning: iterating over a tensor.
         shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
+        inp_shape = torch.tensor(input.shape)
+        if self.initial_input_shape is None:
+            self.initial_input_shape = inp_shape
+        elif len(shape) == 2 and shape[-1] == -1:
+            pass
+        elif torch.equal(self.initial_input_shape, inp_shape):
+            # shape did not change
+            pass
+        elif self.input_indices is not None:
+            self.placeholder *= 0
+            selection = get_selection(self.input_indices, self.feature_dim)
+            self.placeholder[selection] += input
+            input = self.placeholder
+        else:
+            # if input changed the reshaped shape changes as well
+            c = torch.true_divide(inp_shape, self.initial_input_shape)
+            if len(c) < len(shape) and shape[0] == 1:
+                c = torch.cat((torch.tensor([1]), c))
+            shape = (c * torch.tensor(shape)).to(int)
         return torch.reshape(input, tuple(shape))
 
     def set_input_indices(self, input):
