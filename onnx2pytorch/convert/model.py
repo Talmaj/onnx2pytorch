@@ -134,7 +134,11 @@ class ConvertModel(nn.Module):
 
             # TODO: this is only needed because some ops are apparently sending
             # activations back to the CPU. These ops should be fixed.
-            in_activations = [in_act.to(self.device) for in_act in in_activations]
+            in_activations = [
+                in_act.to(self.device)
+                for in_act in in_activations
+                if in_act is not None
+            ]
 
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
@@ -171,3 +175,10 @@ class ConvertModel(nn.Module):
             if self.init_parameters[op_id].device != device:
                 self.init_parameters[op_id] = self.init_parameters[op_id].to(device)
         return self
+
+    def cuda(self, device=None):
+        super(ConvertModel, self).cuda(device=device)
+        if device is None:
+            return self.to("cuda:0")
+        else:
+            return self.to("cuda:{}".format(device))
