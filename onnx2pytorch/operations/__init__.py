@@ -4,6 +4,7 @@ from .div import Div
 from .expand import Expand
 from .instancenorm import InstanceNormUnsafe
 from .cast import Cast
+from .concat import Concat
 from .constant import ConstantOfShape
 from .flatten import Flatten
 from .gather import Gather
@@ -32,6 +33,7 @@ __all__ = [
     "Expand",
     "InstanceNormUnsafe",
     "Cast",
+    "Concat",
     "ConstantOfShape",
     "Flatten",
     "Gather",

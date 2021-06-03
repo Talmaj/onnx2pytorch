@@ -13,7 +13,7 @@ from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
 from torch.nn.modules.pooling import _MaxPoolNd
 
-from onnx2pytorch.operations import Split
+from onnx2pytorch.operations import Concat, Split
 from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.layer import Wrapped1LayerLSTM
 from onnx2pytorch.convert.operations import convert_operations
@@ -141,6 +141,8 @@ class ConvertModel(nn.Module):
             ]
 
             # store activations for next layer
+            # if isinstance(op, Concat):
+            #    activations[out_op_id] = op(*in_activations)
             if isinstance(op, partial) and op.func == torch.cat:
                 activations[out_op_id] = op(in_activations)
             elif isinstance(op, multioutput_types):
@@ -175,3 +177,10 @@ class ConvertModel(nn.Module):
             if self.init_parameters[op_id].device != device:
                 self.init_parameters[op_id] = self.init_parameters[op_id].to(device)
         return self
+
+    def cuda(self, device=None):
+        super(ConvertModel, self).cuda(device=device)
+        if device is None:
+            return self.to("cuda:0")
+        else:
+            return self.to("cuda:{}".format(device))

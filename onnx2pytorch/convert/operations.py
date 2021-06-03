@@ -73,6 +73,7 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "LSTM":
             op = convert_lstm_layer(node, weights)
         elif node.op_type == "Concat":
+            # op = Concat(**extract_attributes(node))
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
             op = value_wrapper(
