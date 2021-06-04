@@ -31,15 +31,21 @@ class Reshape(Operator):
         elif len(shape) == 2 and shape[-1] == -1:
             pass
         elif torch.equal(self.initial_input_shape, inp_shape):
-            # shape did not change
+            # input's shape did not change
             pass
         elif self.input_indices is not None:
             self.placeholder *= 0
             selection = get_selection(self.input_indices, self.feature_dim)
             self.placeholder[selection] += input
             input = self.placeholder
+        elif torch.prod(inp_shape) == torch.prod(torch.tensor(shape)):
+            # If input's shape changed but shape changed to account for this,
+            # no additional work is needed.
+            # This happens when shape is dynamically computed by the network.
+            pass
         else:
-            # if input changed the reshaped shape changes as well
+            # If input's shape changed but shape has not accounted for this,
+            # the reshaped shape must change as well.
             c = torch.true_divide(inp_shape, self.initial_input_shape)
             if len(c) < len(shape) and shape[0] == 1:
                 c = torch.cat((torch.tensor([1]), c))
