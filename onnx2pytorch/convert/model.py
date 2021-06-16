@@ -1,3 +1,5 @@
+from collections import defaultdict
+from copy import deepcopy
 from functools import partial
 import warnings
 
@@ -75,6 +77,13 @@ class ConvertModel(nn.Module):
 
         self.input_names = get_inputs_names(onnx_model)
 
+        self.needed_by = defaultdict(set)
+        for node in self.onnx_model.graph.node:
+            out_op_id = node.output[0]
+            for in_op_id in node.input:
+                self.needed_by[in_op_id].add(out_op_id)
+        self.needed_by.default_factory = None
+
         if experimental:
             warnings.warn(
                 "Using experimental implementation that allows 'batch_size > 1'."
@@ -86,8 +95,8 @@ class ConvertModel(nn.Module):
             raise NotImplementedError(
                 "Input with larger batch size than 1 not supported yet."
             )
-        # TODO figure out how to store only necessary activations.
         activations = dict(zip(self.input_names, input))
+        still_needed_by = deepcopy(self.needed_by)
 
         for node in self.onnx_model.graph.node:
             # Identifying the layer ids and names
@@ -152,6 +161,14 @@ class ConvertModel(nn.Module):
                 activations[out_op_id] = op(in_activations[0])
             else:
                 activations[out_op_id] = op(*in_activations)
+
+            # Remove activations that are no longer needed
+            for in_op_id in node.input:
+                if in_op_id in still_needed_by:
+                    still_needed_by[in_op_id].discard(out_op_id)
+                    if len(still_needed_by[in_op_id]) == 0:
+                        if in_op_id in activations:
+                            del activations[in_op_id]
 
             if self.debug:
                 # compare if the activations of pytorch are the same as from onnxruntime
