@@ -102,6 +102,8 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Range()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
+        elif node.op_type == "ThresholdedRelu":
+            op = ThresholdedRelu(**extract_attributes(node))
         elif node.op_type == "Tile":
             op = Tile()
         elif node.op_type == "TopK":
