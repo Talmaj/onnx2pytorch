@@ -12,6 +12,7 @@ from .globalaveragepool import GlobalAveragePool
 from .instancenorm import InstanceNormUnsafe
 from .lstm import Wrapped1LayerLSTM
 from .matmul import MatMul
+from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
 from .pad import Pad
 from .prelu import PRelu
@@ -43,6 +44,7 @@ __all__ = [
     "GlobalAveragePool",
     "InstanceNormUnsafe",
     "MatMul",
+    "NonMaxSuppression",
     "OneHot",
     "Pad",
     "PRelu",
