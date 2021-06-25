@@ -20,6 +20,8 @@ from .range import Range
 from .reducesum import ReduceSum
 from .reshape import Reshape
 from .resize import Resize, Upsample
+from .scatter import Scatter
+from .scatterelements import ScatterElements
 from .scatternd import ScatterND
 from .shape import Shape
 from .slice import Slice
@@ -52,6 +54,8 @@ __all__ = [
     "ReduceSum",
     "Reshape",
     "Resize",
+    "Scatter",
+    "ScatterElements",
     "ScatterND",
     "Shape",
     "Slice",

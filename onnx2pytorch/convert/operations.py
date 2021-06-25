@@ -173,6 +173,10 @@ def convert_operations(onnx_model, batch_dim=0):
             op = Reshape(shape)
         elif node.op_type == "Resize":
             op = Resize(**extract_attributes(node))
+        elif node.op_type == "Scatter":
+            op = Scatter(**extract_attributes(node))
+        elif node.op_type == "ScatterElements":
+            op = ScatterElements(**extract_attributes(node))
         elif node.op_type == "ScatterND":
             op = ScatterND()
         elif node.op_type == "Shape":
@@ -185,6 +189,10 @@ def convert_operations(onnx_model, batch_dim=0):
             kwargs = dict(dim=-1)
             kwargs.update(extract_attributes(node))
             op = nn.Softmax(**kwargs)
+        elif node.op_type == "Softplus":
+            op = nn.Softplus(beta=1)
+        elif node.op_type == "Softsign":
+            op = nn.Softsign()
         elif node.op_type == "Split":
             kwargs = extract_attributes(node)
             # if the split_size_or_sections is not in node attributes,
