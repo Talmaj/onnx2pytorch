@@ -47,77 +47,63 @@ def convert_operations(onnx_model, batch_dim=0):
         # extract only useful inputs
         params = [weights[par_name] for par_name in node.input if par_name in weights]
 
-        if node.op_type == "Conv":
-            op = convert_layer(node, "Conv", params)
-        elif node.op_type == "Relu":
-            op = nn.ReLU(inplace=True)
-        elif node.op_type == "LeakyRelu":
-            op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
-        elif node.op_type == "Elu":
-            op = nn.ELU(**extract_attributes(node), inplace=True)
-        elif node.op_type == "Sigmoid":
-            op = nn.Sigmoid()
-        elif node.op_type == "MaxPool":
-            op = convert_layer(node, "MaxPool")
+        if node.op_type == "Add":
+            op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
+        elif node.op_type == "And":
+            op = OperatorWrapper(torch.logical_and)
         elif node.op_type == "AveragePool":
             op = convert_layer(node, "AvgPool")
-        elif node.op_type == "Flatten":
-            op = Flatten(**extract_attributes(node))
-        elif node.op_type == "Gemm":
-            op = convert_linear_layer(node, params)
-            op.feature_dim = batch_dim + 1  # Necessary for transformers
         elif node.op_type == "BatchNormalization":
             op = convert_batch_norm_layer(node, params=params)
-        elif node.op_type == "InstanceNormalization":
-            op = convert_instance_norm_layer(node, params=params)
-        elif node.op_type == "LSTM":
-            op = convert_lstm_layer(node, weights)
+        elif node.op_type == "Cast":
+            op = Cast(**extract_attributes(node))
+        elif node.op_type == "Clip":
+            op = OperatorWrapper(torch.clamp)
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
             op = value_wrapper(
                 torch.from_numpy(np.copy(extract_attributes(node)["constant"]))
             )
-        elif node.op_type == "Reshape":
-            shape = list(
-                filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
-            )
-            shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
-            op = Reshape(shape)
-        elif node.op_type == "Shape":
-            op = Shape()
-        elif node.op_type == "Expand":
-            op = Expand()
-        elif node.op_type == "Gather":
-            op = Gather(**extract_attributes(node))
-        elif node.op_type == "ScatterND":
-            op = ScatterND()
-        elif node.op_type == "Squeeze":
-            op = Squeeze(opset_version=opset_version, **extract_attributes(node))
-        elif node.op_type == "Unsqueeze":
-            op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
-        elif node.op_type == "Range":
-            op = Range()
-        elif node.op_type == "Slice":
-            op = Slice(**extract_attributes(node))
-        elif node.op_type == "ThresholdedRelu":
-            op = ThresholdedRelu(**extract_attributes(node))
-        elif node.op_type == "Tile":
-            op = Tile()
-        elif node.op_type == "TopK":
-            op = TopK()
-        elif node.op_type == "Cast":
-            op = Cast(**extract_attributes(node))
-        elif node.op_type == "Where":
-            op = Where()
-        elif node.op_type == "Equal":
-            op = torch.eq
-        elif node.op_type == "Mul":
-            op = torch.mul
+        elif node.op_type == "Conv":
+            op = convert_layer(node, "Conv", params)
+        elif node.op_type == "ConvTranspose":
+            op = convert_layer(node, "ConvTranspose", params)
         elif node.op_type == "Div":
             op = Div()
+        elif node.op_type == "Elu":
+            op = nn.ELU(**extract_attributes(node), inplace=True)
+        elif node.op_type == "Equal":
+            op = OperatorWrapper(torch.eq)
+        elif node.op_type == "Erf":
+            op = OperatorWrapper(torch.erf)
+        elif node.op_type == "Exp":
+            op = OperatorWrapper(torch.exp)
+        elif node.op_type == "Expand":
+            op = Expand()
+        elif node.op_type == "Flatten":
+            op = Flatten(**extract_attributes(node))
+            op.feature_dim = batch_dim + 1  # Necessary for transformers
+        elif node.op_type == "Gather":
+            op = Gather(**extract_attributes(node))
+        elif node.op_type == "GatherND":
+            op = GatherND(**extract_attributes(node))
+        elif node.op_type == "Gemm":
+            op = convert_linear_layer(node, params)
+        elif node.op_type == "GlobalAveragePool":
+            op = GlobalAveragePool()
+        elif node.op_type == "Identity":
+            op = nn.Identity()
+        elif node.op_type == "InstanceNormalization":
+            op = convert_instance_norm_layer(node, params=params)
+        elif node.op_type == "LeakyRelu":
+            op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
+        elif node.op_type == "LSTM":
+            op = convert_lstm_layer(node, weights)
+        elif node.op_type == "Log":
+            op = OperatorWrapper(torch.log)
         elif node.op_type == "MatMul":
             if params:
                 weight = _deserialize_to_torch(params[0])
@@ -139,18 +125,66 @@ def convert_operations(onnx_model, batch_dim=0):
                     onnx_model.graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
-        elif node.op_type == "Sub":
-            op = torch.sub
+        elif node.op_type == "MaxPool":
+            op = convert_layer(node, "MaxPool")
+        elif node.op_type == "Mul":
+            op = OperatorWrapper(torch.mul)
+        elif node.op_type == "Not":
+            op = OperatorWrapper(torch.logical_not)
+        elif node.op_type == "OneHot":
+            op = OneHot(**extract_attributes(node))
+        elif node.op_type == "Or":
+            op = OperatorWrapper(torch.logical_or)
+        elif node.op_type == "Pad":
+            op = Pad(**extract_attributes(node))
         elif node.op_type == "Pow":
-            op = torch.pow
-        elif node.op_type == "Sqrt":
-            op = torch.sqrt
+            op = OperatorWrapper(torch.pow)
+        elif node.op_type == "PRelu":
+            op = PRelu()
+        elif node.op_type == "Range":
+            op = Range()
+        elif node.op_type == "Reciprocal":
+            op = OperatorWrapper(torch.reciprocal)
+        elif node.op_type == "ReduceMax":
+            kwargs = dict(keepdim=True)
+            kwargs.update(extract_attributes(node))
+            op = partial(torch.max, **kwargs)
+        elif node.op_type == "ReduceMean":
+            kwargs = dict(keepdim=True)
+            kwargs.update(extract_attributes(node))
+            op = partial(torch.mean, **kwargs)
+        elif node.op_type == "ReduceMin":
+            kwargs = dict(keepdim=True)
+            kwargs.update(extract_attributes(node))
+            op = partial(torch.min, **kwargs)
+        elif node.op_type == "ReduceProd":
+            kwargs = dict(keepdim=True)
+            kwargs.update(extract_attributes(node))
+            op = partial(torch.prod, **kwargs)
+        elif node.op_type == "ReduceSum":
+            op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
+        elif node.op_type == "Relu":
+            op = nn.ReLU(inplace=True)
+        elif node.op_type == "Reshape":
+            shape = list(
+                filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
+            )
+            shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
+            op = Reshape(shape)
+        elif node.op_type == "Resize":
+            op = Resize(**extract_attributes(node))
+        elif node.op_type == "ScatterND":
+            op = ScatterND()
+        elif node.op_type == "Shape":
+            op = Shape()
+        elif node.op_type == "Sigmoid":
+            op = nn.Sigmoid()
+        elif node.op_type == "Slice":
+            op = Slice(**extract_attributes(node))
         elif node.op_type == "Softmax":
             kwargs = dict(dim=-1)
             kwargs.update(extract_attributes(node))
             op = nn.Softmax(**kwargs)
-        elif node.op_type == "Transpose":
-            op = partial(torch.Tensor.permute, **extract_attributes(node))
         elif node.op_type == "Split":
             kwargs = extract_attributes(node)
             # if the split_size_or_sections is not in node attributes,
@@ -158,46 +192,28 @@ def convert_operations(onnx_model, batch_dim=0):
             if "split_size_or_sections" not in kwargs:
                 kwargs["number_of_splits"] = len(node.output)
             op = Split(**kwargs)
-        elif node.op_type == "ReduceMean":
-            kwargs = dict(keepdim=True)
-            kwargs.update(extract_attributes(node))
-            op = partial(torch.mean, **kwargs)
-        elif node.op_type == "ReduceSum":
-            op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
-        elif node.op_type == "Add":
-            op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
-        elif node.op_type == "GlobalAveragePool":
-            op = GlobalAveragePool()
-        elif node.op_type == "ConvTranspose":
-            op = convert_layer(node, "ConvTranspose", params)
-        elif node.op_type == "Identity":
-            op = nn.Identity()
-        elif node.op_type == "Resize":
-            op = Resize(**extract_attributes(node))
-        elif node.op_type == "Upsample":
-            op = Upsample(**extract_attributes(node))
-        elif node.op_type == "OneHot":
-            op = OneHot(**extract_attributes(node))
-        elif node.op_type == "Pad":
-            op = Pad(**extract_attributes(node))
-        elif node.op_type == "Clip":
-            op = OperatorWrapper(torch.clamp)
+        elif node.op_type == "Sqrt":
+            op = OperatorWrapper(torch.sqrt)
+        elif node.op_type == "Squeeze":
+            op = Squeeze(opset_version=opset_version, **extract_attributes(node))
+        elif node.op_type == "Sub":
+            op = OperatorWrapper(torch.sub)
         elif node.op_type == "Tanh":
             op = OperatorWrapper(torch.tanh)
-        elif node.op_type == "Erf":
-            op = OperatorWrapper(torch.erf)
-        elif node.op_type == "Log":
-            op = OperatorWrapper(torch.log)
-        elif node.op_type == "Exp":
-            op = OperatorWrapper(torch.exp)
-        elif node.op_type == "Reciprocal":
-            op = OperatorWrapper(torch.reciprocal)
-        elif node.op_type == "And":
-            op = OperatorWrapper(torch.logical_and)
-        elif node.op_type == "Or":
-            op = OperatorWrapper(torch.logical_or)
-        elif node.op_type == "Not":
-            op = OperatorWrapper(torch.logical_not)
+        elif node.op_type == "ThresholdedRelu":
+            op = ThresholdedRelu(**extract_attributes(node))
+        elif node.op_type == "Tile":
+            op = Tile()
+        elif node.op_type == "TopK":
+            op = TopK()
+        elif node.op_type == "Transpose":
+            op = partial(torch.Tensor.permute, **extract_attributes(node))
+        elif node.op_type == "Unsqueeze":
+            op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
+        elif node.op_type == "Upsample":
+            op = Upsample(**extract_attributes(node))
+        elif node.op_type == "Where":
+            op = Where()
         else:
             op = getattr(torch, node.op_type.lower(), None)
             if op is None:
