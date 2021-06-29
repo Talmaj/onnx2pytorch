@@ -10,14 +10,16 @@ from onnx import numpy_helper
 from torch import nn
 from torch.jit import TracerWarning
 from torch.nn.modules.conv import _ConvNd
-from torch.nn.modules.batchnorm import _BatchNorm
-from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
 from torch.nn.modules.pooling import _MaxPoolNd
 
-from onnx2pytorch.operations import Split
+from onnx2pytorch.operations import (
+    BatchNormWrapper,
+    InstanceNormWrapper,
+    Split,
+    LSTMWrapper,
+)
 from onnx2pytorch.convert.debug import debug_model_conversion
-from onnx2pytorch.convert.layer import Wrapped1LayerLSTM
 from onnx2pytorch.convert.operations import convert_operations
 from onnx2pytorch.utils import get_inputs_names
 
@@ -115,14 +117,14 @@ class ConvertModel(nn.Module):
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
             layer_types = (
-                nn.LSTM,
                 nn.Linear,
                 _ConvNd,
-                _BatchNorm,
-                _InstanceNorm,
+                BatchNormWrapper,
+                InstanceNormWrapper,
+                LSTMWrapper,
             )
-            composite_types = (nn.Sequential, Wrapped1LayerLSTM)
-            multioutput_types = (_MaxPoolNd, Split, Wrapped1LayerLSTM)
+            composite_types = (nn.Sequential,)
+            multioutput_types = (_MaxPoolNd, Split, LSTMWrapper)
             if isinstance(op, layer_types) or (
                 isinstance(op, composite_types)
                 and any(isinstance(x, layer_types) for x in op.modules())

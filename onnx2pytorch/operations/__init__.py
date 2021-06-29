@@ -1,5 +1,5 @@
 from .add import Add
-from .batchnorm import BatchNormUnsafe
+from .batchnorm import BatchNormWrapper
 from .bitshift import BitShift
 from .cast import Cast
 from .constantofshape import ConstantOfShape
@@ -9,8 +9,8 @@ from .flatten import Flatten
 from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
-from .instancenorm import InstanceNormUnsafe
-from .lstm import Wrapped1LayerLSTM
+from .instancenorm import InstanceNormWrapper
+from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
@@ -34,7 +34,7 @@ from .where import Where
 
 __all__ = [
     "Add",
-    "BatchNormUnsafe",
+    "BatchNormWrapper",
     "BitShift",
     "Cast",
     "ConstantOfShape",
@@ -44,7 +44,8 @@ __all__ = [
     "Gather",
     "GatherND",
     "GlobalAveragePool",
-    "InstanceNormUnsafe",
+    "InstanceNormWrapper",
+    "LSTMWrapper",
     "MatMul",
     "NonMaxSuppression",
     "OneHot",
@@ -66,5 +67,4 @@ __all__ = [
     "Unsqueeze",
     "Upsample",
     "Where",
-    "Wrapped1LayerLSTM",
 ]
