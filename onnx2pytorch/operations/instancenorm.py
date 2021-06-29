@@ -78,9 +78,6 @@ class LazyInstanceNormUnsafe(_LazyInstanceNorm):
     def _check_input_dim(self, input):
         return
 
-    # def forward(self, x):
-    #    return super().forward(x)
-
 
 class InstanceNormUnsafe(_InstanceNorm):
     """Skips dimension check."""
@@ -90,26 +87,6 @@ class InstanceNormUnsafe(_InstanceNorm):
 
     def _check_input_dim(self, input):
         return
-        """
-        print(x.shape)
-        x = x.to(torch.float64)
-        print(type(super()))
-        dims_x = len(x.shape)
-        axis = tuple(range(2, dims_x))
-        mean = torch.mean(x, dim=axis, keepdim=True)
-        var = torch.var(x, unbiased=False, axis=axis, keepdims=True)
-        std = torch.std(x, unbiased=True, axis=axis, keepdims=True)
-        dim_ones = (1,) * (dims_x - 2)
-        s = self.weight.reshape(-1, *dim_ones)
-        bias = self.bias.reshape(-1, *dim_ones)
-        my_norm = s * (x - mean) / torch.sqrt(var + self.eps) + bias
-        print(my_norm.dtype)
-        # torch_norm = super().forward(x)
-        print(my_norm.shape)
-        # print(torch_norm.shape)
-        # print(torch.mean(torch.abs((my_norm - torch_norm))))
-        return my_norm.to(torch.float32)
-        """
 
 
 class InstanceNormWrapper(torch.nn.Module):
