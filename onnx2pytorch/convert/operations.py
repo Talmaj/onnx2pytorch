@@ -24,15 +24,17 @@ def _deserialize_to_torch(onnx_param):
     return torch.from_numpy(np.copy(numpy_helper.to_array(onnx_param)))
 
 
-def convert_operations(onnx_model, batch_dim=0):
+def convert_operations(onnx_graph, opset_version, batch_dim=0):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
 
     Parameters
     ----------
-    onnx_model: onnx.ModelProto
-        Loaded onnx model.
+    onnx_graph: onnx.GraphProto
+        Loaded onnx model's GraphProto.
+    opset_version: int
+        ONNX model's opset version.
     batch_dim: int
         Usually 0 for computer vision models and 1 for NLP models.
 
@@ -40,10 +42,9 @@ def convert_operations(onnx_model, batch_dim=0):
     -------
     iterator: (op_id, op_name, op)
     """
-    weights = {tensor.name: tensor for tensor in onnx_model.graph.initializer}
-    opset_version = onnx_model.opset_import[0].version
+    weights = {tensor.name: tensor for tensor in onnx_graph.initializer}
 
-    for i, node in enumerate(onnx_model.graph.node):
+    for i, node in enumerate(onnx_graph.node):
         # extract only useful inputs
         params = [weights[par_name] for par_name in node.input if par_name in weights]
 
@@ -111,7 +112,7 @@ def convert_operations(onnx_model, batch_dim=0):
                 op.weight.data = weight.t()
 
                 # check if next node Add to add bias
-                next_node = onnx_model.graph.node[i + 1]
+                next_node = onnx_graph.node[i + 1]
                 next_params = [
                     weights[par_name]
                     for par_name in next_node.input
@@ -122,7 +123,7 @@ def convert_operations(onnx_model, batch_dim=0):
                     op.bias = nn.Parameter(bias)
                     node.output.pop()
                     node.output.extend(next_node.output)
-                    onnx_model.graph.node.pop(i + 1)  # remove next node
+                    onnx_graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
         elif node.op_type == "MaxPool":
@@ -167,7 +168,7 @@ def convert_operations(onnx_model, batch_dim=0):
             op = nn.ReLU(inplace=True)
         elif node.op_type == "Reshape":
             shape = list(
-                filter(lambda x: x.name == node.input[1], onnx_model.graph.initializer)
+                filter(lambda x: x.name == node.input[1], onnx_graph.initializer)
             )
             shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
             op = Reshape(shape)

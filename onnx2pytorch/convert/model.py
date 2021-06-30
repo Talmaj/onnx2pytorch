@@ -16,8 +16,8 @@ from torch.nn.modules.pooling import _MaxPoolNd
 from onnx2pytorch.operations import (
     BatchNormWrapper,
     InstanceNormWrapper,
-    Split,
     LSTMWrapper,
+    Split,
 )
 from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.operations import convert_operations
@@ -66,7 +66,10 @@ class ConvertModel(nn.Module):
         self.debug = debug
         self.mapping = {}
         self.device = None
-        for op_id, op_name, op in convert_operations(onnx_model, batch_dim):
+        opset_version = onnx_model.opset_import[0].version
+        for op_id, op_name, op in convert_operations(
+            onnx_model.graph, opset_version, batch_dim
+        ):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
 
@@ -77,7 +80,7 @@ class ConvertModel(nn.Module):
             }
         )
 
-        self.input_names = get_inputs_names(onnx_model)
+        self.input_names = get_inputs_names(onnx_model.graph)
 
         self.needed_by = defaultdict(set)
         for node in self.onnx_model.graph.node:
@@ -92,12 +95,22 @@ class ConvertModel(nn.Module):
                 "Batchnorm layers could potentially produce false outputs."
             )
 
-    def forward(self, *input):
-        if not self.experimental and input[0].shape[self.batch_dim] > 1:
+    def forward(self, *input_list, **input_dict):
+        if len(input_list) > 0 and len(input_dict) > 0:
+            raise ValueError(
+                "forward-pass accepts either input_list (positional args) or "
+                "input_dict (keyword args) but not both"
+            )
+        if len(input_list) > 0:
+            inputs = input_list
+        if len(input_dict) > 0:
+            inputs = [input_dict[key] for key in self.input_names]
+
+        if not self.experimental and inputs[0].shape[self.batch_dim] > 1:
             raise NotImplementedError(
                 "Input with larger batch size than 1 not supported yet."
             )
-        activations = dict(zip(self.input_names, input))
+        activations = dict(zip(self.input_names, inputs))
         still_needed_by = deepcopy(self.needed_by)
 
         for node in self.onnx_model.graph.node:
@@ -139,7 +152,7 @@ class ConvertModel(nn.Module):
                     activations[in_op_id] if in_op_id in activations
                     # if in_op_id not in activations neither in parameters then
                     # it must be the initial input
-                    else self.init_parameters.get(in_op_id, input[0])
+                    else self.init_parameters.get(in_op_id, inputs[0])
                     for in_op_id in node.input
                 ]
 
