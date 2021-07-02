@@ -31,7 +31,7 @@ class Slice(nn.Module):
         super().__init__()
 
     def forward(
-        self, input: torch.Tensor, starts=None, ends=None, axes=None, steps=None
+        self, data: torch.Tensor, starts=None, ends=None, axes=None, steps=None
     ):
         if axes is None:
             axes = self.dim
@@ -43,11 +43,11 @@ class Slice(nn.Module):
             steps = self.steps
 
         if isinstance(starts, (tuple, list)):
-            starts = torch.tensor(starts)
+            starts = torch.tensor(starts, device=data.device)
         if isinstance(ends, (tuple, list)):
-            ends = torch.tensor(ends)
+            ends = torch.tensor(ends, device=data.device)
         if isinstance(steps, (tuple, list)):
-            steps = torch.tensor(steps)
+            steps = torch.tensor(steps, device=data.device)
 
         # If axes=None set them to (0, 1, 2, ...)
         if axes is None:
@@ -55,24 +55,24 @@ class Slice(nn.Module):
         if steps is None:
             steps = tuple(torch.tensor(1) for _ in axes)
 
-        axes = [input.ndim + x if x < 0 else x for x in axes]
+        axes = [data.ndim + x if x < 0 else x for x in axes]
 
         selection = [slice(None) for _ in range(max(axes) + 1)]
 
         flip_dims = []
         for i, axis in enumerate(axes):
             raw_slice = slice(
-                starts[i].to(dtype=torch.long, device=input.device),
-                ends[i].to(dtype=torch.long, device=input.device),
-                steps[i].to(dtype=torch.long, device=input.device),
+                starts[i].to(dtype=torch.long, device=data.device),
+                ends[i].to(dtype=torch.long, device=data.device),
+                steps[i].to(dtype=torch.long, device=data.device),
             )
             if steps[i] < 0:
-                selection[axis] = _to_positive_step(raw_slice, input.shape[axis])
+                selection[axis] = _to_positive_step(raw_slice, data.shape[axis])
                 flip_dims.append(axis)
             else:
                 selection[axis] = raw_slice
         if len(flip_dims) > 0:
-            return torch.flip(input.__getitem__(selection), flip_dims)
+            return torch.flip(data.__getitem__(selection), flip_dims)
         else:
             # For torch < 1.8.1, torch.flip cannot handle empty dims
-            return input.__getitem__(selection)
+            return data.__getitem__(selection)

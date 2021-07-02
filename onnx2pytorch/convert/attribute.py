@@ -143,6 +143,8 @@ def extract_attributes(node):
             kwargs["repeats"] = extract_attr_values(attr)
         elif attr.name == "sorted":
             kwargs["sorted"] = extract_attr_values(attr)
+        elif attr.name == "sparse_value":
+            kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "spatial":
             kwargs["spatial"] = extract_attr_values(attr)  # Batch norm parameter
         elif attr.name == "split":
@@ -158,6 +160,18 @@ def extract_attributes(node):
         elif attr.name == "transA":
             kwargs["transpose_activation"] = bool(extract_attr_values(attr))
         elif attr.name == "value":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_float":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_floats":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_int":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_ints":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_string":
+            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "value_strings":
             kwargs["constant"] = extract_attr_values(attr)
         elif node.op_type == "Resize":
             # These parameters are not used, warn in Resize operator

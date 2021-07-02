@@ -65,7 +65,6 @@ class ConvertModel(nn.Module):
         self.experimental = experimental
         self.debug = debug
         self.mapping = {}
-        self.device = None
         opset_version = onnx_model.opset_import[0].version
         for op_id, op_name, op in convert_operations(
             onnx_model.graph, opset_version, batch_dim
@@ -156,13 +155,7 @@ class ConvertModel(nn.Module):
                     for in_op_id in node.input
                 ]
 
-            # TODO: this is only needed because some ops are apparently sending
-            # activations back to the CPU. These ops should be fixed.
-            in_activations = [
-                in_act.to(self.device)
-                for in_act in in_activations
-                if in_act is not None
-            ]
+            in_activations = [in_act for in_act in in_activations if in_act is not None]
 
             # store activations for next layer
             if isinstance(op, partial) and op.func == torch.cat:
@@ -202,7 +195,6 @@ class ConvertModel(nn.Module):
 
     def to(self, device):
         super(ConvertModel, self).to(device=device)
-        self.device = device
         for op_id in self.init_parameters:
             if self.init_parameters[op_id].device != device:
                 self.init_parameters[op_id] = self.init_parameters[op_id].to(device)

@@ -7,8 +7,8 @@ class Expand(nn.Module):
         if isinstance(shape, torch.Tensor):
             shape = shape.to(torch.int64)
         try:
-            out = input.expand(shape)
-        except RuntimeError as e:
+            out = input.expand(torch.Size(shape))
+        except RuntimeError:
             out = input * torch.ones(
                 torch.Size(shape), dtype=input.dtype, device=input.device
             )

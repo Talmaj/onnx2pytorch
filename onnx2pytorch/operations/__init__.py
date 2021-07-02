@@ -2,6 +2,7 @@ from .add import Add
 from .batchnorm import BatchNormWrapper
 from .bitshift import BitShift
 from .cast import Cast
+from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .div import Div
 from .expand import Expand
@@ -37,6 +38,7 @@ __all__ = [
     "BatchNormWrapper",
     "BitShift",
     "Cast",
+    "Constant",
     "ConstantOfShape",
     "Div",
     "Expand",

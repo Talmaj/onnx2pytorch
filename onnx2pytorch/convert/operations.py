@@ -63,9 +63,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
-            op = value_wrapper(
-                torch.from_numpy(np.copy(extract_attributes(node)["constant"]))
-            )
+            op = Constant(**extract_attributes(node))
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
         elif node.op_type == "Conv":
