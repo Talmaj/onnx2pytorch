@@ -24,19 +24,6 @@ from onnx2pytorch.convert.operations import convert_operations
 from onnx2pytorch.utils import get_inputs_names
 
 
-class InitParameters(dict):
-    """Use for parameters that are hidden."""
-
-    def __getitem__(self, item):
-        return super().__getitem__(item)
-
-    def get(self, item, default):
-        if item in self:
-            return self[item]
-        else:
-            return default
-
-
 class ConvertModel(nn.Module):
     def __init__(
         self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False, debug=False
@@ -72,12 +59,12 @@ class ConvertModel(nn.Module):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
 
-        self.init_parameters = InitParameters(
-            {
-                tensor.name: torch.from_numpy(np.copy(numpy_helper.to_array(tensor)))
-                for tensor in self.onnx_model.graph.initializer
-            }
-        )
+        for tensor in self.onnx_model.graph.initializer:
+            buffer_name = self._get_buffer_name(tensor.name)
+            self.register_buffer(
+                buffer_name,
+                torch.from_numpy(np.copy(numpy_helper.to_array(tensor))),
+            )
 
         self.input_names = get_inputs_names(onnx_model.graph)
 
@@ -93,6 +80,16 @@ class ConvertModel(nn.Module):
                 "Using experimental implementation that allows 'batch_size > 1'."
                 "Batchnorm layers could potentially produce false outputs."
             )
+
+    def _get_buffer_name(self, param_name):
+        return "_initializer_{}".format(param_name.replace(".", "_"))
+
+    def _get_init_parameter(self, item, default):
+        try:
+            param = getattr(self, self._get_buffer_name(item))
+        except:
+            param = default
+        return param
 
     def forward(self, *input_list, **input_dict):
         if len(input_list) > 0 and len(input_dict) > 0:
@@ -151,7 +148,7 @@ class ConvertModel(nn.Module):
                     activations[in_op_id] if in_op_id in activations
                     # if in_op_id not in activations neither in parameters then
                     # it must be the initial input
-                    else self.init_parameters.get(in_op_id, inputs[0])
+                    else self._get_init_parameter(in_op_id, inputs[0])
                     for in_op_id in node.input
                 ]
 
@@ -192,17 +189,3 @@ class ConvertModel(nn.Module):
         if len(outputs) == 1:
             outputs = outputs[0]
         return outputs
-
-    def to(self, device):
-        super(ConvertModel, self).to(device=device)
-        for op_id in self.init_parameters:
-            if self.init_parameters[op_id].device != device:
-                self.init_parameters[op_id] = self.init_parameters[op_id].to(device)
-        return self
-
-    def cuda(self, device=None):
-        super(ConvertModel, self).cuda(device=device)
-        if device is None:
-            return self.to("cuda:0")
-        else:
-            return self.to("cuda:{}".format(device))
