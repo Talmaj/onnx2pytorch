@@ -204,3 +204,24 @@ def get_inputs_sample(onnx_model, to_torch=False):
     if to_torch:
         input_tensors = [torch.from_numpy(x) for x in input_tensors]
     return dict(zip(input_names, input_tensors))
+
+
+def get_outputs_names(onnx_graph):
+    output_names = [x.name for x in onnx_graph.output]
+    return output_names
+
+
+def get_ops_names(onnx_graph):
+    ops_used = set(node.op_type for node in onnx_graph.node)
+    for node in onnx_graph.node:
+        if node.op_type == "Loop":
+            for attr in node.attribute:
+                if attr.name == "body":
+                    ops_used |= get_ops_names(attr.g)
+        elif node.op_type == "If":
+            for attr in node.attribute:
+                if attr.name == "then_branch":
+                    ops_used |= get_ops_names(attr.g)
+                elif attr.name == "else_branch":
+                    ops_used |= get_ops_names(attr.g)
+    return ops_used

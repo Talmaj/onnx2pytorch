@@ -41,6 +41,8 @@ def extract_attr_values(attr):
         value = numpy_helper.to_array(attr.t)
     elif attr.type == AttributeType["STRING"]:
         value = attr.s.decode()
+    elif attr.type == AttributeType["GRAPH"]:
+        value = attr.g
     else:
         raise NotImplementedError(
             "Extraction of attribute type {} not implemented.".format(attr.type)
@@ -83,6 +85,8 @@ def extract_attributes(node):
                 kwargs["dim"] = v
         elif attr.name == "beta":
             kwargs["bias_multiplier"] = extract_attr_values(attr)
+        elif attr.name == "body":
+            kwargs["body"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":
             kwargs["ceil_mode"] = bool(extract_attr_values(attr))
         elif attr.name == "center_point_box":

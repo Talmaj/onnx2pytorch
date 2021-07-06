@@ -1,10 +1,16 @@
+from collections import defaultdict
 from functools import partial
 
 import numpy as np
+import onnx
 import torch
 from torch import nn
 from torch.nn import functional as F
 from onnx import numpy_helper
+from torch.nn.modules.conv import _ConvNd
+from torch.nn.modules.linear import Identity
+from torch.nn.modules.pooling import _MaxPoolNd
+
 
 from onnx2pytorch.convert.attribute import extract_attributes
 from onnx2pytorch.convert.layer import (
@@ -17,7 +23,193 @@ from onnx2pytorch.convert.layer import (
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
 from onnx2pytorch.operations import Resize, Upsample
-from onnx2pytorch.utils import value_wrapper
+from onnx2pytorch.utils import (
+    get_inputs_names,
+    get_outputs_names,
+    value_wrapper,
+)
+
+
+class Loop(nn.Module):
+    def __init__(
+        self,
+        opset_version,
+        batch_dim,
+        body: onnx.GraphProto,
+    ):
+        super().__init__()
+        self.body = body
+        self.batch_dim = batch_dim
+
+        self.input_names = get_inputs_names(body)
+        self.output_names = get_outputs_names(body)
+
+        # Creates mapping from node (identified by first output) to submodule
+        self.mapping = {}
+        for op_id, op_name, op in convert_operations(body, opset_version, batch_dim):
+            setattr(self, op_name, op)
+            self.mapping[op_id] = op_name
+
+        # Store initializers as buffers
+        for tensor in self.body.initializer:
+            buffer_name = get_buffer_name(tensor.name)
+            self.register_buffer(
+                buffer_name,
+                torch.from_numpy(np.copy(numpy_helper.to_array(tensor))),
+            )
+
+        # We do not track dependencies (for memory reduction) within loops.
+        # This would be complicated due to loop-carried dependencies.
+
+    def forward(self, model, activation_contexts, *inputs):
+        """
+        Parameters
+        ----------
+        model: ConvertModel
+            Converted model, which contains initializers as buffers.
+        activation_contexts: list
+            List of activations from the caller hierarchy.
+        inputs: list
+            Inputs to Loop node (length >= 2), comprising M, cond, and v_initial.
+
+        Returns
+        -------
+        v_final_and_scan_outputs: list
+            Final N loop carried dependency values then K scan_outputs.
+        """
+        N = len(self.input_names) - 2
+        K = len(self.output_names) - (1 + N)
+        print(self.body, flush=True)
+
+        M = inputs[0]
+        cond = inputs[1]
+        v_initial = inputs[2:]
+
+        iteration_num_name = self.input_names[0]
+        cond_in_name = self.input_names[1]
+        loop_carried_in_names = self.input_names[2:]
+        cond_out_name = self.output_names[0]
+        loop_carried_out_names = self.output_names[1 : N + 1]
+        scan_outputs_names = self.output_names[1 + N :]
+
+        activations = {}
+        activations.update(zip(loop_carried_in_names, v_initial))
+        for act_context in activation_contexts:
+            activations.update(act_context)
+
+        scan_outputs = defaultdict(list)
+        i = torch.tensor(0)
+        while i < M and cond:
+            activations[iteration_num_name] = i
+            activations[cond_in_name] = cond
+            for node in self.body.node:
+                # Identifying the layer ids and names
+                out_op_id = node.output[0]
+                out_op_name = self.mapping[out_op_id]
+                in_op_names = [
+                    self.mapping.get(in_op_id, in_op_id)
+                    for in_op_id in node.input
+                    if in_op_id in activations
+                ]
+
+                # getting correct layer
+                op = getattr(self, out_op_name)
+
+                # if first layer choose input as in_activations
+                # if not in_op_names and len(node.input) == 1:
+                #    in_activations = input
+                if isinstance(op, LAYER_TYPES) or (
+                    isinstance(op, COMPOSITE_TYPES)
+                    and any(isinstance(x, LAYER_TYPES) for x in op.modules())
+                ):
+                    in_activations = [
+                        activations[in_op_id]
+                        for in_op_id in node.input
+                        if in_op_id in activations
+                    ]
+                else:
+                    in_activations = [
+                        activations[in_op_id] if in_op_id in activations
+                        # if in_op_id not in activations neither in parameters then
+                        # it must be the initial input
+                        else get_init_parameter(self, in_op_id, inputs[0])
+                        for in_op_id in node.input
+                    ]
+
+                in_activations = [
+                    in_act for in_act in in_activations if in_act is not None
+                ]
+
+                # store activations for next layer
+                if isinstance(op, Loop):
+                    outputs = op(self, [activations], *in_activations)
+                    for out_act_name, output in zip(node.output, outputs):
+                        activations[out_op_id] = output
+                        if out_act_name in scan_outputs_names:
+                            scan_outputs[out_act_name].append(output)
+                elif isinstance(op, partial) and op.func == torch.cat:
+                    output = op(in_activations)
+                    activations[out_op_id] = output
+                    if out_op_id in scan_outputs_names:
+                        scan_outputs[out_op_id].append(output)
+                elif isinstance(op, MULTIOUTPUT_TYPES):
+                    outputs = op(*in_activations)
+                    for out_act_name, output in zip(node.output, outputs):
+                        activations[out_act_name] = out_act_name
+                        if out_act_name in scan_outputs_names:
+                            scan_outputs[out_act_name].append(output)
+                elif isinstance(op, Identity):
+                    # After batch norm fusion the batch norm parameters
+                    # were all passed to identity instead of first one only
+                    output = op(in_activations[0])
+                    activations[out_op_id] = op(output)
+                    if out_op_id in scan_outputs_names:
+                        scan_outputs[out_op_id].append(output)
+                else:
+                    if node.op_type == "Unsqueeze":
+                        print(node)
+                        print(in_activations)
+                    output = op(*in_activations)
+                    activations[out_op_id] = output
+                    if out_op_id in scan_outputs_names:
+                        scan_outputs[out_op_id].append(output)
+
+            # Prepare for next iteration
+            cond = activations[cond_out_name]
+            i += 1
+            loop_carried_outputs = [
+                activations[aname] for aname in loop_carried_out_names
+            ]
+            activations.update(zip(loop_carried_in_names, loop_carried_outputs))
+
+        # Set outputs to N loop carried final values, followed by K scan outputs
+        outputs = [activations[lcn] for lcn in loop_carried_out_names]
+        for son in scan_outputs_names:
+            outputs.append(torch.cat([so.unsqueeze(dim=0) for so in scan_outputs[son]]))
+        return outputs
+
+
+COMPOSITE_TYPES = (nn.Sequential,)
+LAYER_TYPES = (
+    nn.Linear,
+    _ConvNd,
+    BatchNormWrapper,
+    InstanceNormWrapper,
+    LSTMWrapper,
+)
+MULTIOUTPUT_TYPES = (_MaxPoolNd, Loop, LSTMWrapper, Split)
+
+
+def get_buffer_name(param_name):
+    return "_initializer_{}".format(param_name.replace(".", "_"))
+
+
+def get_init_parameter(model, item, default):
+    try:
+        param = getattr(model, get_buffer_name(item))
+    except:
+        param = default
+    return param
 
 
 def _deserialize_to_torch(onnx_param):
@@ -99,10 +291,16 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
             op = convert_instance_norm_layer(node, params=params)
         elif node.op_type == "LeakyRelu":
             op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
-        elif node.op_type == "LSTM":
-            op = convert_lstm_layer(node, weights)
         elif node.op_type == "Log":
             op = OperatorWrapper(torch.log)
+        elif node.op_type == "Loop":
+            op = Loop(
+                opset_version=opset_version,
+                batch_dim=batch_dim,
+                **extract_attributes(node),
+            )
+        elif node.op_type == "LSTM":
+            op = convert_lstm_layer(node, weights)
         elif node.op_type == "MatMul":
             if params:
                 weight = _deserialize_to_torch(params[0])
@@ -128,6 +326,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
             op = convert_layer(node, "MaxPool")
         elif node.op_type == "Mul":
             op = OperatorWrapper(torch.mul)
+        elif node.op_type == "NonMaxSuppression":
+            op = NonMaxSuppression(**extract_attributes(node))
         elif node.op_type == "Not":
             op = OperatorWrapper(torch.logical_not)
         elif node.op_type == "OneHot":
