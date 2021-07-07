@@ -30,6 +30,7 @@ from .split import Split
 from .squeeze import Squeeze
 from .thresholdedrelu import ThresholdedRelu
 from .topk import TopK
+from .transpose import Transpose
 from .unsqueeze import Unsqueeze
 from .where import Where
 
@@ -66,6 +67,7 @@ __all__ = [
     "Squeeze",
     "ThresholdedRelu",
     "TopK",
+    "Transpose",
     "Unsqueeze",
     "Upsample",
     "Where",

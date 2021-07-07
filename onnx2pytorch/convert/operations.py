@@ -414,7 +414,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
         elif node.op_type == "TopK":
             op = TopK()
         elif node.op_type == "Transpose":
-            op = partial(torch.Tensor.permute, **extract_attributes(node))
+            op = Transpose(**extract_attributes(node))
         elif node.op_type == "Unsqueeze":
             op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Upsample":
