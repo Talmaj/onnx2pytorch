@@ -61,25 +61,24 @@ class Loop(nn.Module):
         # We do not track dependencies (for memory reduction) within loops.
         # This would be complicated due to loop-carried dependencies.
 
-    def forward(self, model, activation_contexts, *inputs):
+    def forward(self, enclosing_modules, enclosing_activations, *inputs):
         """
         Parameters
         ----------
-        model: ConvertModel
-            Converted model, which contains initializers as buffers.
-        activation_contexts: list
-            List of activations from the caller hierarchy.
+        enclosing_modules: tuple of nn.Modules
+            Module(s) from enclosing scope(s), containing initializers as buffers.
+        enclosing_activations: dict
+            All activations from the enclosing scope.
         inputs: list
             Inputs to Loop node (length >= 2), comprising M, cond, and v_initial.
 
         Returns
         -------
         v_final_and_scan_outputs: list
-            Final N loop carried dependency values then K scan_outputs.
+            Final N loop carried dependency values, then K scan_outputs.
         """
         N = len(self.input_names) - 2
         K = len(self.output_names) - (1 + N)
-        print(self.body, flush=True)
 
         M = inputs[0]
         cond = inputs[1]
@@ -92,10 +91,11 @@ class Loop(nn.Module):
         loop_carried_out_names = self.output_names[1 : N + 1]
         scan_outputs_names = self.output_names[1 + N :]
 
+        buffer_modules = enclosing_modules + (self,)
+
         activations = {}
         activations.update(zip(loop_carried_in_names, v_initial))
-        for act_context in activation_contexts:
-            activations.update(act_context)
+        activations.update(enclosing_activations)
 
         scan_outputs = defaultdict(list)
         i = torch.tensor(0)
@@ -132,7 +132,7 @@ class Loop(nn.Module):
                         activations[in_op_id] if in_op_id in activations
                         # if in_op_id not in activations neither in parameters then
                         # it must be the initial input
-                        else get_init_parameter(self, in_op_id, inputs[0])
+                        else get_init_parameter(buffer_modules, in_op_id, inputs[0])
                         for in_op_id in node.input
                     ]
 
@@ -142,7 +142,7 @@ class Loop(nn.Module):
 
                 # store activations for next layer
                 if isinstance(op, Loop):
-                    outputs = op(self, [activations], *in_activations)
+                    outputs = op(buffer_modules, activations, *in_activations)
                     for out_act_name, output in zip(node.output, outputs):
                         activations[out_op_id] = output
                         if out_act_name in scan_outputs_names:
@@ -152,12 +152,6 @@ class Loop(nn.Module):
                     activations[out_op_id] = output
                     if out_op_id in scan_outputs_names:
                         scan_outputs[out_op_id].append(output)
-                elif isinstance(op, MULTIOUTPUT_TYPES):
-                    outputs = op(*in_activations)
-                    for out_act_name, output in zip(node.output, outputs):
-                        activations[out_act_name] = out_act_name
-                        if out_act_name in scan_outputs_names:
-                            scan_outputs[out_act_name].append(output)
                 elif isinstance(op, Identity):
                     # After batch norm fusion the batch norm parameters
                     # were all passed to identity instead of first one only
@@ -165,10 +159,16 @@ class Loop(nn.Module):
                     activations[out_op_id] = op(output)
                     if out_op_id in scan_outputs_names:
                         scan_outputs[out_op_id].append(output)
+                elif isinstance(op, MULTIOUTPUT_TYPES) or (
+                    isinstance(op, COMPOSITE_TYPES)
+                    and any(isinstance(x, MULTIOUTPUT_TYPES) for x in op.modules())
+                ):
+                    outputs = op(*in_activations)
+                    for out_act_name, output in zip(node.output, outputs):
+                        activations[out_act_name] = output
+                        if out_act_name in scan_outputs_names:
+                            scan_outputs[out_act_name].append(output)
                 else:
-                    if node.op_type == "Unsqueeze":
-                        print(node)
-                        print(in_activations)
                     output = op(*in_activations)
                     activations[out_op_id] = output
                     if out_op_id in scan_outputs_names:
@@ -197,26 +197,41 @@ LAYER_TYPES = (
     InstanceNormWrapper,
     LSTMWrapper,
 )
-MULTIOUTPUT_TYPES = (_MaxPoolNd, Loop, LSTMWrapper, Split)
+MULTIOUTPUT_TYPES = (_MaxPoolNd, Loop, LSTMWrapper, Split, TopK)
 
 
 def get_buffer_name(param_name):
+    """
+    Convert name of initializer to valid name for nn.Module attribute.
+    """
     return "_initializer_{}".format(param_name.replace(".", "_"))
 
 
-def get_init_parameter(model, item, default):
-    try:
-        param = getattr(model, get_buffer_name(item))
-    except:
-        param = default
-    return param
+def get_init_parameter(modules, item, default):
+    """
+    Look in modules for the item, and if not found return default.
+
+    Parameters
+    ----------
+    modules: list of nn.Modules
+        Modules whose attributes to search.
+    item: str
+        Name of initializer in ONNX model.
+    default: torch.Tensor
+        Tensor to return if item not found.
+    """
+    item_name = get_buffer_name(item)
+    for mod in modules:
+        if hasattr(mod, item_name):
+            return getattr(mod, item_name)
+    return default
 
 
 def _deserialize_to_torch(onnx_param):
     return torch.from_numpy(np.copy(numpy_helper.to_array(onnx_param)))
 
 
-def convert_operations(onnx_graph, opset_version, batch_dim=0):
+def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
@@ -229,6 +244,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
         ONNX model's opset version.
     batch_dim: int
         Usually 0 for computer vision models and 1 for NLP models.
+    enable_pruning: bool
+        Track kept/pruned indices between different calls to forward pass.
 
     Returns
     -------
@@ -250,6 +267,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
             op = convert_batch_norm_layer(node, params=params)
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
+        elif node.op_type == "Ceil":
+            op = OperatorWrapper(torch.ceil)
         elif node.op_type == "Clip":
             op = OperatorWrapper(torch.clamp)
         elif node.op_type == "Concat":
@@ -277,6 +296,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
         elif node.op_type == "Flatten":
             op = Flatten(**extract_attributes(node))
             op.feature_dim = batch_dim + 1  # Necessary for transformers
+        elif node.op_type == "Floor":
+            op = OperatorWrapper(torch.floor)
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
         elif node.op_type == "GatherND":
@@ -285,12 +306,16 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
             op = convert_linear_layer(node, params)
         elif node.op_type == "GlobalAveragePool":
             op = GlobalAveragePool()
+        elif node.op_type == "Greater":
+            op = OperatorWrapper(torch.greater)
         elif node.op_type == "Identity":
             op = nn.Identity()
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
         elif node.op_type == "LeakyRelu":
             op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
+        elif node.op_type == "Less":
+            op = OperatorWrapper(torch.less)
         elif node.op_type == "Log":
             op = OperatorWrapper(torch.log)
         elif node.op_type == "Loop":
@@ -322,8 +347,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
                     onnx_graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
+        elif node.op_type == "Max":
+            op = OperatorWrapper(torch.max)
         elif node.op_type == "MaxPool":
             op = convert_layer(node, "MaxPool")
+        elif node.op_type == "Min":
+            op = OperatorWrapper(torch.min)
         elif node.op_type == "Mul":
             op = OperatorWrapper(torch.mul)
         elif node.op_type == "NonMaxSuppression":
@@ -369,7 +398,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
                 filter(lambda x: x.name == node.input[1], onnx_graph.initializer)
             )
             shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
-            op = Reshape(shape)
+            op = Reshape(enable_pruning, shape)
         elif node.op_type == "Resize":
             op = Resize(**extract_attributes(node))
         elif node.op_type == "Scatter":
@@ -398,7 +427,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0):
             # the number_of_splits becomes the number of node outputs
             if "split_size_or_sections" not in kwargs:
                 kwargs["number_of_splits"] = len(node.output)
-            op = Split(**kwargs)
+            op = Split(enable_pruning, **kwargs)
         elif node.op_type == "Sqrt":
             op = OperatorWrapper(torch.sqrt)
         elif node.op_type == "Squeeze":

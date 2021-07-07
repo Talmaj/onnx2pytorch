@@ -37,7 +37,12 @@ from onnx2pytorch.utils import (
 
 class ConvertModel(nn.Module):
     def __init__(
-        self, onnx_model: onnx.ModelProto, batch_dim=0, experimental=False, debug=False
+        self,
+        onnx_model: onnx.ModelProto,
+        batch_dim=0,
+        experimental=False,
+        debug=False,
+        enable_pruning=True,
     ):
         """
         Convert onnx model to pytorch.
@@ -51,6 +56,8 @@ class ConvertModel(nn.Module):
         experimental: bool
             Experimental implementation allows batch_size > 1. However,
             batchnorm layers could potentially produce false outputs.
+        enable_pruning: bool
+            Track kept/pruned indices between different calls to forward pass.
 
         Returns
         -------
@@ -62,6 +69,7 @@ class ConvertModel(nn.Module):
         self.batch_dim = batch_dim
         self.experimental = experimental
         self.debug = debug
+        self.enable_pruning = enable_pruning
 
         self.input_names = get_inputs_names(onnx_model.graph)
         self.output_names = get_outputs_names(onnx_model.graph)
@@ -70,7 +78,10 @@ class ConvertModel(nn.Module):
         # Create mapping from node (identified by first output) to submodule
         self.mapping = {}
         for op_id, op_name, op in convert_operations(
-            onnx_model.graph, opset_version, batch_dim
+            onnx_model.graph,
+            opset_version,
+            batch_dim,
+            enable_pruning,
         ):
             setattr(self, op_name, op)
             if isinstance(op, Loop) and debug:
@@ -168,44 +179,30 @@ class ConvertModel(nn.Module):
                     activations[in_op_id] if in_op_id in activations
                     # if in_op_id not in activations neither in parameters then
                     # it must be the initial input
-                    else get_init_parameter(self, in_op_id, inputs[0])
+                    else get_init_parameter([self], in_op_id, inputs[0])
                     for in_op_id in node.input
                 ]
 
             in_activations = [in_act for in_act in in_activations if in_act is not None]
 
-            """
-            if node.op_type == "Conv":
-                print(node, flush=True)
-                #print(in_activations, flush=True)
-            """
-
             # store activations for next layer
             if isinstance(op, Loop):
-                outputs = op(self, [activations], *in_activations)
+                outputs = op((self,), activations, *in_activations)
                 for out_op_id, output in zip(node.output, outputs):
                     activations[out_op_id] = output
             elif isinstance(op, partial) and op.func == torch.cat:
                 activations[out_op_id] = op(in_activations)
-            elif isinstance(op, MULTIOUTPUT_TYPES) or node.op_type == "MaxPool":
-                """
-                if node.op_type == "MaxPool":
-                    print("MaxPool is multioutput!", flush=True)
-                    print(node, flush=True)
-                """
-                for out_op_id, output in zip(node.output, op(*in_activations)):
-                    # print(out_op_id, flush=True)
-                    # print(output.shape, flush=True)
-                    activations[out_op_id] = output
             elif isinstance(op, Identity):
                 # After batch norm fusion the batch norm parameters
                 # were all passed to identity instead of first one only
                 activations[out_op_id] = op(in_activations[0])
+            elif isinstance(op, MULTIOUTPUT_TYPES) or (
+                isinstance(op, COMPOSITE_TYPES)
+                and any(isinstance(x, MULTIOUTPUT_TYPES) for x in op.modules())
+            ):
+                for out_op_id, output in zip(node.output, op(*in_activations)):
+                    activations[out_op_id] = output
             else:
-                if node.op_type == "MaxPool":
-                    print("MaxPool is NOT multioutput!", flush=True)
-                    print(node, flush=True)
-                    outputs = op(*in_activations)
                 activations[out_op_id] = op(*in_activations)
 
             # Remove activations that are no longer needed

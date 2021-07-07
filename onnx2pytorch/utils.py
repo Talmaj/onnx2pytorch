@@ -182,11 +182,6 @@ def get_activation_value(onnx_model, inputs, activation_names):
 def get_inputs_names(onnx_graph):
     param_names = set([x.name for x in onnx_graph.initializer])
     input_names = [x.name for x in onnx_graph.input]
-    # TODO: this may prevent us from overwriting initializers.
-    # ONNX IR:
-    # When a name appears in both the initializer list and the graph input list,
-    # a runtime MAY allow a caller to specify a value for this (input) name
-    # overriding the value specified in the initializer
     input_names = [x for x in input_names if x not in param_names]
     return input_names
 

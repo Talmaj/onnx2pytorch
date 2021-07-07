@@ -8,11 +8,17 @@ from onnx2pytorch.utils import assign_values_to_dim
 
 class Split(Operator):
     def __init__(
-        self, split_size_or_sections=None, number_of_splits=None, dim=0, keep_size=True
+        self,
+        enable_pruning,
+        split_size_or_sections=None,
+        number_of_splits=None,
+        dim=0,
+        keep_size=True,
     ):
         """
         Parameters
         ----------
+        enable_pruning: bool
         split_size_or_sections: tuple[int]
         number_of_splits: int
             The number of equal splits along dim.
@@ -25,6 +31,7 @@ class Split(Operator):
         assert (
             split_size_or_sections is not None or number_of_splits is not None
         ), "One of the parameters needs to be set."
+        self.enable_pruning = enable_pruning
         self.dim = dim
         self.split_size_or_sections = split_size_or_sections
         self.number_of_splits = number_of_splits
@@ -45,11 +52,9 @@ class Split(Operator):
         sections = tuple(s for _ in range(self.number_of_splits))
         return sections
 
-    def forward(self, input, split):
-        return torch.split(input, list(split), dim=self.dim)
-
-    """
     def forward(self, *input):
+        if not self.enable_pruning and len(input) == 2:
+            return torch.split(input[0], list(input[1]), dim=self.dim)
         if self.split_size_or_sections is None:
             self.split_size_or_sections = self._get_sections(input)
 
@@ -62,7 +67,6 @@ class Split(Operator):
         else:
             split = torch.split(*input, self.split_size_or_sections, dim=self.dim)
         return split
-    """
 
     def set_input_indices(self, input: tuple):
         assert isinstance(input, (tuple, list))
