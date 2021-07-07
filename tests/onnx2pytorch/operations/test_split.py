@@ -16,7 +16,7 @@ def weight():
 )
 def test_split(weight, split_size_or_sections, number_of_splits):
     """keep_size=False"""
-    op = Split(split_size_or_sections, number_of_splits, keep_size=False)
+    op = Split(True, split_size_or_sections, number_of_splits, keep_size=False)
     s = op(weight)
     assert all(len(x) == 5 for x in s)
 
@@ -30,7 +30,7 @@ def test_split(weight, split_size_or_sections, number_of_splits):
 )
 def test_split_2(weight, split_size_or_sections, number_of_splits):
     """keep_size=True"""
-    op = Split(split_size_or_sections, number_of_splits, keep_size=True)
+    op = Split(True, split_size_or_sections, number_of_splits, keep_size=True)
     s = op(weight)
     assert all(len(x) == 5 for x in s)
 
@@ -47,4 +47,4 @@ def test_split_2(weight, split_size_or_sections, number_of_splits):
 
 def test_split_parameter_check(weight):
     with pytest.raises(AssertionError):
-        Split(split_size_or_sections=None, number_of_splits=None)
+        Split(enable_pruning=True, split_size_or_sections=None, number_of_splits=None)

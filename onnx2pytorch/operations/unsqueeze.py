@@ -20,6 +20,6 @@ class Unsqueeze(Operator):
         elif isinstance(dims, int):
             return torch.unsqueeze(data, dim=dims)
         else:
-            for dim in sorted(dims, reverse=True):
+            for dim in sorted(dims):
                 data = torch.unsqueeze(data, dim=dim)
             return data

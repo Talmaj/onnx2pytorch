@@ -8,6 +8,6 @@ class Gather(nn.Module):
         self.selection = [slice(None) for _ in range(dim)]
         super().__init__()
 
-    def forward(self, input: torch.Tensor, indices: torch.Tensor):
+    def forward(self, data: torch.Tensor, indices: torch.Tensor):
         selection = self.selection + [indices.to(torch.int64)]
-        return input.__getitem__(selection)
+        return data.__getitem__(selection)
