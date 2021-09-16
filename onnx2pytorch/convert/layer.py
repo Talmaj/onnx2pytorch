@@ -4,9 +4,9 @@ from torch import nn
 from onnx import numpy_helper
 
 from onnx2pytorch.operations import (
-    BatchNormUnsafe,
-    InstanceNormUnsafe,
-    Wrapped1LayerLSTM,
+    BatchNormWrapper,
+    InstanceNormWrapper,
+    LSTMWrapper,
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
@@ -91,30 +91,23 @@ def convert_layer(node, layer_type, params=None):
 
 def convert_batch_norm_layer(node, params):
     kwargs = extract_attributes(node)
-    layer = BatchNormUnsafe  # Input dimension check missing, not possible before forward pass
+    # Skip input dimension check, not possible before forward pass
+    layer = BatchNormWrapper
+    torch_params = [_deserialize_to_torch(param) for param in params]
 
-    kwargs["num_features"] = params[0].dims[0]
-    # initialize layer and load weights
-    layer = layer(**kwargs)
-    keys = ["weight", "bias", "running_mean", "running_var"]
-    for key, value in zip(keys, params):
-        getattr(layer, key).data = _deserialize_to_torch(value)
-
+    # Initialize layer and load weights
+    layer = layer(torch_params, **kwargs)
     return layer
 
 
 def convert_instance_norm_layer(node, params):
     kwargs = extract_attributes(node)
-    # Skips input dimension check, not possible before forward pass
-    layer = InstanceNormUnsafe
+    # Skip input dimension check, not possible before forward pass
+    layer = InstanceNormWrapper
+    torch_params = [_deserialize_to_torch(param) for param in params]
 
-    kwargs["num_features"] = params[0].dims[0]
-    # initialize layer and load weights
-    layer = layer(**kwargs)
-    keys = ["weight", "bias"]
-    for key, value in zip(keys, params):
-        getattr(layer, key).data = _deserialize_to_torch(value)
-
+    # Initialize layer and load weights
+    layer = layer(torch_params, **kwargs)
     return layer
 
 
@@ -355,5 +348,5 @@ def convert_lstm_layer(node, weights):
         )
         getattr(lstm_layer, "bias_hh_l0").data = Rb_ifco
 
-    layer = Wrapped1LayerLSTM(lstm_layer)
+    layer = LSTMWrapper(lstm_layer)
     return layer

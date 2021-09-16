@@ -1,7 +1,7 @@
 from torch import nn
 
 
-class Wrapped1LayerLSTM(nn.Module):
+class LSTMWrapper(nn.Module):
     """Wraps a 1-layer nn.LSTM to match the API of an ONNX LSTM.
 
     It expects h_0 and c_0 as separate inputs rather than as a tuple,

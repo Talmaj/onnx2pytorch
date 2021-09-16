@@ -1,56 +1,74 @@
 from .add import Add
-from .batchnorm import BatchNormUnsafe
+from .batchnorm import BatchNormWrapper
+from .bitshift import BitShift
+from .cast import Cast
+from .constant import Constant
+from .constantofshape import ConstantOfShape
 from .div import Div
 from .expand import Expand
-from .instancenorm import InstanceNormUnsafe
-from .cast import Cast
-from .constant import ConstantOfShape
 from .flatten import Flatten
 from .gather import Gather
-from .lstm import Wrapped1LayerLSTM
+from .gathernd import GatherND
+from .globalaveragepool import GlobalAveragePool
+from .instancenorm import InstanceNormWrapper
+from .lstm import LSTMWrapper
 from .matmul import MatMul
+from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
 from .pad import Pad
-from .pooling import GlobalAveragePool
+from .prelu import PRelu
 from .range import Range
 from .reducesum import ReduceSum
 from .reshape import Reshape
 from .resize import Resize, Upsample
+from .scatter import Scatter
+from .scatterelements import ScatterElements
 from .scatternd import ScatterND
 from .shape import Shape
 from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
+from .thresholdedrelu import ThresholdedRelu
 from .topk import TopK
+from .transpose import Transpose
 from .unsqueeze import Unsqueeze
 from .where import Where
 
 __all__ = [
     "Add",
-    "BatchNormUnsafe",
+    "BatchNormWrapper",
+    "BitShift",
+    "Cast",
+    "Constant",
+    "ConstantOfShape",
     "Div",
     "Expand",
-    "InstanceNormUnsafe",
-    "Cast",
-    "ConstantOfShape",
     "Flatten",
     "Gather",
+    "GatherND",
+    "GlobalAveragePool",
+    "InstanceNormWrapper",
+    "LSTMWrapper",
     "MatMul",
+    "NonMaxSuppression",
     "OneHot",
     "Pad",
-    "GlobalAveragePool",
+    "PRelu",
     "Range",
     "ReduceSum",
     "Reshape",
     "Resize",
+    "Scatter",
+    "ScatterElements",
     "ScatterND",
     "Shape",
     "Slice",
     "Split",
     "Squeeze",
+    "ThresholdedRelu",
     "TopK",
+    "Transpose",
     "Unsqueeze",
     "Upsample",
     "Where",
-    "Wrapped1LayerLSTM",
 ]

@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from onnx2pytorch.operations.pooling import GlobalAveragePool
+from onnx2pytorch.operations.globalaveragepool import GlobalAveragePool
 
 
 def test_globalaveragepool_2d():

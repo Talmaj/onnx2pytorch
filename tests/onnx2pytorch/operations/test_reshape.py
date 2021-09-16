@@ -16,7 +16,7 @@ def pruned_inp():
 
 def test_reshape(inp, pruned_inp):
     """Pass shape in forward."""
-    op = Reshape()
+    op = Reshape(enable_pruning=True)
     shape = torch.Size((35, 2, 100))
     out = op(inp, shape)
     assert out.shape == shape
@@ -35,7 +35,7 @@ def test_reshape(inp, pruned_inp):
 def test_reshape_2(inp, pruned_inp):
     """Pass shape in init."""
     shape = torch.Size((35, 2, 100))
-    op = Reshape(shape)
+    op = Reshape(enable_pruning=True, shape=shape)
     out = op(inp)
     assert out.shape == shape
 
