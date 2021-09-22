@@ -29,6 +29,54 @@ from onnx2pytorch.utils import (
 )
 
 
+def compute_activation_dependencies(onnx_graph, model, mapping):
+    """
+    Compute activation dependencies, mapping each node to its dependents.
+
+    Parameters
+    ----------
+    onnx_graph: onnx.GraphProto
+        ONNX graph.
+    model: onnx2pytorch.ConvertModel
+        Module which contains converted submodules.
+    mapping: dict
+        Dictionary mapping from node name to name of submodule.
+
+    Returns
+    -------
+    needed_by: dict
+        Dictionary mapping from node name to names of its dependents.
+    """
+    needed_by = defaultdict(set)
+    for node in onnx_graph.node:
+        out_op_id = node.output[0]
+        for in_op_id in node.input:
+            needed_by[in_op_id].add(out_op_id)
+        if node.op_type == "Loop":
+            # Look at nodes in the loop body
+            l1 = getattr(model, mapping[out_op_id])  # Loop object
+            loop_body_l1 = l1.body
+            for node_l1 in loop_body_l1.node:
+                for in_op_id in node_l1.input:
+                    # Treating node (outer loop) as dependent, not node_l1
+                    needed_by[in_op_id].add(out_op_id)
+                if node_l1.op_type == "Loop":
+                    # Look at nodes in the loop body
+                    l2 = getattr(model, l1.mapping[node_l1.output[0]])  # Loop object
+                    loop_body_l2 = l2.body
+                    for node_l2 in loop_body_l2.node:
+                        for in_op_id in node_l2.input:
+                            # Treating node (outer loop) as dependent, not node_l2
+                            needed_by[in_op_id].add(out_op_id)
+                        if node_l2.op_type == "Loop":
+                            # TODO: make this recursive for nested loops
+                            raise NotImplementedError(
+                                "Activation garbage collection not implemented for >2 nested loops."
+                            )
+    needed_by.default_factory = None
+    return needed_by
+
+
 class ConvertModel(nn.Module):
     def __init__(
         self,
@@ -91,33 +139,9 @@ class ConvertModel(nn.Module):
             )
 
         # Compute activation dependencies, mapping each node to its dependents
-        self.needed_by = defaultdict(set)
-        for node in self.onnx_model.graph.node:
-            out_op_id = node.output[0]
-            for in_op_id in node.input:
-                self.needed_by[in_op_id].add(out_op_id)
-            if node.op_type == "Loop":
-                # Look at nodes in the loop body
-                l1 = getattr(self, self.mapping[out_op_id])  # Loop object
-                loop_body_l1 = l1.body
-                for node_l1 in loop_body_l1.node:
-                    for in_op_id in node_l1.input:
-                        # Treating node (outer loop) as dependent, not node_l1
-                        self.needed_by[in_op_id].add(out_op_id)
-                    if node_l1.op_type == "Loop":
-                        # Look at nodes in the loop body
-                        l2 = getattr(self, l1.mapping[node_l1.output[0]])  # Loop object
-                        loop_body_l2 = l2.body
-                        for node_l2 in loop_body_l2.node:
-                            for in_op_id in node_l2.input:
-                                # Treating node (outer loop) as dependent, not node_l2
-                                self.needed_by[in_op_id].add(out_op_id)
-                            if node_l2.op_type == "Loop":
-                                # TODO: make this recursive for nested loops
-                                raise NotImplementedError(
-                                    "Activation garbage collection not implemented for >2 nested loops."
-                                )
-        self.needed_by.default_factory = None
+        self.needed_by = compute_activation_dependencies(
+            self.onnx_model.graph, self, self.mapping
+        )
 
         if experimental:
             warnings.warn(
