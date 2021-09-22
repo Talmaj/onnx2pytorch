@@ -9,21 +9,15 @@ import torch
 from onnx import numpy_helper
 from torch import nn
 from torch.jit import TracerWarning
-from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.linear import Identity
-from torch.nn.modules.pooling import _MaxPoolNd
 
-from onnx2pytorch.operations import (
-    BatchNormWrapper,
-    InstanceNormWrapper,
-    LSTMWrapper,
-    Split,
+from onnx2pytorch.constants import (
+    COMPOSITE_LAYERS,
+    MULTIOUTPUT_LAYERS,
+    STANDARD_LAYERS,
 )
 from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.operations import (
-    COMPOSITE_TYPES,
-    LAYER_TYPES,
-    MULTIOUTPUT_TYPES,
     convert_operations,
     get_buffer_name,
     get_init_parameter,
@@ -165,9 +159,9 @@ class ConvertModel(nn.Module):
             # if first layer choose input as in_activations
             # if not in_op_names and len(node.input) == 1:
             #    in_activations = input
-            if isinstance(op, LAYER_TYPES) or (
-                isinstance(op, COMPOSITE_TYPES)
-                and any(isinstance(x, LAYER_TYPES) for x in op.modules())
+            if isinstance(op, STANDARD_LAYERS) or (
+                isinstance(op, COMPOSITE_LAYERS)
+                and any(isinstance(x, STANDARD_LAYERS) for x in op.modules())
             ):
                 in_activations = [
                     activations[in_op_id]
@@ -196,9 +190,9 @@ class ConvertModel(nn.Module):
                 # After batch norm fusion the batch norm parameters
                 # were all passed to identity instead of first one only
                 activations[out_op_id] = op(in_activations[0])
-            elif isinstance(op, MULTIOUTPUT_TYPES) or (
-                isinstance(op, COMPOSITE_TYPES)
-                and any(isinstance(x, MULTIOUTPUT_TYPES) for x in op.modules())
+            elif isinstance(op, MULTIOUTPUT_LAYERS) or (
+                isinstance(op, COMPOSITE_LAYERS)
+                and any(isinstance(x, MULTIOUTPUT_LAYERS) for x in op.modules())
             ):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
