@@ -26,7 +26,6 @@ class Loop(nn.Module):
         from onnx2pytorch.convert.operations import (
             convert_operations,
             get_buffer_name,
-            get_init_parameter,
         )
 
         super().__init__()
@@ -74,6 +73,7 @@ class Loop(nn.Module):
             MULTIOUTPUT_LAYERS,
             STANDARD_LAYERS,
         )
+        from onnx2pytorch.convert.operations import get_init_parameter
 
         N = len(self.input_names) - 2
         K = len(self.output_names) - (1 + N)
