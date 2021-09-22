@@ -112,12 +112,12 @@ def test_loop_sum():
         outputs=[res_y, res_scan],
     )
 
-    model_def = onnx.helper.make_model(
+    model_def = onnx.helper.make_model_gen_version(
         graph_def,
         producer_name="loop-example",
         opset_imports=[onnx.helper.make_opsetid("", 11)],
     )
-    # onnx.checker.check_model(model_def)
+    onnx.checker.check_model(model_def)
     bitstream = io.BytesIO()
     onnx.save(model_def, bitstream)
     bitstream_data = bitstream.getvalue()
