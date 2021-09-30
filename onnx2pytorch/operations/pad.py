@@ -12,9 +12,7 @@ class Pad(Operator):
     def forward(self, input, pads=None, value=0):
         if self.padding is not None:
             pads = self.padding
-        elif pads is not None:
-            pass
-        else:
+        elif pads is None:
             raise TypeError("forward() missing 1 required positional argument: 'pads'")
         out = F.pad(input, list(pads), mode=self.mode, value=value)
         return out
