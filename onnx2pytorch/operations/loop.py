@@ -46,7 +46,7 @@ class Loop(nn.Module):
             buffer_name = get_buffer_name(tensor.name)
             self.register_buffer(
                 buffer_name,
-                torch.from_numpy(np.copy(numpy_helper.to_array(tensor))),
+                torch.from_numpy(numpy_helper.to_array(tensor)),
             )
 
         # We do not track dependencies (for memory reduction) within loops.
