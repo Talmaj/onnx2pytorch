@@ -1,6 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 from functools import partial
+from importlib import import_module
 import warnings
 
 import numpy as np
@@ -23,12 +24,10 @@ class Loop(nn.Module):
         batch_dim,
         body: onnx.GraphProto,
     ):
-        from onnx2pytorch.convert.operations import (
-            convert_operations,
-            get_buffer_name,
-        )
-
         super().__init__()
+        self.ops = import_module("onnx2pytorch.convert.operations")
+        self.c = import_module("onnx2pytorch.constants")
+
         self.body = body
         self.batch_dim = batch_dim
 
@@ -37,13 +36,15 @@ class Loop(nn.Module):
 
         # Creates mapping from node (identified by first output) to submodule
         self.mapping = {}
-        for op_id, op_name, op in convert_operations(body, opset_version, batch_dim):
+        for op_id, op_name, op in self.ops.convert_operations(
+            body, opset_version, batch_dim
+        ):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
 
         # Store initializers as buffers
         for tensor in self.body.initializer:
-            buffer_name = get_buffer_name(tensor.name)
+            buffer_name = self.ops.get_buffer_name(tensor.name)
             self.register_buffer(
                 buffer_name,
                 torch.from_numpy(numpy_helper.to_array(tensor)),
@@ -68,12 +69,6 @@ class Loop(nn.Module):
         v_final_and_scan_outputs: list
             Final N loop carried dependency values, then K scan_outputs.
         """
-        from onnx2pytorch.constants import (
-            COMPOSITE_LAYERS,
-            MULTIOUTPUT_LAYERS,
-            STANDARD_LAYERS,
-        )
-        from onnx2pytorch.convert.operations import get_init_parameter
 
         N = len(self.input_names) - 2
         K = len(self.output_names) - (1 + N)
@@ -116,9 +111,9 @@ class Loop(nn.Module):
                 # if first layer choose input as in_activations
                 # if not in_op_names and len(node.input) == 1:
                 #    in_activations = input
-                if isinstance(op, STANDARD_LAYERS) or (
-                    isinstance(op, COMPOSITE_LAYERS)
-                    and any(isinstance(x, STANDARD_LAYERS) for x in op.modules())
+                if isinstance(op, self.c.STANDARD_LAYERS) or (
+                    isinstance(op, self.c.COMPOSITE_LAYERS)
+                    and any(isinstance(x, self.c.STANDARD_LAYERS) for x in op.modules())
                 ):
                     in_activations = [
                         activations[in_op_id]
@@ -130,7 +125,9 @@ class Loop(nn.Module):
                         activations[in_op_id] if in_op_id in activations
                         # if in_op_id not in activations neither in parameters then
                         # it must be the initial input
-                        else get_init_parameter(buffer_modules, in_op_id, inputs[0])
+                        else self.ops.get_init_parameter(
+                            buffer_modules, in_op_id, inputs[0]
+                        )
                         for in_op_id in node.input
                     ]
 
@@ -157,9 +154,11 @@ class Loop(nn.Module):
                     activations[out_op_id] = op(output)
                     if out_op_id in scan_outputs_names:
                         scan_outputs[out_op_id].append(output)
-                elif isinstance(op, MULTIOUTPUT_LAYERS) or (
-                    isinstance(op, COMPOSITE_LAYERS)
-                    and any(isinstance(x, MULTIOUTPUT_LAYERS) for x in op.modules())
+                elif isinstance(op, self.c.MULTIOUTPUT_LAYERS) or (
+                    isinstance(op, self.c.COMPOSITE_LAYERS)
+                    and any(
+                        isinstance(x, self.c.MULTIOUTPUT_LAYERS) for x in op.modules()
+                    )
                 ):
                     outputs = op(*in_activations)
                     for out_act_name, output in zip(node.output, outputs):

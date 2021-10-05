@@ -30,6 +30,7 @@ from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
 from .thresholdedrelu import ThresholdedRelu
+from .tile import Tile
 from .topk import TopK
 from .transpose import Transpose
 from .unsqueeze import Unsqueeze
@@ -68,6 +69,7 @@ __all__ = [
     "Split",
     "Squeeze",
     "ThresholdedRelu",
+    "Tile",
     "TopK",
     "Transpose",
     "Unsqueeze",

@@ -9,7 +9,7 @@ from onnx2pytorch.utils import assign_values_to_dim
 class Split(Operator):
     def __init__(
         self,
-        enable_pruning,
+        enable_pruning=False,
         split_size_or_sections=None,
         number_of_splits=None,
         dim=0,
