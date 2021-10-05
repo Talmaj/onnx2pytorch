@@ -11,12 +11,15 @@ def weight():
     return a
 
 
+@pytest.mark.parametrize("enable_pruning", [True, False])
 @pytest.mark.parametrize(
     "split_size_or_sections, number_of_splits", [((5, 5, 5), None), (None, 3)]
 )
-def test_split(weight, split_size_or_sections, number_of_splits):
+def test_split(weight, enable_pruning, split_size_or_sections, number_of_splits):
     """keep_size=False"""
-    op = Split(True, split_size_or_sections, number_of_splits, keep_size=False)
+    op = Split(
+        enable_pruning, split_size_or_sections, number_of_splits, keep_size=False
+    )
     s = op(weight)
     assert all(len(x) == 5 for x in s)
 
@@ -25,12 +28,13 @@ def test_split(weight, split_size_or_sections, number_of_splits):
     assert all(len(x) == 4 for x in s)
 
 
+@pytest.mark.parametrize("enable_pruning", [True, False])
 @pytest.mark.parametrize(
     "split_size_or_sections, number_of_splits", [((5, 5, 5), None), (None, 3)]
 )
-def test_split_2(weight, split_size_or_sections, number_of_splits):
+def test_split_2(weight, enable_pruning, split_size_or_sections, number_of_splits):
     """keep_size=True"""
-    op = Split(True, split_size_or_sections, number_of_splits, keep_size=True)
+    op = Split(enable_pruning, split_size_or_sections, number_of_splits, keep_size=True)
     s = op(weight)
     assert all(len(x) == 5 for x in s)
 
@@ -48,3 +52,10 @@ def test_split_2(weight, split_size_or_sections, number_of_splits):
 def test_split_parameter_check(weight):
     with pytest.raises(AssertionError):
         Split(enable_pruning=True, split_size_or_sections=None, number_of_splits=None)
+
+
+@pytest.mark.parametrize("split_size_or_sections", [(5, 5, 5)])
+def test_split_no_enable_pruning(weight, split_size_or_sections):
+    op = Split(enable_pruning=False, keep_size=False)
+    s = op(weight, split_size_or_sections)
+    assert all(len(x) == 5 for x in s)

@@ -28,9 +28,10 @@ class Split(Operator):
             If True it keeps the size of the split the same as in initial pass.
             Else it splits it accordingly to the pruned input.
         """
-        assert (
-            split_size_or_sections is not None or number_of_splits is not None
-        ), "One of the parameters needs to be set."
+        if enable_pruning:
+            assert (
+                split_size_or_sections is not None or number_of_splits is not None
+            ), "One of the parameters needs to be set."
         self.enable_pruning = enable_pruning
         self.dim = dim
         self.split_size_or_sections = split_size_or_sections
