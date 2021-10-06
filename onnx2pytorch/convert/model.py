@@ -84,7 +84,7 @@ class ConvertModel(nn.Module):
         batch_dim=0,
         experimental=False,
         debug=False,
-        enable_pruning=True,
+        enable_pruning=False,
     ):
         """
         Convert onnx model to pytorch.
