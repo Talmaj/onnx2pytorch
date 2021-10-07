@@ -35,8 +35,10 @@ def is_symmetric(params):
 
 
 def extract_padding_params(params):
-    """Extract padding parameters fod Pad layers."""
+    """Extract padding parameters for Pad layers."""
     pad_dim = len(params) // 2
+    if pad_dim == 0:
+        return []
     pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
 
     # Some padding modes do not support padding in batch and channel dimension.
@@ -177,9 +179,9 @@ def get_activation_value(onnx_model, inputs, activation_names):
     return sess.run(None, inputs)
 
 
-def get_inputs_names(onnx_model):
-    param_names = set([x.name for x in onnx_model.graph.initializer])
-    input_names = [x.name for x in onnx_model.graph.input]
+def get_inputs_names(onnx_graph):
+    param_names = set([x.name for x in onnx_graph.initializer])
+    input_names = [x.name for x in onnx_graph.input]
     input_names = [x for x in input_names if x not in param_names]
     return input_names
 
@@ -190,10 +192,31 @@ def get_inputs_sample(onnx_model, to_torch=False):
 
     sess = ort.InferenceSession(onnx_model.SerializeToString())
     inputs = sess.get_inputs()
-    input_names = get_inputs_names(onnx_model)
+    input_names = get_inputs_names(onnx_model.graph)
     input_tensors = [
         np.abs(np.random.rand(*get_shape(x)).astype(get_type(x))) for x in inputs
     ]
     if to_torch:
         input_tensors = [torch.from_numpy(x) for x in input_tensors]
     return dict(zip(input_names, input_tensors))
+
+
+def get_outputs_names(onnx_graph):
+    output_names = [x.name for x in onnx_graph.output]
+    return output_names
+
+
+def get_ops_names(onnx_graph):
+    ops_used = set(node.op_type for node in onnx_graph.node)
+    for node in onnx_graph.node:
+        if node.op_type == "Loop":
+            for attr in node.attribute:
+                if attr.name == "body":
+                    ops_used |= get_ops_names(attr.g)
+        elif node.op_type == "If":
+            for attr in node.attribute:
+                if attr.name == "then_branch":
+                    ops_used |= get_ops_names(attr.g)
+                elif attr.name == "else_branch":
+                    ops_used |= get_ops_names(attr.g)
+    return ops_used
