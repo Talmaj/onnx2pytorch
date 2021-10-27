@@ -9,8 +9,6 @@ def test_gathernd_float32():
     data = torch.tensor([[[0, 1], [2, 3]], [[4, 5], [6, 7]]], dtype=torch.float32)
     indices = torch.tensor([[[0, 1]], [[1, 0]]], dtype=torch.int64)
     exp_output = torch.tensor([[[2, 3]], [[4, 5]]], dtype=torch.float32)
-    print(op(data, indices).shape)
-    print(exp_output.shape)
     assert torch.equal(op(data, indices), exp_output)
 
 

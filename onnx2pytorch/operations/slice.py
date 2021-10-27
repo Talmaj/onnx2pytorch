@@ -3,6 +3,14 @@ from torch import nn
 
 
 def _to_positive_step(orig_slice, N):
+    """
+    Convert a slice object with a negative step to one with a positive step.
+    Accessing an iterable with the positive-stepped slice, followed by flipping
+    the result, should be equivalent to accessing the tensor with the original
+    slice. Computing positive-step slice requires using N, the length of the
+    iterable being sliced. This is because PyTorch currently does not support
+    slicing a tensor with a negative step.
+    """
     # Get rid of backward slices
     start, stop, step = orig_slice.indices(N)
 

@@ -14,7 +14,8 @@ def pruned_inp():
     return torch.rand(35, 1, 160)
 
 
-def test_reshape(inp, pruned_inp):
+@pytest.mark.parametrize("enable_pruning", [True, False])
+def test_reshape(inp, pruned_inp, enable_pruning):
     """Pass shape in forward."""
     op = Reshape(enable_pruning=True)
     shape = torch.Size((35, 2, 100))
@@ -32,7 +33,8 @@ def test_reshape(inp, pruned_inp):
     assert out.shape == expected_shape
 
 
-def test_reshape_2(inp, pruned_inp):
+@pytest.mark.parametrize("enable_pruning", [True, False])
+def test_reshape_2(inp, pruned_inp, enable_pruning):
     """Pass shape in init."""
     shape = torch.Size((35, 2, 100))
     op = Reshape(enable_pruning=True, shape=shape)

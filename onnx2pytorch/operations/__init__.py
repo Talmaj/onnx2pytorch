@@ -11,6 +11,7 @@ from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .instancenorm import InstanceNormWrapper
+from .loop import Loop
 from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .nonmaxsuppression import NonMaxSuppression
@@ -29,6 +30,7 @@ from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
 from .thresholdedrelu import ThresholdedRelu
+from .tile import Tile
 from .topk import TopK
 from .transpose import Transpose
 from .unsqueeze import Unsqueeze
@@ -48,6 +50,7 @@ __all__ = [
     "GatherND",
     "GlobalAveragePool",
     "InstanceNormWrapper",
+    "Loop",
     "LSTMWrapper",
     "MatMul",
     "NonMaxSuppression",
@@ -66,6 +69,7 @@ __all__ = [
     "Split",
     "Squeeze",
     "ThresholdedRelu",
+    "Tile",
     "TopK",
     "Transpose",
     "Unsqueeze",
