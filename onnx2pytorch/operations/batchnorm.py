@@ -1,7 +1,12 @@
 import warnings
 
 from torch import nn
-from torch.nn.modules.batchnorm import _BatchNorm, _LazyBatchNorm
+from torch.nn.modules.batchnorm import _BatchNorm, _LazyNormBase
+
+
+class _LazyBatchNorm(_LazyNormBase, _BatchNorm):
+
+    cls_to_become = _BatchNorm
 
 
 class LazyBatchNormUnsafe(_LazyBatchNorm):
