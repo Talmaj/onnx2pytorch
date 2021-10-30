@@ -1,10 +1,10 @@
 import warnings
 
 from torch import nn
-from torch.nn.modules.batchnorm import _BatchNorm, _LazyBatchNorm
+from torch.nn.modules.batchnorm import _BatchNorm, _LazyNormBase
 
 
-class LazyBatchNormUnsafe(_LazyBatchNorm):
+class LazyBatchNormUnsafe(_LazyNormBase):
     def __init__(self, *args, spatial=True, **kwargs):
         if not spatial:
             warnings.warn("Non-spatial BatchNorm not implemented.", RuntimeWarning)
