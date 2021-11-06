@@ -1,12 +1,19 @@
 import warnings
 
 from torch import nn
-from torch.nn.modules.batchnorm import _BatchNorm, _LazyNormBase
+from torch.nn.modules.batchnorm import _BatchNorm
+
+try:
+    from torch.nn.modules.batchnorm import _LazyNormBase
+
+    class _LazyBatchNorm(_LazyNormBase, _BatchNorm):
+
+        cls_to_become = _BatchNorm
 
 
-class _LazyBatchNorm(_LazyNormBase, _BatchNorm):
-
-    cls_to_become = _BatchNorm
+except ImportError:
+    # for torch < 1.10.0
+    from torch.nn.modules.batchnorm import _LazyBatchNorm
 
 
 class LazyBatchNormUnsafe(_LazyBatchNorm):
