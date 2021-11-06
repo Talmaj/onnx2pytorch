@@ -42,6 +42,12 @@ if [[ $1 == "--all" ]]; then
     echo Downloading efficientnet-lite4
     curl -LJo efficientnet-lite4.onnx https://github.com/onnx/models/blob/master/vision/classification/efficientnet-lite4/model/efficientnet-lite4-11.onnx\?raw\=true
   fi
+
+  if [[ ! -f mobilenetv2-7.onnx ]]; then
+    echo Downloading mobilenetv2-7
+    curl -LJo mobilenetv2-7.onnx https://github.com/onnx/models/raw/master/vision/classification/mobilenet/model/mobilenetv2-7.onnx\?raw\=true
+  fi
+ 
 fi
 
 echo "All models downloaded."
