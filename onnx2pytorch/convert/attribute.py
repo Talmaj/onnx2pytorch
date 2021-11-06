@@ -124,6 +124,10 @@ def extract_attributes(node):
             kwargs["largest"] = extract_attr_values(attr)
         elif attr.name == "layout":
             kwargs["layout"] = extract_attr_values(attr)
+        elif attr.name == "max":
+            kwargs["max"] = extract_attr_values(attr)
+        elif attr.name == "min":
+            kwargs["min"] = extract_attr_values(attr)
         elif attr.name == "mode":
             kwargs["mode"] = extract_attr_values(attr)
         elif attr.name == "momentum":
