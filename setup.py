@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 from setuptools import setup, find_packages
 
 try:
@@ -7,12 +8,19 @@ try:
 except IOError:
     long_description = ""
 
+# Extract version. Cannot import directly because of import error.
+root_dir = os.path.dirname(__file__)
+with open(os.path.join(root_dir, "onnx2pytorch/__init__.py"), "r") as f:
+    for line in f.readlines():
+        if line.startswith("__version__"):
+            version = line.split("=")[-1].strip().strip('"')
+            break
 
 PACKAGES = find_packages(exclude=("tests.*", "tests"))
 
 setup(
     name="onnx2pytorch",
-    version="0.4.0",
+    version=version,
     description="Library to transform onnx model to pytorch.",
     license="apache-2.0",
     author="Talmaj Marinc",
