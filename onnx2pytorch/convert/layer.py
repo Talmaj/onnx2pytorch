@@ -10,6 +10,9 @@ from onnx2pytorch.operations import (
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
+def param2torch(param):
+    return torch.from_numpy(numpy_helper.to_array(param).copy())
+
 
 def extract_params(params):
     """Extract weights and biases."""
@@ -27,9 +30,9 @@ def extract_params(params):
 
 def load_params(layer, weight, bias):
     """Load weight and bias to a given layer from onnx format."""
-    layer.weight.data = torch.from_numpy(numpy_helper.to_array(weight))
+    layer.weight.data = param2torch(weight)
     if bias is not None:
-        layer.bias.data = torch.from_numpy(numpy_helper.to_array(bias))
+        layer.bias.data = param2torch(bias)
 
 
 def convert_layer(node, layer_type, params=None):
@@ -89,7 +92,7 @@ def convert_batch_norm_layer(node, params):
     kwargs = extract_attributes(node)
     # Skip input dimension check, not possible before forward pass
     layer = BatchNormWrapper
-    torch_params = [torch.from_numpy(numpy_helper.to_array(param)) for param in params]
+    torch_params = [param2torch(param) for param in params]
 
     # Initialize layer and load weights
     layer = layer(torch_params, **kwargs)
@@ -100,7 +103,7 @@ def convert_instance_norm_layer(node, params):
     kwargs = extract_attributes(node)
     # Skip input dimension check, not possible before forward pass
     layer = InstanceNormWrapper
-    torch_params = [torch.from_numpy(numpy_helper.to_array(param)) for param in params]
+    torch_params = [param2torch(param) for param in params]
 
     # Initialize layer and load weights
     layer = layer(torch_params, **kwargs)
@@ -157,30 +160,28 @@ def extract_and_load_params_lstm(node, weights):
     for par_ix, par_name in enumerate(node.input):
         if par_ix == 0:
             if par_name in weights:
-                X = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                X = param2torch(weights[par_name])
         elif par_ix == 1:
             if par_name in weights:
-                W = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                W = param2torch(weights[par_name])
         elif par_ix == 2:
             if par_name in weights:
-                R = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                R = param2torch(weights[par_name])
         elif par_ix == 3:
             if par_name != "" and par_name in weights:
-                B = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                B = param2torch(weights[par_name])
         elif par_ix == 4:
             if par_name != "" and par_name in weights:
-                sequence_lens = torch.from_numpy(
-                    numpy_helper.to_array(weights[par_name])
-                )
+                sequence_lens = param2torch(weights[par_name])
         elif par_ix == 5:
             if par_name != "" and par_name in weights:
-                initial_h = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                initial_h = param2torch(weights[par_name])
         elif par_ix == 6:
             if par_name != "" and par_name in weights:
-                initial_c = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                initial_c = param2torch(weights[par_name])
         elif par_ix == 7:
             if par_name != "" and par_name in weights:
-                P = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+                P = param2torch(weights[par_name])
     return (X, W, R, B, sequence_lens, initial_h, initial_c, P)
 
 
