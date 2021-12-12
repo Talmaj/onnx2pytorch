@@ -68,7 +68,6 @@ class Loop(nn.Module):
         """
 
         N = len(self.input_names) - 2
-        K = len(self.output_names) - (1 + N)
 
         M = inputs[0]
         cond = inputs[1]
