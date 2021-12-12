@@ -1,10 +1,7 @@
 from collections import defaultdict
-from copy import deepcopy
 from functools import partial
 from importlib import import_module
-import warnings
 
-import numpy as np
 import onnx
 import torch
 from onnx import numpy_helper

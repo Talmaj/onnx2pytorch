@@ -240,10 +240,14 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             kwargs = dict(dim=-1)
             kwargs.update(extract_attributes(node))
             op = nn.Softmax(**kwargs)
+        elif node.op_type == "LogSoftmax":
+            kwargs = dict(dim=-1)
+            kwargs.update(extract_attributes(node))
+            op = nn.LogSoftmax(**kwargs)
         elif node.op_type == "Softplus":
-            op = nn.Softplus(beta=1)
+            op = nn.Softplus(**extract_attributes(node))
         elif node.op_type == "Softsign":
-            op = nn.Softsign()
+            op = nn.Softsign(**extract_attributes(node))
         elif node.op_type == "Split":
             kwargs = extract_attributes(node)
             # if the split_size_or_sections is not in node attributes,
