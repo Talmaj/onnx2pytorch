@@ -21,6 +21,7 @@ from .onehot import OneHot
 from .pad import Pad
 from .prelu import PRelu
 from .range import Range
+from .reducemax import ReduceMax
 from .reducesum import ReduceSum
 from .reshape import Reshape
 from .resize import Resize, Upsample
@@ -61,6 +62,7 @@ __all__ = [
     "Pad",
     "PRelu",
     "Range",
+    "ReduceMax",
     "ReduceSum",
     "Reshape",
     "Resize",
