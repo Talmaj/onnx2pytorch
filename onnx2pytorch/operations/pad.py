@@ -17,6 +17,7 @@ class Pad(Operator):
             pads = self.padding
         elif pads is None:
             raise TypeError("forward() missing 1 required positional argument: 'pads'")
+        print(input.shape, pads.shape, value)
         out = F.pad(input, list(pads), mode=self.mode, value=value)
         return out
 
