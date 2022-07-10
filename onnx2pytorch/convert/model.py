@@ -222,11 +222,13 @@ class ConvertModel(nn.Module):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
             else:
-                print(out_op_id)
-                print(in_activations)
+                print(out_op_id, out_op_name)
                 print("op: ", op, type(op))
                 print(isinstance(op, Dropout))
-                activations[out_op_id] = op(*in_activations)
+                if 'dropout' in out_op_id:
+                    activations[out_op_id] = op(*in_activations, p=0.5, training=False)
+                else:
+                    activations[out_op_id] = op(*in_activations)
 
             # Remove activations that are no longer needed
             for in_op_id in node.input:
