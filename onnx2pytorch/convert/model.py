@@ -222,9 +222,6 @@ class ConvertModel(nn.Module):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
             else:
-                print(out_op_id, out_op_name)
-                print("op: ", op, type(op))
-                print(isinstance(op, Dropout))
                 if 'dropout' in out_op_id:
                     op = Dropout()
                 activations[out_op_id] = op(*in_activations)
