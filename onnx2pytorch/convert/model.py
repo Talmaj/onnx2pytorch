@@ -223,7 +223,7 @@ class ConvertModel(nn.Module):
             else:
                 print(out_op_id)
                 print(in_activations)
-                print(op)
+                print("op: ", op, type(op))
                 activations[out_op_id] = op(*in_activations)
 
             # Remove activations that are no longer needed
