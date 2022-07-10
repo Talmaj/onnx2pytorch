@@ -226,7 +226,7 @@ class ConvertModel(nn.Module):
                 print("op: ", op, type(op))
                 print(isinstance(op, Dropout))
                 if 'dropout' in out_op_id:
-                    activations[out_op_id] = op(*in_activations, p=0.5, training=False)
+                    activations[out_op_id] = op(*in_activations, p=0.5, train=False)
                 else:
                     activations[out_op_id] = op(*in_activations)
 
