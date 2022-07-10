@@ -10,12 +10,14 @@ class Pad(Operator):
         self.value = value
         super().__init__()
 
-    def forward(self, input, pads=None):
+    def forward(self, input, pads=None, value=None):
+        if value is None:
+            value = self.value
         if self.padding is not None:
             pads = self.padding
         elif pads is None:
             raise TypeError("forward() missing 1 required positional argument: 'pads'")
-        out = F.pad(input, list(pads), mode=self.mode, value=self.value)
+        out = F.pad(input, list(pads), mode=self.mode, value=value)
         return out
 
     def extra_repr(self) -> str:
