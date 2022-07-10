@@ -224,10 +224,7 @@ class ConvertModel(nn.Module):
             else:
                 if 'dropout' in out_op_id:
                     op = Dropout()
-                    
-                print(out_op_id, out_op_name)
-                print("op: ", op, type(op))
-                print(in_activations)
+
                 activations[out_op_id] = op(*in_activations)
 
             # Remove activations that are no longer needed
