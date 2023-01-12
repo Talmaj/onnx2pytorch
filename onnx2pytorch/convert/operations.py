@@ -214,6 +214,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = partial(torch.prod, **kwargs)
         elif node.op_type == "ReduceSum":
             op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
+        elif node.op_type == "ReduceL2":
+            op = ReduceL2(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Relu":
             op = nn.ReLU(inplace=True)
         elif node.op_type == "Reshape":
