@@ -21,6 +21,7 @@ from .pad import Pad
 from .prelu import PRelu
 from .range import Range
 from .reducesum import ReduceSum
+from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
 from .scatter import Scatter
@@ -61,6 +62,7 @@ __all__ = [
     "PRelu",
     "Range",
     "ReduceSum",
+    "ReduceL2",
     "Reshape",
     "Resize",
     "Scatter",
