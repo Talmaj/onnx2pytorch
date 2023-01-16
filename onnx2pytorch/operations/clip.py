@@ -9,8 +9,6 @@ class Clip(nn.Module):
         self.max = max
 
     def forward(self, input, min=None, max=None):
-        # ALERT: Please remove this if you provided max. 
-        max = None
         if min is None:
             min = self.min
         if max is None:
