@@ -131,6 +131,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = GlobalAveragePool()
         elif node.op_type == "Greater":
             op = OperatorWrapper(torch.greater)
+        elif node.op_type == "GreaterOrEqual":
+            op = OperatorWrapper(torch.greater_equal)
         elif node.op_type == "Identity":
             op = nn.Identity()
         elif node.op_type == "InstanceNormalization":
