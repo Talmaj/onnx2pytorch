@@ -7,16 +7,13 @@ try:
     from torch.nn.modules.batchnorm import _LazyNormBase
 
     class _LazyInstanceNorm(_LazyNormBase, _InstanceNorm):
-
         cls_to_become = _InstanceNorm
-
 
 except ImportError:
     from torch.nn.modules.lazy import LazyModuleMixin
     from torch.nn.parameter import UninitializedBuffer, UninitializedParameter
 
     class _LazyInstanceNorm(LazyModuleMixin, _InstanceNorm):
-
         weight: UninitializedParameter  # type: ignore[assignment]
         bias: UninitializedParameter  # type: ignore[assignment]
 
@@ -78,24 +75,29 @@ except ImportError:
                 self.reset_parameters()
 
 
-class LazyInstanceNormUnsafe(_LazyInstanceNorm):
+class InstanceNormMixin:
     """Skips dimension check."""
 
     def __init__(self, *args, affine=True, **kwargs):
+        self.no_batch_dim = None  # no_batch_dim has to be set at runtime
         super().__init__(*args, affine=affine, **kwargs)
+
+    def set_no_dim_batch_dim(self, no_batch_dim):
+        self.no_batch_dim = no_batch_dim
 
     def _check_input_dim(self, input):
         return
 
+    def _get_no_batch_dim(self):
+        return self.no_batch_dim
 
-class InstanceNormUnsafe(_InstanceNorm):
-    """Skips dimension check."""
 
-    def __init__(self, *args, affine=True, **kwargs):
-        super().__init__(*args, affine=affine, **kwargs)
+class LazyInstanceNormUnsafe(InstanceNormMixin, _LazyInstanceNorm):
+    pass
 
-    def _check_input_dim(self, input):
-        return
+
+class InstanceNormUnsafe(InstanceNormMixin, _InstanceNorm):
+    pass
 
 
 class InstanceNormWrapper(torch.nn.Module):
@@ -119,5 +121,8 @@ class InstanceNormWrapper(torch.nn.Module):
             getattr(self.inu, "weight").data = scale
         if B is not None:
             getattr(self.inu, "bias").data = B
+
+        if self.inu.no_batch_dim is None:
+            self.inu.set_no_dim_batch_dim(input.dim() - 1)
 
         return self.inu.forward(input)

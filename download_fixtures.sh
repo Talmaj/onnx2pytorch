@@ -9,7 +9,7 @@ fi
 
 if [[ ! -f shufflenet_v2.onnx ]]; then
   echo Downloading shufflenet_v2
-  curl -LJo shufflenet_v2.onnx https://github.com/onnx/models/blob/master/vision/classification/shufflenet/model/shufflenet-v2-10.onnx\?raw\=true
+  curl -LJo shufflenet_v2.onnx https://github.com/onnx/models/raw/main/validated/vision/classification/shufflenet/model/shufflenet-v2-10.onnx
 fi
 
 if [[ $1 == "--all" ]]; then
@@ -20,32 +20,32 @@ if [[ $1 == "--all" ]]; then
 
   if [[ ! -f bertsquad-10.onnx ]]; then
     echo Downloading bertsquad-10
-    curl -LJo bertsquad-10.onnx https://github.com/onnx/models/blob/master/text/machine_comprehension/bert-squad/model/bertsquad-10.onnx\?raw\=true
+    curl -LJo bertsquad-10.onnx https://github.com/onnx/models/raw/main/validated/text/machine_comprehension/bert-squad/model/bertsquad-10.onnx
   fi
 
   if [[ ! -f yolo_v4.onnx ]]; then
     echo Downloading yolo_v4
-    curl -LJo yolo_v4.onnx https://github.com/onnx/models/blob/master/vision/object_detection_segmentation/yolov4/model/yolov4.onnx\?raw\=true
+    curl -LJo yolo_v4.onnx https://github.com/onnx/models/raw/main/validated/vision/object_detection_segmentation/yolov4/model/yolov4.onnx
   fi
 
   if [[ ! -f super_res.onnx ]]; then
     echo Downloading super_res
-    curl -LJo super_res.onnx https://github.com/onnx/models/blob/master/vision/super_resolution/sub_pixel_cnn_2016/model/super-resolution-10.onnx\?raw\=true
+    curl -LJo super_res.onnx https://github.com/onnx/models/raw/main/validated/vision/super_resolution/sub_pixel_cnn_2016/model/super-resolution-10.onnx
   fi
 
   if [[ ! -f fast_neural_style.onnx ]]; then
     echo Downloading fast_neural_style
-    curl -LJo fast_neural_style.onnx https://github.com/onnx/models/blob/master/vision/style_transfer/fast_neural_style/model/rain-princess-9.onnx\?raw\=true
+    curl -LJo fast_neural_style.onnx https://github.com/onnx/models/raw/main/validated/vision/style_transfer/fast_neural_style/model/rain-princess-9.onnx
   fi
 
   if [[ ! -f efficientnet-lite4.onnx ]]; then
     echo Downloading efficientnet-lite4
-    curl -LJo efficientnet-lite4.onnx https://github.com/onnx/models/blob/master/vision/classification/efficientnet-lite4/model/efficientnet-lite4-11.onnx\?raw\=true
+    curl -LJo efficientnet-lite4.onnx https://github.com/onnx/models/raw/main/validated/vision/classification/efficientnet-lite4/model/efficientnet-lite4-11.onnx
   fi
 
   if [[ ! -f mobilenetv2-7.onnx ]]; then
     echo Downloading mobilenetv2-7
-    curl -LJo mobilenetv2-7.onnx https://github.com/onnx/models/raw/master/vision/classification/mobilenet/model/mobilenetv2-7.onnx\?raw\=true
+    curl -LJo mobilenetv2-7.onnx https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-7.onnx
   fi
  
 fi
