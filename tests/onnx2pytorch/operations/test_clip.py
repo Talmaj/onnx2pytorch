@@ -20,11 +20,11 @@ def test_clip():
     assert torch.equal(op(x), exp_y)
 
     op = Clip(max=0)
-    exp_y_np = np.clip(x_np, np.NINF, 0)
+    exp_y_np = np.clip(x_np, -np.inf, 0)
     exp_y = torch.from_numpy(exp_y_np)
     assert torch.equal(op(x), exp_y)
 
     op = Clip()
-    exp_y_np = np.clip(x_np, np.NINF, np.inf)
+    exp_y_np = np.clip(x_np, -np.inf, np.inf)
     exp_y = torch.from_numpy(exp_y_np)
     assert torch.equal(op(x), exp_y)
