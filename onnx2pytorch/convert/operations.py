@@ -238,6 +238,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = nn.Sigmoid()
         elif node.op_type == "HardSigmoid":
             op = Hardsigmoid(**extract_attributes(node))
+        elif node.op_type == "HardSwish":
+            op = nn.Hardswish()
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
         elif node.op_type == "Softmax":
