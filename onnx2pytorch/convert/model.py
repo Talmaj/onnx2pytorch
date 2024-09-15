@@ -202,7 +202,10 @@ class ConvertModel(nn.Module):
                 ]
 
             in_activations = [in_act for in_act in in_activations if in_act is not None]
-
+            if node.op_type == "Pad":
+                # preprocess pad in case it is 8-d array or 6-d array
+                from onnx2pytorch.operations.pad import preprocess_pads
+                in_activations = preprocess_pads(in_activations)
             # store activations for next layer
             if isinstance(op, Loop):
                 outputs = op((self,), activations, *in_activations)
