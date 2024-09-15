@@ -65,6 +65,8 @@ def extract_attributes(node):
                 kwargs["negative_slope"] = extract_attr_values(attr)
             elif node.op_type in ("Elu", "ThresholdedRelu"):
                 kwargs["alpha"] = extract_attr_values(attr)
+            elif node.op_type == "HardSigmoid":
+                kwargs["alpha"] = extract_attr_values(attr)
             else:
                 kwargs["weight_multiplier"] = extract_attr_values(attr)
         elif attr.name == "auto_pad":
@@ -84,7 +86,10 @@ def extract_attributes(node):
             else:
                 kwargs["dim"] = v
         elif attr.name == "beta":
-            kwargs["bias_multiplier"] = extract_attr_values(attr)
+            if node.op_type == "HardSigmoid":
+                kwargs["beta"] = extract_attr_values(attr)
+            else:
+                kwargs["bias_multiplier"] = extract_attr_values(attr)
         elif attr.name == "body":
             kwargs["body"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":
