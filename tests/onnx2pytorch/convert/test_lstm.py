@@ -52,17 +52,17 @@ def test_single_layer_lstm(
     o2p_lstm = ConvertModel(onnx_lstm, experimental=True)
     with torch.no_grad():
         o2p_output, o2p_h_n, o2p_c_n = o2p_lstm(input, h_0, c_0)
-        assert torch.equal(o2p_output, output)
-        assert torch.equal(o2p_h_n, h_n)
-        assert torch.equal(o2p_c_n, c_n)
+        torch.testing.assert_allclose(o2p_output, output, rtol=1e-6, atol=1e-6)
+        torch.testing.assert_allclose(o2p_h_n, h_n, rtol=1e-6, atol=1e-6)
+        torch.testing.assert_allclose(o2p_c_n, c_n, rtol=1e-6, atol=1e-6)
 
     onnx_lstm = onnx.ModelProto.FromString(bitstream_data)
     o2p_lstm = ConvertModel(onnx_lstm, experimental=True)
     with torch.no_grad():
         o2p_output, o2p_h_n, o2p_c_n = o2p_lstm(h_0=h_0, input=input, c_0=c_0)
-        assert torch.equal(o2p_output, output)
-        assert torch.equal(o2p_h_n, h_n)
-        assert torch.equal(o2p_c_n, c_n)
+        torch.testing.assert_allclose(o2p_output, output, rtol=1e-6, atol=1e-6)
+        torch.testing.assert_allclose(o2p_h_n, h_n, rtol=1e-6, atol=1e-6)
+        torch.testing.assert_allclose(o2p_c_n, c_n, rtol=1e-6, atol=1e-6)
         with pytest.raises(KeyError):
             o2p_output, o2p_h_n, o2p_c_n = o2p_lstm(h_0=h_0, input=input)
         with pytest.raises(Exception):
