@@ -1,6 +1,6 @@
 # ONNX to PyTorch
 ![PyPI - License](https://img.shields.io/pypi/l/onnx2pytorch?color)
-[![CircleCI](https://circleci.com/gh/ToriML/onnx2pytorch.svg?style=shield)](https://app.circleci.com/pipelines/github/ToriML/onnx2pytorch)
+[![Lint and Test](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml)
 [![Downloads](https://pepy.tech/badge/onnx2pytorch)](https://pepy.tech/project/onnx2pytorch)
 ![PyPI](https://img.shields.io/pypi/v/onnx2pytorch)
 
