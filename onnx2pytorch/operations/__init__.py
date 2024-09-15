@@ -23,6 +23,7 @@ from .prelu import PRelu
 from .range import Range
 from .reducemax import ReduceMax
 from .reducesum import ReduceSum
+from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
 from .scatter import Scatter
@@ -64,6 +65,7 @@ __all__ = [
     "Range",
     "ReduceMax",
     "ReduceSum",
+    "ReduceL2",
     "Reshape",
     "Resize",
     "Scatter",
