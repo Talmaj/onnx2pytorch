@@ -5,3 +5,4 @@ torchvision>=0.9.0
 onnx>=1.6.0
 onnxruntime>=1.5.0
 numpy>=1.18.1
+protobuf==3.20.0
