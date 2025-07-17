@@ -13,6 +13,7 @@ from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .hardsigmoid import Hardsigmoid
 from .instancenorm import InstanceNormWrapper
+from .layernorm import LayerNorm
 from .loop import Loop
 from .lstm import LSTMWrapper
 from .matmul import MatMul
@@ -55,6 +56,7 @@ __all__ = [
     "GatherND",
     "GlobalAveragePool",
     "InstanceNormWrapper",
+    "LayerNorm",
     "Loop",
     "LSTMWrapper",
     "MatMul",
