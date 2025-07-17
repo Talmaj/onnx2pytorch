@@ -12,7 +12,7 @@ class LayerNorm(nn.Module):  # pylint: disable=missing-docstring
     def forward(  # pylint: disable=missing-function-docstring
         self,
         inputs: torch.Tensor,
-        scale: torch.Tensor,
+        scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         normalized_shape = inputs.shape[self.axis :]
