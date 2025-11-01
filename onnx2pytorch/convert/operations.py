@@ -15,6 +15,7 @@ from onnx2pytorch.convert.layer import (
     convert_linear_layer,
     convert_batch_norm_layer,
     convert_instance_norm_layer,
+    convert_gru_layer,
     convert_lstm_layer,
 )
 from onnx2pytorch.operations import *
@@ -133,6 +134,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.greater)
         elif node.op_type == "GreaterOrEqual":
             op = OperatorWrapper(torch.greater_equal)
+        elif node.op_type == "GRU":
+            op = convert_gru_layer(node, weights)
         elif node.op_type == "Identity":
             op = nn.Identity()
         elif node.op_type == "If":

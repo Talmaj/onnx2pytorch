@@ -5,6 +5,7 @@ from onnx import numpy_helper
 
 from onnx2pytorch.operations import (
     BatchNormWrapper,
+    GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
 )
@@ -142,6 +143,39 @@ def convert_linear_layer(node, params):
         layer.bias.data *= dc.get("bias_multiplier")
 
     return layer
+
+
+def extract_and_load_params_gru(node, weights):
+    """Extract and load parameters for GRU layer."""
+    X = None
+    W = None
+    R = None
+    B = None
+    sequence_lens = None
+    initial_h = None
+
+    for par_ix, par_name in enumerate(node.input):
+        if par_ix == 0:
+            if par_name in weights:
+                X = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+        elif par_ix == 1:
+            if par_name in weights:
+                W = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+        elif par_ix == 2:
+            if par_name in weights:
+                R = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+        elif par_ix == 3:
+            if par_name != "" and par_name in weights:
+                B = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+        elif par_ix == 4:
+            if par_name != "" and par_name in weights:
+                sequence_lens = torch.from_numpy(
+                    numpy_helper.to_array(weights[par_name])
+                )
+        elif par_ix == 5:
+            if par_name != "" and par_name in weights:
+                initial_h = torch.from_numpy(numpy_helper.to_array(weights[par_name]))
+    return (X, W, R, B, sequence_lens, initial_h)
 
 
 def extract_and_load_params_lstm(node, weights):
@@ -347,4 +381,181 @@ def convert_lstm_layer(node, weights):
         getattr(lstm_layer, "bias_hh_l0").data = Rb_ifco
 
     layer = LSTMWrapper(lstm_layer)
+    return layer
+
+
+def convert_gru_layer(node, weights):
+    """Convert GRU layer from onnx node and params."""
+    params_tuple = extract_and_load_params_gru(node, weights)
+    (X, W, R, B, sequence_lens, initial_h) = params_tuple
+    if initial_h is not None:
+        raise NotImplementedError("GRU initial_h not yet implemented.")
+
+    dc = dict(
+        activation_alpha=None,
+        activation_beta=None,
+        activations=None,
+        clip=None,
+        direction="forward",
+        hidden_size=None,
+        layout=0,
+        linear_before_reset=0,
+    )
+    dc.update(extract_attributes(node))
+    if dc["activation_alpha"] is not None:
+        raise NotImplementedError(
+            "GRU activation_alpha {}.".format(dc["activation_alpha"])
+        )
+    if dc["activation_beta"] is not None:
+        raise NotImplementedError(
+            "GRU activation_beta {}.".format(dc["activation_beta"])
+        )
+    if dc["activations"] is not None:
+        # TODO allow if torch-compatible activations are set explicitly
+        raise NotImplementedError("GRU activations {}.".format(dc["activations"]))
+    if dc["clip"] is not None:
+        raise NotImplementedError("GRU clip {}".format(dc["clip"]))
+    if dc["direction"] not in ("forward", "bidirectional"):
+        raise ValueError("GRU direction {}.".format(dc["direction"]))
+    if dc["hidden_size"] is None:
+        raise ValueError("GRU hidden_size is None.")
+    if dc["layout"] != 0:
+        raise NotImplementedError(
+            "GRU not implemented for layout={}".format(dc["layout"])
+        )
+    if dc["linear_before_reset"] != 0:
+        raise NotImplementedError(
+            "GRU linear_before_reset={}".format(dc["linear_before_reset"])
+        )
+
+    kwargs = {
+        "input_size": W.shape[2],
+        "hidden_size": dc["hidden_size"],
+        "num_layers": 1,
+        "bias": True,
+        "batch_first": False,
+        "dropout": 0,
+        "bidirectional": dc["direction"] == "bidirectional",
+    }
+    gru_layer = nn.GRU(**kwargs)
+
+    input_size = kwargs["input_size"]
+    hidden_size = kwargs["hidden_size"]
+    num_directions = kwargs["bidirectional"] + 1
+    num_layers = 1
+
+    # ONNX GRU gate order: [z, r, h] (update, reset, hidden)
+    # PyTorch GRU gate order: [r, z, n] (reset, input/update, new)
+    # Need to reorder from ONNX to PyTorch
+
+    if kwargs["bidirectional"]:
+        # Set input-hidden weights
+        W_zrh = W.transpose(0, 1).view(3 * hidden_size, num_directions, input_size)
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+            W_rzn = torch.cat(
+                tensors=(
+                    W_zrh[hidden_size : 2 * hidden_size, dir_dim, :],  # r
+                    W_zrh[0:hidden_size, dir_dim, :],  # z
+                    W_zrh[2 * hidden_size : 3 * hidden_size, dir_dim, :],  # n/h
+                ),
+                dim=0,
+            )
+            getattr(gru_layer, "weight_ih_l0{}".format(dir_str)).data = W_rzn
+
+        # Set hidden-hidden weights
+        R_zrh = R.transpose(0, 1).view(3 * hidden_size, num_directions, hidden_size)
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+            R_rzn = torch.cat(
+                tensors=(
+                    R_zrh[hidden_size : 2 * hidden_size, dir_dim, :],  # r
+                    R_zrh[0:hidden_size, dir_dim, :],  # z
+                    R_zrh[2 * hidden_size : 3 * hidden_size, dir_dim, :],  # n/h
+                ),
+                dim=0,
+            )
+            getattr(gru_layer, "weight_hh_l0{}".format(dir_str)).data = R_rzn
+
+        # Set input-hidden biases
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            Wb_zrh = B[dir_dim, 0 : 3 * hidden_size]
+            # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+            Wb_rzn = torch.cat(
+                tensors=(
+                    Wb_zrh[hidden_size : 2 * hidden_size],  # r
+                    Wb_zrh[0:hidden_size],  # z
+                    Wb_zrh[2 * hidden_size : 3 * hidden_size],  # n/h
+                ),
+                dim=0,
+            )
+            getattr(gru_layer, "bias_ih_l0{}".format(dir_str)).data = Wb_rzn
+
+        # Set hidden-hidden biases
+        for dir_dim, dir_str in [(0, ""), (1, "_reverse")]:
+            Rb_zrh = B[dir_dim, 3 * hidden_size :]
+            # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+            Rb_rzn = torch.cat(
+                tensors=(
+                    Rb_zrh[hidden_size : 2 * hidden_size],  # r
+                    Rb_zrh[0:hidden_size],  # z
+                    Rb_zrh[2 * hidden_size : 3 * hidden_size],  # n/h
+                ),
+                dim=0,
+            )
+            getattr(gru_layer, "bias_hh_l0{}".format(dir_str)).data = Rb_rzn
+    else:
+        # Set input-hidden weights
+        W_zrh = W.transpose(0, 1).view(3 * hidden_size, input_size)
+        # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+        W_rzn = torch.cat(
+            tensors=(
+                W_zrh[hidden_size : 2 * hidden_size, :],  # r
+                W_zrh[0:hidden_size, :],  # z
+                W_zrh[2 * hidden_size : 3 * hidden_size, :],  # n/h
+            ),
+            dim=0,
+        )
+        getattr(gru_layer, "weight_ih_l0").data = W_rzn
+
+        # Set hidden-hidden weights
+        R_zrh = R.transpose(0, 1).view(3 * hidden_size, hidden_size)
+        # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+        R_rzn = torch.cat(
+            tensors=(
+                R_zrh[hidden_size : 2 * hidden_size, :],  # r
+                R_zrh[0:hidden_size, :],  # z
+                R_zrh[2 * hidden_size : 3 * hidden_size, :],  # n/h
+            ),
+            dim=0,
+        )
+        getattr(gru_layer, "weight_hh_l0").data = R_rzn
+
+        # Set input-hidden biases
+        Wb_zrh = B[0, 0 : 3 * hidden_size]
+        # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+        Wb_rzn = torch.cat(
+            tensors=(
+                Wb_zrh[hidden_size : 2 * hidden_size],  # r
+                Wb_zrh[0:hidden_size],  # z
+                Wb_zrh[2 * hidden_size : 3 * hidden_size],  # n/h
+            ),
+            dim=0,
+        )
+        getattr(gru_layer, "bias_ih_l0").data = Wb_rzn
+
+        # Set hidden-hidden biases
+        Rb_zrh = B[0, 3 * hidden_size :]
+        # Reorder from ONNX [z, r, h] to PyTorch [r, z, n]
+        Rb_rzn = torch.cat(
+            tensors=(
+                Rb_zrh[hidden_size : 2 * hidden_size],  # r
+                Rb_zrh[0:hidden_size],  # z
+                Rb_zrh[2 * hidden_size : 3 * hidden_size],  # n/h
+            ),
+            dim=0,
+        )
+        getattr(gru_layer, "bias_hh_l0").data = Rb_rzn
+
+    layer = GRUWrapper(gru_layer)
     return layer
