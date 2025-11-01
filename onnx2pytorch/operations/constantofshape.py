@@ -9,7 +9,7 @@ class ConstantOfShape(nn.Module):
         if constant is None:
             const = torch.tensor(1.0, dtype=torch.float32)
         else:
-            const = torch.from_numpy(np.copy(constant))
+            const = torch.tensor(np.copy(constant))
         self.register_buffer("constant", const)
 
     def forward(self, shape: torch.Tensor):

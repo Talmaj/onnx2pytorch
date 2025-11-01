@@ -9,7 +9,7 @@ def test_tile():
     op = Tile()
     x = torch.rand(2, 3, 4, 5)
     repeats = torch.randint(low=1, high=10, size=(x.ndim,))
-    z = torch.from_numpy(np.tile(x.numpy(), repeats.numpy()))
+    z = torch.tensor(np.tile(x.numpy(), repeats.numpy()))
     assert torch.equal(op(x, repeats), z)
 
 

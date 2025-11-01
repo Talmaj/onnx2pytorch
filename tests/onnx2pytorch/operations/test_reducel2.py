@@ -24,7 +24,7 @@ def test_reduce_l2_older_opset_version(tensor):
         np.sum(a=np.square(data), axis=tuple(axes), keepdims=keepdims == 1)
     )
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -60,7 +60,7 @@ def test_do_not_keepdims_older_opset_version() -> None:
     # [7.81024968, 10.63014581],
     # [13.45362405, 16.2788206]]
 
-    out = op(torch.from_numpy(data))
+    out = op(torch.tensor(data))
     np.testing.assert_array_equal(out, reduced)
 
     np.random.seed(0)
@@ -69,7 +69,7 @@ def test_do_not_keepdims_older_opset_version() -> None:
         np.sum(a=np.square(data), axis=tuple(axes), keepdims=keepdims == 1)
     )
 
-    out = op(torch.from_numpy(data))
+    out = op(torch.tensor(data))
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -102,7 +102,7 @@ def test_do_not_keepdims() -> None:
     # [7.81024968, 10.63014581],
     # [13.45362405, 16.2788206]]
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
     np.random.seed(0)
@@ -111,7 +111,7 @@ def test_do_not_keepdims() -> None:
         np.sum(a=np.square(data), axis=tuple(axes), keepdims=keepdims == 1)
     )
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -142,7 +142,7 @@ def test_export_keepdims() -> None:
     # [[7.81024968], [10.63014581]]
     # [[13.45362405], [16.2788206 ]]]
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
     np.random.seed(0)
@@ -151,7 +151,7 @@ def test_export_keepdims() -> None:
         np.sum(a=np.square(data), axis=tuple(axes), keepdims=keepdims == 1)
     )
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -175,14 +175,14 @@ def test_export_default_axes_keepdims() -> None:
     # print(reduced)
     # [[[25.49509757]]]
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
     np.random.seed(0)
     data = np.random.uniform(-10, 10, shape).astype(np.float32)
     reduced = np.sqrt(np.sum(a=np.square(data), axis=None, keepdims=keepdims == 1))
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -213,7 +213,7 @@ def test_export_negative_axes_keepdims() -> None:
     # [[7.81024968], [10.63014581]]
     # [[13.45362405], [16.2788206 ]]]
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
     np.random.seed(0)
@@ -222,7 +222,7 @@ def test_export_negative_axes_keepdims() -> None:
         np.sum(a=np.square(data), axis=tuple(axes), keepdims=keepdims == 1)
     )
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)
 
 
@@ -245,5 +245,5 @@ def test_export_empty_set() -> None:
     axes = np.array([1], dtype=np.int64)
     reduced = np.array(np.zeros(reduced_shape, dtype=np.float32))
 
-    out = op(torch.from_numpy(data), axes=axes)
+    out = op(torch.tensor(data), axes=axes)
     np.testing.assert_array_equal(out, reduced)

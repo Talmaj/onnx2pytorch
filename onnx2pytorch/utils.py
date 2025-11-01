@@ -197,7 +197,7 @@ def get_inputs_sample(onnx_model, to_torch=False):
         np.abs(np.random.rand(*get_shape(x)).astype(get_type(x))) for x in inputs
     ]
     if to_torch:
-        input_tensors = [torch.from_numpy(x) for x in input_tensors]
+        input_tensors = [torch.tensor(x) for x in input_tensors]
     return dict(zip(input_names, input_tensors))
 
 

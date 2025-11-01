@@ -47,7 +47,7 @@ def test_if_basic_true():
     outputs = op((), {}, cond)
 
     assert len(outputs) == 1
-    assert torch.allclose(outputs[0], torch.from_numpy(then_const))
+    assert torch.allclose(outputs[0], torch.tensor(then_const))
 
 
 def test_if_basic_false():
@@ -90,7 +90,7 @@ def test_if_basic_false():
     outputs = op((), {}, cond)
 
     assert len(outputs) == 1
-    assert torch.allclose(outputs[0], torch.from_numpy(else_const))
+    assert torch.allclose(outputs[0], torch.tensor(else_const))
 
 
 def test_if_with_numpy_bool():
@@ -131,7 +131,7 @@ def test_if_with_numpy_bool():
     outputs = op((), {}, cond)
 
     assert len(outputs) == 1
-    assert torch.allclose(outputs[0], torch.from_numpy(then_const))
+    assert torch.allclose(outputs[0], torch.tensor(then_const))
 
 
 def test_if_official_onnx():
@@ -177,7 +177,7 @@ def test_if_official_onnx():
     outputs = op((), {}, cond)
 
     assert len(outputs) == 1
-    assert torch.allclose(outputs[0], torch.from_numpy(expected))
+    assert torch.allclose(outputs[0], torch.tensor(expected))
 
 
 def test_if_with_computation():
@@ -253,13 +253,13 @@ def test_if_with_computation():
     cond = torch.tensor(True)
     outputs = op((), {}, cond)
     expected = a + b
-    assert torch.allclose(outputs[0], torch.from_numpy(expected))
+    assert torch.allclose(outputs[0], torch.tensor(expected))
 
     # Test else branch
     cond = torch.tensor(False)
     outputs = op((), {}, cond)
     expected = c * d
-    assert torch.allclose(outputs[0], torch.from_numpy(expected))
+    assert torch.allclose(outputs[0], torch.tensor(expected))
 
 
 def test_if_multiple_outputs():
@@ -325,15 +325,15 @@ def test_if_multiple_outputs():
     cond = torch.tensor(True)
     outputs = op((), {}, cond)
     assert len(outputs) == 2
-    assert torch.allclose(outputs[0], torch.from_numpy(x1))
-    assert torch.allclose(outputs[1], torch.from_numpy(x2))
+    assert torch.allclose(outputs[0], torch.tensor(x1))
+    assert torch.allclose(outputs[1], torch.tensor(x2))
 
     # Test else branch
     cond = torch.tensor(False)
     outputs = op((), {}, cond)
     assert len(outputs) == 2
-    assert torch.allclose(outputs[0], torch.from_numpy(y1))
-    assert torch.allclose(outputs[1], torch.from_numpy(y2))
+    assert torch.allclose(outputs[0], torch.tensor(y1))
+    assert torch.allclose(outputs[1], torch.tensor(y2))
 
 
 def test_if_different_shapes():
@@ -377,13 +377,13 @@ def test_if_different_shapes():
     cond = torch.tensor(True)
     outputs = op((), {}, cond)
     assert outputs[0].shape == (2,)
-    assert torch.allclose(outputs[0], torch.from_numpy(x))
+    assert torch.allclose(outputs[0], torch.tensor(x))
 
     # Test else branch
     cond = torch.tensor(False)
     outputs = op((), {}, cond)
     assert outputs[0].shape == (3,)
-    assert torch.allclose(outputs[0], torch.from_numpy(y))
+    assert torch.allclose(outputs[0], torch.tensor(y))
 
 
 def test_if_seq_official_onnx():
@@ -448,7 +448,7 @@ def test_if_seq_official_onnx():
     # Output should be a sequence (list) containing one tensor
     assert isinstance(outputs[0], (list, tuple))
     assert len(outputs[0]) == 1
-    assert torch.allclose(outputs[0][0], torch.from_numpy(expected[0]))
+    assert torch.allclose(outputs[0][0], torch.tensor(expected[0]))
 
 
 def test_if_opt_official_onnx():
@@ -557,4 +557,4 @@ def test_if_opset_version_24():
     outputs = op((), {}, cond)
 
     assert len(outputs) == 1
-    assert torch.allclose(outputs[0], torch.from_numpy(x))
+    assert torch.allclose(outputs[0], torch.tensor(x))

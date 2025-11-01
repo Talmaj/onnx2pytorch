@@ -123,8 +123,8 @@ def test_sequenceconstruct_two_tensors():
     x = np.array([1, 2, 3, 4, 5]).astype(np.float32)
     y = np.array([5, 4, 3, 2, 1]).astype(np.float32)
 
-    x_torch = torch.from_numpy(x)
-    y_torch = torch.from_numpy(y)
+    x_torch = torch.tensor(x)
+    y_torch = torch.tensor(y)
 
     result = op(x_torch, y_torch)
 

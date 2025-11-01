@@ -14,7 +14,7 @@ def test_onnx2pytorch(onnx_model, onnx_model_outputs, onnx_inputs):
     model.eval()
     model.cpu()
     with torch.no_grad():
-        outputs = model(*(torch.from_numpy(i) for i in onnx_inputs.values()))
+        outputs = model(*(torch.tensor(i) for i in onnx_inputs.values()))
 
     if not isinstance(outputs, list):
         outputs = [outputs]
@@ -28,7 +28,7 @@ def test_onnx2pytorch(onnx_model, onnx_model_outputs, onnx_inputs):
 
 def test_onnx2pytorch2onnx(onnx_model, onnx_model_outputs, onnx_inputs):
     """Test that conversion works both ways."""
-    torch_inputs = [torch.from_numpy(x) for x in onnx_inputs.values()]
+    torch_inputs = [torch.tensor(x) for x in onnx_inputs.values()]
 
     model = convert.ConvertModel(onnx_model)
     model.eval()
