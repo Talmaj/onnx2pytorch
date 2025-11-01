@@ -146,6 +146,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             )
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
+        elif node.op_type == "LayerNormalization":
+            op = LayerNorm(list(params[0].dims), **extract_attributes(node))
         elif node.op_type == "LeakyRelu":
             op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
         elif node.op_type == "Less":
