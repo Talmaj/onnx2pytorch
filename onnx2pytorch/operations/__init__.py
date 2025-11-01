@@ -20,6 +20,7 @@ from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
+from .optional import Optional
 from .pad import Pad
 from .prelu import PRelu
 from .range import Range
@@ -32,6 +33,7 @@ from .resize import Resize, Upsample
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
+from .sequenceconstruct import SequenceConstruct
 from .shape import Shape
 from .slice import Slice
 from .split import Split
@@ -65,6 +67,7 @@ __all__ = [
     "MatMul",
     "NonMaxSuppression",
     "OneHot",
+    "Optional",
     "Pad",
     "PRelu",
     "Range",
@@ -77,6 +80,7 @@ __all__ = [
     "Scatter",
     "ScatterElements",
     "ScatterND",
+    "SequenceConstruct",
     "Shape",
     "Slice",
     "Split",
