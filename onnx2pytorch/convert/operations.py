@@ -168,19 +168,20 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
                 op.weight.data = weight.t()
 
-                # check if next node Add to add bias
-                next_node = onnx_graph.node[i + 1]
-                next_params = [
-                    weights[par_name]
-                    for par_name in next_node.input
-                    if par_name in weights
-                ]
-                if next_params and next_node.op_type == "Add":
-                    bias = torch.tensor(numpy_helper.to_array(next_params[0]))
-                    op.bias = nn.Parameter(bias)
-                    node.output.pop()
-                    node.output.extend(next_node.output)
-                    onnx_graph.node.pop(i + 1)  # remove next node
+                # check if next node Add to add bias (if there is another node)
+                if i + 1 < len(onnx_graph.node):
+                    next_node = onnx_graph.node[i + 1]
+                    next_params = [
+                        weights[par_name]
+                        for par_name in next_node.input
+                        if par_name in weights
+                    ]
+                    if next_params and next_node.op_type == "Add":
+                        bias = torch.tensor(numpy_helper.to_array(next_params[0]))
+                        op.bias = nn.Parameter(bias)
+                        node.output.pop()
+                        node.output.extend(next_node.output)
+                        onnx_graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
         elif node.op_type == "Max":
