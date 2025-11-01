@@ -1,7 +1,10 @@
 import numpy as np
+import onnxruntime as ort
 import torch
 import pytest
+from onnx import helper, TensorProto
 from onnx2pytorch.operations.autopad import AutoPad
+from onnx2pytorch.convert import ConvertModel
 
 
 def test_autopad_same_upper_2d():
@@ -104,3 +107,98 @@ def test_autopad_invalid_mode():
     """Test that invalid mode raises error."""
     with pytest.raises(ValueError, match="Unsupported auto_pad mode"):
         AutoPad(kernel_size=3, stride=1, dilation=1, mode="INVALID")
+
+
+@pytest.mark.parametrize(
+    "auto_pad,kernel_shape,strides,dilations,input_shape",
+    [
+        # SAME_UPPER with stride=1
+        ("SAME_UPPER", [3, 3], [1, 1], [1, 1], [1, 1, 5, 5]),
+        # SAME_LOWER with stride=1
+        ("SAME_LOWER", [3, 3], [1, 1], [1, 1], [1, 1, 5, 5]),
+        # VALID (no padding) - supports dilation
+        ("VALID", [3, 3], [1, 1], [1, 1], [1, 1, 5, 5]),
+        ("VALID", [3, 3], [1, 1], [2, 2], [1, 1, 7, 7]),
+        # SAME_UPPER with stride=2
+        ("SAME_UPPER", [3, 3], [2, 2], [1, 1], [1, 1, 6, 6]),
+        # SAME_LOWER with stride=2
+        ("SAME_LOWER", [3, 3], [2, 2], [1, 1], [1, 1, 6, 6]),
+        # SAME_UPPER with asymmetric kernel
+        ("SAME_UPPER", [3, 5], [1, 2], [1, 1], [1, 1, 10, 10]),
+        # SAME_LOWER with asymmetric kernel
+        ("SAME_LOWER", [3, 5], [1, 2], [1, 1], [1, 1, 10, 10]),
+        # SAME_UPPER with larger kernel
+        ("SAME_UPPER", [5, 5], [1, 1], [1, 1], [1, 1, 8, 8]),
+        # Note: onnxruntime does not support dilation with SAME_UPPER/SAME_LOWER
+    ],
+)
+def test_autopad_with_conv_onnxruntime(
+    auto_pad, kernel_shape, strides, dilations, input_shape
+):
+    """Test AutoPad implementation against onnxruntime using Conv operator."""
+    np.random.seed(42)
+    torch.manual_seed(42)
+
+    # Create input
+    X = np.random.randn(*input_shape).astype(np.float32)
+    in_channels = input_shape[1]
+    out_channels = 2
+
+    # Create random weights for Conv
+    # W shape: [out_channels, in_channels, kernel_h, kernel_w]
+    W = np.random.randn(out_channels, in_channels, *kernel_shape).astype(np.float32)
+
+    # Create ONNX graph with Conv node using auto_pad
+    input_tensor = helper.make_tensor_value_info("X", TensorProto.FLOAT, input_shape)
+    output_tensor = helper.make_tensor_value_info(
+        "Y", TensorProto.FLOAT, None
+    )  # Output shape is dynamic
+
+    W_initializer = helper.make_tensor(
+        "W", TensorProto.FLOAT, W.shape, W.flatten().tolist()
+    )
+
+    conv_node = helper.make_node(
+        "Conv",
+        inputs=["X", "W"],
+        outputs=["Y"],
+        kernel_shape=kernel_shape,
+        strides=strides,
+        dilations=dilations,
+        auto_pad=auto_pad,
+    )
+
+    graph = helper.make_graph(
+        [conv_node],
+        "conv_autopad_test",
+        [input_tensor],
+        [output_tensor],
+        [W_initializer],
+    )
+
+    model = helper.make_model(
+        graph, opset_imports=[helper.make_opsetid("", 11)], ir_version=8
+    )
+
+    # Run with onnxruntime to get expected output (onnxruntime will validate the model)
+    ort_session = ort.InferenceSession(model.SerializeToString())
+    ort_inputs = {"X": X}
+    ort_outputs = ort_session.run(None, ort_inputs)
+    expected_Y = ort_outputs[0]
+
+    # Convert to PyTorch and run
+    o2p_model = ConvertModel(model, experimental=True)
+    X_torch = torch.from_numpy(X)
+
+    with torch.no_grad():
+        o2p_output = o2p_model(X_torch)
+
+    # Compare outputs
+    torch.testing.assert_close(
+        o2p_output,
+        torch.from_numpy(expected_Y),
+        rtol=1e-5,
+        atol=1e-5,
+        msg=f"AutoPad mismatch for {auto_pad} with kernel={kernel_shape}, "
+        f"stride={strides}, dilation={dilations}",
+    )
