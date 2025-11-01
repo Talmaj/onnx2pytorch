@@ -87,7 +87,10 @@ def extract_attributes(node):
                 kwargs["weight_multiplier"] = extract_attr_values(attr)
         elif attr.name == "auto_pad":
             value = extract_attr_values(attr)
-            if value in ("NOTSET", "VALID", "SAME_UPPER", "SAME_LOWER"):
+            if value == "NOTSET":
+                # NOTSET means explicit padding is used, don't add to kwargs
+                pass
+            elif value in ("VALID", "SAME_UPPER", "SAME_LOWER"):
                 kwargs["auto_pad"] = value
             else:
                 raise NotImplementedError(
