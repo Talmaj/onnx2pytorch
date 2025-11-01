@@ -14,6 +14,7 @@ from .globalaveragepool import GlobalAveragePool
 from .hardsigmoid import Hardsigmoid
 from .instancenorm import InstanceNormWrapper
 from .loop import Loop
+from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .nonmaxsuppression import NonMaxSuppression
@@ -56,6 +57,7 @@ __all__ = [
     "GlobalAveragePool",
     "InstanceNormWrapper",
     "Loop",
+    "LRN",
     "LSTMWrapper",
     "MatMul",
     "NonMaxSuppression",
