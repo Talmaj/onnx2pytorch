@@ -12,6 +12,7 @@ from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .hardsigmoid import Hardsigmoid
+from .if_op import If
 from .instancenorm import InstanceNormWrapper
 from .loop import Loop
 from .lrn import LRN
@@ -56,6 +57,7 @@ __all__ = [
     "Gather",
     "GatherND",
     "GlobalAveragePool",
+    "If",
     "InstanceNormWrapper",
     "Loop",
     "LRN",
