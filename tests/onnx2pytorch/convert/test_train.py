@@ -14,7 +14,9 @@ def test_train_multiple_models():
     original_output = original_model(dummy_input)
 
     bitstream = io.BytesIO()
-    torch.onnx.export(original_model, dummy_input, bitstream, opset_version=11)
+    torch.onnx.export(
+        original_model, dummy_input, bitstream, opset_version=11, dynamo=False
+    )
 
     bitstream.seek(0)
     onnx_model = onnx.load(bitstream)

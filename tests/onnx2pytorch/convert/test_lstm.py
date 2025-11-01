@@ -40,6 +40,7 @@ def test_single_layer_lstm(
         f=bitstream,
         input_names=["input", "h_0", "c_0"],
         opset_version=11,
+        dynamo=False,  # Use legacy exporter for LSTM compatibility
         dynamic_axes={
             "input": {0: "seq_len", 1: "batch"},
             "h_0": {1: "batch"},

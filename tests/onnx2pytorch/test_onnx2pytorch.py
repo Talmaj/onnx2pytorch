@@ -42,6 +42,7 @@ def test_onnx2pytorch2onnx(onnx_model, onnx_model_outputs, onnx_inputs):
         export_params=True,
         opset_version=11,
         do_constant_folding=True,
+        dynamo=False,
         input_names=list(onnx_inputs.keys()),
     )
 

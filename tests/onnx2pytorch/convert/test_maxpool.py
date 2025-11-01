@@ -85,6 +85,7 @@ def test_maxpool_2d_ceil():
         f=bitstream,
         input_names=["x"],
         opset_version=11,
+        dynamo=False,
     )
     onnx_model = onnx.ModelProto.FromString(bitstream.getvalue())
     o2p_model = ConvertModel(onnx_model)
@@ -100,6 +101,7 @@ def test_maxpool_2d_ceil():
         f=bitstream,
         input_names=["x"],
         opset_version=11,
+        dynamo=False,
     )
     onnx_model = onnx.ModelProto.FromString(bitstream.getvalue())
     o2p_model = ConvertModel(onnx_model)
