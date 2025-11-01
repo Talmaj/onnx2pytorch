@@ -3,6 +3,6 @@ pre-commit>=2.2.0
 torch>=1.4.0
 torchvision>=0.9.0
 onnx>=1.6.0
-onnxruntime>=1.5.0
+onnxruntime>=1.12.0
 onnxscript>=0.1.0
 numpy>=1.18.1
