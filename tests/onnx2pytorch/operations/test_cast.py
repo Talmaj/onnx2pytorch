@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import pytest
-from onnx.mapping import TENSOR_TYPE_TO_NP_TYPE
 
 from onnx2pytorch.operations import Cast
 
