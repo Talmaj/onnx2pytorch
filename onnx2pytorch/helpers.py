@@ -23,6 +23,7 @@ def to_onnx(model, inp_size, device=torch.device("cpu"), do_constant_folding=Fal
         do_constant_folding=do_constant_folding,
         input_names=["input"],
         output_names=["output"],
+        dynamo=False,  # Use legacy exporter for compatibility with LSTM
     )
     return onnx.ModelProto.FromString(bitstream.getvalue())
 
