@@ -412,7 +412,7 @@ def convert_gru_layer(node, weights):
         direction="forward",
         hidden_size=None,
         layout=0,
-        linear_before_reset=0,
+        linear_before_reset=0,  # ONNX spec default
     )
     dc.update(extract_attributes(node))
     if dc["activation_alpha"] is not None:
@@ -436,10 +436,7 @@ def convert_gru_layer(node, weights):
         raise NotImplementedError(
             "GRU not implemented for layout={}".format(dc["layout"])
         )
-    if dc["linear_before_reset"] != 0:
-        raise NotImplementedError(
-            "GRU linear_before_reset={}".format(dc["linear_before_reset"])
-        )
+    # linear_before_reset is now supported for both 0 and 1
 
     kwargs = {
         "input_size": W.shape[2],
@@ -570,5 +567,5 @@ def convert_gru_layer(node, weights):
         )
         getattr(gru_layer, "bias_hh_l0").data = Rb_rzn
 
-    layer = GRUWrapper(gru_layer)
+    layer = GRUWrapper(gru_layer, linear_before_reset=dc["linear_before_reset"])
     return layer
