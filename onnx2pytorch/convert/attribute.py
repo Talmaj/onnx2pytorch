@@ -17,14 +17,15 @@ AttributeType = dict(
     STRING=3,
     TENSOR=4,
     GRAPH=5,
-    SPARSE_TENSOR=11,
     FLOATS=6,
     INTS=7,
     STRINGS=8,
     TENSORS=9,
     GRAPHS=10,
+    SPARSE_TENSOR=11,
     SPARSE_TENSORS=12,
     TYPE_PROTO=13,
+    TYPE_PROTOS=14,
 )
 
 
@@ -44,8 +45,20 @@ def extract_attr_values(attr):
         value = attr.s.decode()
     elif attr.type == AttributeType["GRAPH"]:
         value = attr.g
+    elif attr.type == AttributeType["STRINGS"]:
+        value = tuple(s.decode() for s in attr.strings)
+    elif attr.type == AttributeType["TENSORS"]:
+        value = tuple(numpy_helper.to_array(t) for t in attr.tensors)
+    elif attr.type == AttributeType["GRAPHS"]:
+        value = tuple(attr.graphs)
+    elif attr.type == AttributeType["SPARSE_TENSOR"]:
+        value = attr.sparse_tensor
+    elif attr.type == AttributeType["SPARSE_TENSORS"]:
+        value = tuple(attr.sparse_tensors)
     elif attr.type == AttributeType["TYPE_PROTO"]:
         value = attr.tp
+    elif attr.type == AttributeType["TYPE_PROTOS"]:
+        value = tuple(attr.type_protos)
     else:
         raise NotImplementedError(
             "Extraction of attribute type {} not implemented.".format(attr.type)
