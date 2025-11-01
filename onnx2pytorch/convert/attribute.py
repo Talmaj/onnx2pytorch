@@ -111,6 +111,8 @@ def extract_attributes(node):
             kwargs["dilation"] = extract_attr_values(attr)
         elif attr.name == "direction":
             kwargs["direction"] = extract_attr_values(attr)
+        elif attr.name == "dtype":
+            kwargs["dtype"] = extract_attr_values(attr)
         elif attr.name == "ends":
             kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "epsilon":
@@ -119,6 +121,8 @@ def extract_attributes(node):
             kwargs["groups"] = extract_attr_values(attr)
         elif attr.name == "hidden_size":
             kwargs["hidden_size"] = extract_attr_values(attr)
+        elif attr.name == "high":
+            kwargs["high"] = extract_attr_values(attr)
         elif attr.name == "input_forget":
             kwargs["input_forget"] = extract_attr_values(attr)
         elif attr.name == "keepdims":
@@ -129,6 +133,8 @@ def extract_attributes(node):
             kwargs["largest"] = extract_attr_values(attr)
         elif attr.name == "layout":
             kwargs["layout"] = extract_attr_values(attr)
+        elif attr.name == "low":
+            kwargs["low"] = extract_attr_values(attr)
         elif attr.name == "max":
             kwargs["max"] = extract_attr_values(attr)
         elif attr.name == "min":
@@ -154,6 +160,8 @@ def extract_attributes(node):
             kwargs["dims"] = extract_attr_values(attr)
         elif attr.name == "repeats":
             kwargs["repeats"] = extract_attr_values(attr)
+        elif attr.name == "seed":
+            kwargs["seed"] = extract_attr_values(attr)
         elif attr.name == "sorted":
             kwargs["sorted"] = extract_attr_values(attr)
         elif attr.name == "sparse_value":

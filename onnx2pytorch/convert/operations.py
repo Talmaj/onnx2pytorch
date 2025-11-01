@@ -198,6 +198,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = PRelu()
         elif node.op_type == "Range":
             op = Range()
+        elif node.op_type == "RandomUniformLike":
+            op = RandomUniformLike(**extract_attributes(node))
         elif node.op_type == "Reciprocal":
             op = OperatorWrapper(torch.reciprocal)
         elif node.op_type == "ReduceMax":
