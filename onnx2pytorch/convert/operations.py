@@ -135,6 +135,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.greater_equal)
         elif node.op_type == "Identity":
             op = nn.Identity()
+        elif node.op_type == "If":
+            op = If(
+                opset_version=opset_version,
+                batch_dim=batch_dim,
+                **extract_attributes(node),
+            )
         elif node.op_type == "InstanceNormalization":
             op = convert_instance_norm_layer(node, params=params)
         elif node.op_type == "LeakyRelu":

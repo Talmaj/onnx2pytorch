@@ -113,6 +113,8 @@ def extract_attributes(node):
             kwargs["direction"] = extract_attr_values(attr)
         elif attr.name == "dtype":
             kwargs["dtype"] = extract_attr_values(attr)
+        elif attr.name == "else_branch":
+            kwargs["else_branch"] = extract_attr_values(attr)
         elif attr.name == "ends":
             kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "epsilon":
@@ -174,6 +176,8 @@ def extract_attributes(node):
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "starts":
             kwargs["starts"] = extract_attr_values(attr)
+        elif attr.name == "then_branch":
+            kwargs["then_branch"] = extract_attr_values(attr)
         elif attr.name == "to":
             kwargs["dtype"] = TENSOR_PROTO_MAPPING[extract_attr_values(attr)].lower()
         elif attr.name == "transB":
