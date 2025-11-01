@@ -22,6 +22,7 @@ from .onehot import OneHot
 from .pad import Pad
 from .prelu import PRelu
 from .range import Range
+from .randomuniformlike import RandomUniformLike
 from .reducemax import ReduceMax
 from .reducesum import ReduceSum
 from .reducel2 import ReduceL2
@@ -65,6 +66,7 @@ __all__ = [
     "Pad",
     "PRelu",
     "Range",
+    "RandomUniformLike",
     "ReduceMax",
     "ReduceSum",
     "ReduceL2",
