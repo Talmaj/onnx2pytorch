@@ -24,6 +24,7 @@ AttributeType = dict(
     TENSORS=9,
     GRAPHS=10,
     SPARSE_TENSORS=12,
+    TYPE_PROTO=13,
 )
 
 
@@ -43,6 +44,8 @@ def extract_attr_values(attr):
         value = attr.s.decode()
     elif attr.type == AttributeType["GRAPH"]:
         value = attr.g
+    elif attr.type == AttributeType["TYPE_PROTO"]:
+        value = attr.tp
     else:
         raise NotImplementedError(
             "Extraction of attribute type {} not implemented.".format(attr.type)
@@ -180,6 +183,8 @@ def extract_attributes(node):
             kwargs["then_branch"] = extract_attr_values(attr)
         elif attr.name == "to":
             kwargs["dtype"] = TENSOR_PROTO_MAPPING[extract_attr_values(attr)].lower()
+        elif attr.name == "type":
+            kwargs["type"] = extract_attr_values(attr)
         elif attr.name == "transB":
             kwargs["transpose_weight"] = not extract_attr_values(attr)
         elif attr.name == "transA":

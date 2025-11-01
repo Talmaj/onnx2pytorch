@@ -451,15 +451,12 @@ def test_if_seq_official_onnx():
     assert torch.allclose(outputs[0][0], torch.from_numpy(expected[0]))
 
 
-@pytest.mark.skip(reason="Optional types not yet fully supported")
 def test_if_opt_official_onnx():
     """
     Official ONNX test case for If with optional types.
     Return an empty optional sequence of tensor if True,
     return an optional sequence with value x otherwise.
     From: https://github.com/onnx/onnx/blob/main/docs/Operators.md#If
-
-    Note: This test is skipped as optional types require additional implementation.
     """
     ten_in_tp = helper.make_tensor_type_proto(onnx.TensorProto.FLOAT, shape=[5])
     seq_in_tp = helper.make_sequence_type_proto(ten_in_tp)
