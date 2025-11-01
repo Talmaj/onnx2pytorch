@@ -139,7 +139,9 @@ def test_gru_linear_before_reset(linear_before_reset, bidirectional):
         [W_initializer, R_initializer, B_initializer],
     )
 
-    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 14)])
+    model = helper.make_model(
+        graph, opset_imports=[helper.make_opsetid("", 14)], ir_version=8
+    )
     onnx.checker.check_model(model)
 
     # Run with onnxruntime to get expected output
