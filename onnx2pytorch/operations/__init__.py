@@ -16,6 +16,7 @@ from .gru import GRUWrapper
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
 from .instancenorm import InstanceNormWrapper
+from .layernorm import LayerNorm
 from .loop import Loop
 from .lrn import LRN
 from .lstm import LSTMWrapper
@@ -65,6 +66,7 @@ __all__ = [
     "GRUWrapper",
     "If",
     "InstanceNormWrapper",
+    "LayerNorm",
     "Loop",
     "LRN",
     "LSTMWrapper",
