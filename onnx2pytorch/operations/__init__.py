@@ -11,6 +11,7 @@ from .flatten import Flatten
 from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
+from .gru import GRUWrapper
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
 from .instancenorm import InstanceNormWrapper
@@ -59,6 +60,7 @@ __all__ = [
     "Gather",
     "GatherND",
     "GlobalAveragePool",
+    "GRUWrapper",
     "If",
     "InstanceNormWrapper",
     "Loop",

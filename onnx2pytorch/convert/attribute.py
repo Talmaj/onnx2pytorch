@@ -151,6 +151,8 @@ def extract_attributes(node):
             kwargs["largest"] = extract_attr_values(attr)
         elif attr.name == "layout":
             kwargs["layout"] = extract_attr_values(attr)
+        elif attr.name == "linear_before_reset":
+            kwargs["linear_before_reset"] = extract_attr_values(attr)
         elif attr.name == "low":
             kwargs["low"] = extract_attr_values(attr)
         elif attr.name == "max":
