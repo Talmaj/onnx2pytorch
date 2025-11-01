@@ -96,7 +96,7 @@ def extract_attributes(node):
         elif attr.name == "axis" and node.op_type == "Flatten":
             kwargs["start_dim"] = extract_attr_values(attr)
         elif attr.name == "axis" and node.op_type == "LayerNormalization":
-            continue
+            kwargs["axis"] = extract_attr_values(attr)
         elif attr.name == "axis" or attr.name == "axes":
             v = extract_attr_values(attr)
             if isinstance(v, (tuple, list)) and len(v) == 1:
