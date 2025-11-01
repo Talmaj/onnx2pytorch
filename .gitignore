@@ -75,3 +75,6 @@ target/
 # models
 *.onnx
 *.pb
+
+# vscode
+.vscode/
