@@ -1,4 +1,5 @@
 from .add import Add
+from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
 from .bitshift import BitShift
 from .cast import Cast
@@ -48,6 +49,7 @@ from .where import Where
 
 __all__ = [
     "Add",
+    "AutoPad",
     "BatchNormWrapper",
     "BitShift",
     "Cast",

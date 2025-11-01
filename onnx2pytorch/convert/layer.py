@@ -4,6 +4,7 @@ from torch import nn
 from onnx import numpy_helper
 
 from onnx2pytorch.operations import (
+    AutoPad,
     BatchNormWrapper,
     GRUWrapper,
     InstanceNormWrapper,
@@ -50,7 +51,23 @@ def convert_layer(node, layer_type, params=None):
             "Unexpected length of kernel_size dimension: {}".format(kernel_size_length)
         )
 
+    # Handle auto_pad attribute
     pad_layer = None
+    auto_pad = kwargs.pop("auto_pad", "NOTSET")
+    if auto_pad == "VALID":
+        # No padding
+        kwargs["padding"] = 0
+    elif auto_pad in ("SAME_UPPER", "SAME_LOWER"):
+        # Create dynamic padding layer
+        # Note: explicit pads are ignored when auto_pad is not NOTSET (per ONNX spec)
+        pad_layer = AutoPad(
+            kernel_size=kwargs["kernel_size"],
+            stride=kwargs.get("stride", 1),
+            dilation=kwargs.get("dilation", 1),
+            mode=auto_pad,
+        )
+        kwargs["padding"] = 0  # Conv layer itself should not pad
+
     if params:
         weight, bias = extract_params(params)
         kwargs["bias"] = bias is not None
