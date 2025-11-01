@@ -135,7 +135,7 @@ class ConvertModel(nn.Module):
             buffer_name = get_buffer_name(tensor.name)
             self.register_buffer(
                 buffer_name,
-                torch.from_numpy(numpy_helper.to_array(tensor)),
+                torch.tensor(numpy_helper.to_array(tensor)),
             )
 
         # Compute activation dependencies, mapping each node to its dependents
@@ -194,10 +194,13 @@ class ConvertModel(nn.Module):
                 ]
             else:
                 in_activations = [
-                    activations[in_op_id] if in_op_id in activations
-                    # if in_op_id not in activations neither in parameters then
-                    # it must be the initial input
-                    else get_init_parameter([self], in_op_id, inputs[0])
+                    (
+                        activations[in_op_id]
+                        if in_op_id in activations
+                        # if in_op_id not in activations neither in parameters then
+                        # it must be the initial input
+                        else get_init_parameter([self], in_op_id, inputs[0])
+                    )
                     for in_op_id in node.input
                 ]
 

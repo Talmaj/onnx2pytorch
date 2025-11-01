@@ -22,7 +22,7 @@ def test_onehot(indices, axis):
     values = torch.tensor([off_value, on_value], dtype=output_type)
     y = one_hot(indices.numpy(), depth.numpy(), axis=axis, dtype=np.float32)
     y = y * (on_value - off_value) + off_value
-    y = torch.from_numpy(y)
+    y = torch.tensor(y)
 
     op = OneHot(axis)
     out = op(indices, depth, values)

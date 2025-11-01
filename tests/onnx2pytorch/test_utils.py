@@ -122,7 +122,7 @@ def test_extract_padding_params_for_conv_layer(pads, output):
         s = len(pads) // 2
         inp = np.random.rand(*s * [3])
         expected_out = pad_impl(inp, np.array(pads), "constant", 0)
-        infered_out = out(torch.from_numpy(inp)).numpy()
+        infered_out = out(torch.tensor(inp)).numpy()
         assert (expected_out == infered_out).all()
         assert output._get_name() == out._get_name()
         assert output.padding == out.padding

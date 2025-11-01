@@ -64,7 +64,7 @@ class If(nn.Module):
             buffer_name = self.ops.get_buffer_name(f"then_{tensor.name}")
             self.register_buffer(
                 buffer_name,
-                torch.from_numpy(numpy_helper.to_array(tensor)),
+                torch.tensor(numpy_helper.to_array(tensor)),
             )
 
         # Store initializers for else_branch as buffers
@@ -72,7 +72,7 @@ class If(nn.Module):
             buffer_name = self.ops.get_buffer_name(f"else_{tensor.name}")
             self.register_buffer(
                 buffer_name,
-                torch.from_numpy(numpy_helper.to_array(tensor)),
+                torch.tensor(numpy_helper.to_array(tensor)),
             )
 
     def _execute_branch(

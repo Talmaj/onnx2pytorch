@@ -11,22 +11,22 @@ def test_cast(dtype):
     shape = (3, 4)
     x_np = np.array(
         [
-            u"0.47892547",
-            u"0.48033667",
-            u"0.49968487",
-            u"0.81910545",
-            u"0.47031248",
-            u"0.816468",
-            u"0.21087195",
-            u"0.7229038",
-            u"NaN",
-            u"INF",
-            u"+INF",
-            u"-INF",
+            "0.47892547",
+            "0.48033667",
+            "0.49968487",
+            "0.81910545",
+            "0.47031248",
+            "0.816468",
+            "0.21087195",
+            "0.7229038",
+            "NaN",
+            "INF",
+            "+INF",
+            "-INF",
         ],
         dtype=np.dtype(object),
     ).reshape(shape)
-    x = torch.from_numpy(x_np.astype(dtype))
+    x = torch.tensor(x_np.astype(dtype))
     op = Cast(dtype)
     y = x_np.astype(getattr(np, dtype.lower()))
     assert np.allclose(op(x).numpy(), y, rtol=0, atol=0, equal_nan=True)

@@ -137,9 +137,9 @@ def test_loop_sum():
 
     o2p_model = ConvertModel(model_def, experimental=True)
     o2p_inputs = {
-        "trip_count": torch.from_numpy(trip_count_input),
-        "cond": torch.from_numpy(cond_input),
-        "y": torch.from_numpy(y_input),
+        "trip_count": torch.tensor(trip_count_input),
+        "cond": torch.tensor(cond_input),
+        "y": torch.tensor(y_input),
     }
     o2p_outputs = o2p_model(**o2p_inputs)
     o2p_res_y, o2p_res_scan = o2p_outputs

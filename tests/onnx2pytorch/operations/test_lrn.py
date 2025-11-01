@@ -46,7 +46,7 @@ def test_lrn_basic():
 
     # Create a simple input
     x_np = np.random.randn(1, 10, 4, 4).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -68,7 +68,7 @@ def test_lrn_custom_parameters():
 
     # Create a simple input
     x_np = np.random.randn(2, 8, 3, 3).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -89,7 +89,7 @@ def test_lrn_size_one():
     bias = 1.0
 
     x_np = np.random.randn(1, 5, 2, 2).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -111,7 +111,7 @@ def test_lrn_large_size():
 
     # Only 10 channels but size is 20
     x_np = np.random.randn(1, 10, 3, 3).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -134,7 +134,7 @@ def test_lrn_known_values():
     # Simple input: [[[1, 2], [3, 4], [5, 6]]]
     # Shape: (1, 3, 1, 2)
     x_np = np.array([[[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]]).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -168,7 +168,7 @@ def test_lrn_ones():
     bias = 1.0
 
     x_np = np.ones((1, 10, 4, 4), dtype=np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size, alpha, beta, bias)
@@ -204,7 +204,7 @@ def test_lrn_single_channel():
     """Test LRN with single channel input."""
     size = 3
     x_np = np.random.randn(1, 1, 5, 5).astype(np.float32)
-    x = torch.from_numpy(x_np)
+    x = torch.tensor(x_np)
 
     # Compute reference output
     exp_y = lrn_reference(x_np, size)
@@ -256,7 +256,7 @@ def test_lrn_official_onnx():
     y_expected = lrn_reference(x, size=nsize, alpha=alpha, beta=beta, bias=bias)
 
     # Test our implementation
-    x_torch = torch.from_numpy(x)
+    x_torch = torch.tensor(x)
     op = LRN(alpha=alpha, beta=beta, bias=bias, size=nsize)
     y_torch = op(x_torch)
 
@@ -279,7 +279,7 @@ def test_lrn_default_official_onnx():
     y_expected = lrn_reference(x, size=nsize)
 
     # Test our implementation (size is the only required parameter, others use defaults)
-    x_torch = torch.from_numpy(x)
+    x_torch = torch.tensor(x)
     op = LRN(size=nsize)
     y_torch = op(x_torch)
 

@@ -22,8 +22,8 @@ def test_hardsigmoid(x):
     assert isinstance(op, torch.nn.Hardsigmoid)
     x = np.random.randn(3, 4, 5).astype(np.float32)
     y = np.clip(x * alpha + beta, 0, 1)
-    out = op(torch.from_numpy(x))
-    np.testing.assert_allclose(out, torch.from_numpy(y), rtol=1e-6, atol=1e-6)
+    out = op(torch.tensor(x))
+    np.testing.assert_allclose(out, torch.tensor(y), rtol=1e-6, atol=1e-6)
 
 
 def test_hardsigmoid_with_custom_alpha_and_beta(x):
@@ -32,8 +32,8 @@ def test_hardsigmoid_with_custom_alpha_and_beta(x):
     op = Hardsigmoid(alpha=alpha, beta=beta)
     assert not isinstance(op, torch.nn.Hardsigmoid)
     y = np.clip(x * alpha + beta, 0, 1)
-    out = op(torch.from_numpy(x))
-    np.testing.assert_allclose(out, torch.from_numpy(y), rtol=1e-6, atol=1e-6)
+    out = op(torch.tensor(x))
+    np.testing.assert_allclose(out, torch.tensor(y), rtol=1e-6, atol=1e-6)
 
 
 def test_hardsigmoid_conversion():

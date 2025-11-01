@@ -47,7 +47,7 @@ class Loop(nn.Module):
             buffer_name = self.ops.get_buffer_name(tensor.name)
             self.register_buffer(
                 buffer_name,
-                torch.from_numpy(numpy_helper.to_array(tensor)),
+                torch.tensor(numpy_helper.to_array(tensor)),
             )
 
         # We do not track dependencies (for memory reduction) within loops.
@@ -122,11 +122,14 @@ class Loop(nn.Module):
                     ]
                 else:
                     in_activations = [
-                        activations[in_op_id] if in_op_id in activations
-                        # if in_op_id not in activations neither in parameters then
-                        # it must be the initial input
-                        else self.ops.get_init_parameter(
-                            buffer_modules, in_op_id, inputs[0]
+                        (
+                            activations[in_op_id]
+                            if in_op_id in activations
+                            # if in_op_id not in activations neither in parameters then
+                            # it must be the initial input
+                            else self.ops.get_init_parameter(
+                                buffer_modules, in_op_id, inputs[0]
+                            )
                         )
                         for in_op_id in node.input
                     ]

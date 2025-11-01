@@ -51,8 +51,8 @@ def test_convert_linear_layer_trasB1():
     params = [numpy_helper.from_array(b), numpy_helper.from_array(c)]
     op = convert_linear_layer(node, params)
     op.eval()
-    out = op(torch.from_numpy(a))
-    torch.allclose(torch.from_numpy(y), out)
+    out = op(torch.tensor(a))
+    torch.allclose(torch.tensor(y), out)
 
 
 def test_convert_linear_layer_default():
@@ -65,8 +65,8 @@ def test_convert_linear_layer_default():
     params = [numpy_helper.from_array(b), numpy_helper.from_array(c)]
     op = convert_linear_layer(node, params)
     op.eval()
-    out = op(torch.from_numpy(a))
-    torch.allclose(torch.from_numpy(y), out)
+    out = op(torch.tensor(a))
+    torch.allclose(torch.tensor(y), out)
 
 
 def test_convert_linear_layer_transB0():
@@ -81,8 +81,8 @@ def test_convert_linear_layer_transB0():
     params = [numpy_helper.from_array(b), numpy_helper.from_array(c)]
     op = convert_linear_layer(node, params)
     op.eval()
-    out = op(torch.from_numpy(a))
-    torch.allclose(torch.from_numpy(y), out)
+    out = op(torch.tensor(a))
+    torch.allclose(torch.tensor(y), out)
 
 
 def test_convert_linear_layer_alpha():
@@ -97,8 +97,8 @@ def test_convert_linear_layer_alpha():
     params = [numpy_helper.from_array(b), numpy_helper.from_array(c)]
     op = convert_linear_layer(node, params)
     op.eval()
-    out = op(torch.from_numpy(a))
-    torch.allclose(torch.from_numpy(y), out)
+    out = op(torch.tensor(a))
+    torch.allclose(torch.tensor(y), out)
 
 
 def test_convert_linear_layer_all():
@@ -121,5 +121,5 @@ def test_convert_linear_layer_all():
     params = [numpy_helper.from_array(b), numpy_helper.from_array(c)]
     op = convert_linear_layer(node, params)
     op.eval()
-    out = op(torch.from_numpy(a))
-    torch.allclose(torch.from_numpy(y), out)
+    out = op(torch.tensor(a))
+    torch.allclose(torch.tensor(y), out)

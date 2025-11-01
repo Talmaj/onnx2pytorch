@@ -34,9 +34,9 @@ def b_np():
 
 def test_instancenorm(x_np, s_np, b_np):
     eps = 1e-5
-    x = torch.from_numpy(x_np)
-    s = torch.from_numpy(s_np)
-    b = torch.from_numpy(b_np)
+    x = torch.tensor(x_np)
+    s = torch.tensor(s_np)
+    b = torch.tensor(b_np)
 
     exp_y = instancenorm_reference(x_np, s_np, b_np, eps).astype(np.float32)
     exp_y_shape = (1, 2, 1, 3)
@@ -49,9 +49,9 @@ def test_instancenorm(x_np, s_np, b_np):
 
 def test_instancenorm_lazy(x_np, s_np, b_np):
     eps = 1e-5
-    x = torch.from_numpy(x_np)
-    s = torch.from_numpy(s_np)
-    b = torch.from_numpy(b_np)
+    x = torch.tensor(x_np)
+    s = torch.tensor(s_np)
+    b = torch.tensor(b_np)
 
     exp_y = instancenorm_reference(x_np, s_np, b_np, eps).astype(np.float32)
     exp_y_shape = (1, 2, 1, 3)
