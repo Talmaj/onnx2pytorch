@@ -30,6 +30,7 @@ from .range import Range
 from .randomuniformlike import RandomUniformLike
 from .reducemax import ReduceMax
 from .reducesum import ReduceSum
+from .reducesumsquare import ReduceSumSquare
 from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
@@ -80,6 +81,7 @@ __all__ = [
     "RandomUniformLike",
     "ReduceMax",
     "ReduceSum",
+    "ReduceSumSquare",
     "ReduceL2",
     "Reshape",
     "Resize",
