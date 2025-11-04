@@ -34,9 +34,9 @@ Currently supported and tested models from [onnx_zoo](https://github.com/onnx/mo
 
 ## Limitations
 Known current version limitations are:
-- `batch_size > 1` could deliver unexpected results due to ambiguity of onnx's BatchNorm layer.   
-That is why in this case for now we raise an assertion error.  
-Set `experimental=True` in `ConvertModel` to be able to use `batch_size > 1`.
+- `batch_size > 1` requires `experimental=True` in `ConvertModel`.   
+BatchNorm layers use inference mode (running statistics), which is correct for most ONNX models  
+exported for inference. If your model was exported in training mode, results may differ.
 - Fine tuning and training of converted models was not tested yet, only inference.
 
 ## Development

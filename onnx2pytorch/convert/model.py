@@ -96,8 +96,9 @@ class ConvertModel(nn.Module):
         batch_dim: int
             Dimension of the batch.
         experimental: bool
-            Experimental implementation allows batch_size > 1. However,
-            batchnorm layers could potentially produce false outputs.
+            Experimental implementation allows batch_size > 1.
+            BatchNorm layers use inference mode (running statistics), which is
+            correct for most ONNX models exported for inference.
         enable_pruning: bool
             Track kept/pruned indices between different calls to forward pass.
 
@@ -145,8 +146,11 @@ class ConvertModel(nn.Module):
 
         if experimental:
             warnings.warn(
-                "Using experimental implementation that allows 'batch_size > 1'."
-                "Batchnorm layers could potentially produce false outputs."
+                "Using experimental implementation that allows 'batch_size > 1'. "
+                "BatchNorm layers use inference mode (running statistics). "
+                "This is correct for ONNX models exported for inference, but may be "
+                "incorrect if the model was exported in training mode.",
+                UserWarning,
             )
 
     def forward(self, *input_list, **input_dict):

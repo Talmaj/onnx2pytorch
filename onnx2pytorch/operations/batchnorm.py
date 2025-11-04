@@ -48,6 +48,9 @@ class BatchNormWrapper(nn.Module):
             for key, value in zip(keys, torch_params):
                 getattr(self.bnu, key).data = value
 
+        # Set to eval mode to use running statistics (ONNX inference behavior)
+        self.bnu.eval()
+
     def forward(self, X, scale=None, B=None, input_mean=None, input_var=None):
         if self.has_lazy:
             self.bnu.initialize_parameters(X)
