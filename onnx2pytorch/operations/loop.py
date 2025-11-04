@@ -1,10 +1,7 @@
 from collections import defaultdict
-from copy import deepcopy
 from functools import partial
 from importlib import import_module
-import warnings
 
-import numpy as np
 import onnx
 import torch
 from onnx import numpy_helper
@@ -71,7 +68,6 @@ class Loop(nn.Module):
         """
 
         N = len(self.input_names) - 2
-        K = len(self.output_names) - (1 + N)
 
         M = inputs[0]
         cond = inputs[1]
