@@ -271,9 +271,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             kwargs.update(extract_attributes(node))
             op = nn.LogSoftmax(**kwargs)
         elif node.op_type == "Softplus":
-            op = nn.Softplus(**extract_attributes(node))
+            # ONNX Softplus has no attributes: y = ln(exp(x) + 1)
+            # PyTorch Softplus with beta=1 matches ONNX spec
+            op = nn.Softplus(beta=1)
         elif node.op_type == "Softsign":
-            op = nn.Softsign(**extract_attributes(node))
+            # ONNX Softsign has no attributes: y = x / (1 + |x|)
+            op = nn.Softsign()
         elif node.op_type == "Split":
             kwargs = extract_attributes(node)
             # if the split_size_or_sections is not in node attributes,
