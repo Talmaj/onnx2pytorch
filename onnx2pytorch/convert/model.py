@@ -10,6 +10,7 @@ from onnx import numpy_helper
 from torch import nn
 from torch.jit import TracerWarning
 from torch.nn.modules.linear import Identity
+from torch.nn import Dropout
 
 from onnx2pytorch.constants import (
     COMPOSITE_LAYERS,
@@ -213,6 +214,9 @@ class ConvertModel(nn.Module):
                 for out_op_id, output in zip(node.output, op(*in_activations)):
                     activations[out_op_id] = output
             else:
+                if 'dropout' in out_op_id:
+                    op = Dropout()
+
                 activations[out_op_id] = op(*in_activations)
 
             # Remove activations that are no longer needed

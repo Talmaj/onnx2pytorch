@@ -210,7 +210,10 @@ def extract_attributes(node):
         elif attr.name == "transA":
             kwargs["transpose_activation"] = bool(extract_attr_values(attr))
         elif attr.name == "value":
-            kwargs["constant"] = extract_attr_values(attr)
+            if node.op_type == "Pad":
+                kwargs["value"] = extract_attr_values(attr)
+            else:
+                kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "value_float":
             kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "value_floats":

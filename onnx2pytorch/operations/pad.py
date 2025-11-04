@@ -4,12 +4,15 @@ from onnx2pytorch.operations.base import Operator
 
 
 class Pad(Operator):
-    def __init__(self, mode="constant", padding=None):
+    def __init__(self, mode="constant", padding=None, value=0):
         self.mode = mode
         self.padding = padding
+        self.value = value
         super().__init__()
 
-    def forward(self, input, pads=None, value=0):
+    def forward(self, input, pads=None, value=None):
+        if value is None:
+            value = self.value
         if self.padding is not None:
             pads = self.padding
         elif pads is None:

@@ -6,3 +6,4 @@ onnx>=1.6.0
 onnxruntime>=1.12.0
 onnxscript>=0.1.0
 numpy>=1.18.1
+protobuf==3.20.0
