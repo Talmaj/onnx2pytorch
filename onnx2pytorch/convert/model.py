@@ -96,9 +96,7 @@ class ConvertModel(nn.Module):
         batch_dim: int
             Dimension of the batch.
         experimental: bool
-            Experimental implementation allows batch_size > 1.
-            BatchNorm layers use inference mode (running statistics), which is
-            correct for most ONNX models exported for inference.
+            At the moment it does not do anything anymore. Default: False
         enable_pruning: bool
             Track kept/pruned indices between different calls to forward pass.
 
@@ -144,15 +142,6 @@ class ConvertModel(nn.Module):
             self.onnx_model.graph, self, self.mapping
         )
 
-        if experimental:
-            warnings.warn(
-                "Using experimental implementation that allows 'batch_size > 1'. "
-                "BatchNorm layers use inference mode (running statistics). "
-                "This is correct for ONNX models exported for inference, but may be "
-                "incorrect if the model was exported in training mode.",
-                UserWarning,
-            )
-
     def forward(self, *input_list, **input_dict):
         if len(input_list) > 0 and len(input_dict) > 0:
             raise ValueError(
@@ -164,10 +153,6 @@ class ConvertModel(nn.Module):
         if len(input_dict) > 0:
             inputs = [input_dict[key] for key in self.input_names]
 
-        if not self.experimental and inputs[0].shape[self.batch_dim] > 1:
-            raise NotImplementedError(
-                "Input with larger batch size than 1 not supported yet."
-            )
         activations = dict(zip(self.input_names, inputs))
         still_needed_by = deepcopy(self.needed_by)
 
