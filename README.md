@@ -34,9 +34,9 @@ Currently supported and tested models from [onnx_zoo](https://github.com/onnx/mo
 
 ## Limitations
 Known current version limitations are:
-- `batch_size > 1` requires `experimental=True` in `ConvertModel`.   
-BatchNorm layers use inference mode (running statistics), which is correct for most ONNX models  
-exported for inference. If your model was exported in training mode, results may differ.
+- `batch_size > 1` is now supported by default.   
+BatchNorm layers use inference mode (running statistics), which is correct for ONNX models  
+exported for inference.
 - Fine tuning and training of converted models was not tested yet, only inference.
 
 ## Development
