@@ -10,7 +10,6 @@ try:
 
         cls_to_become = _BatchNorm
 
-
 except ImportError:
     # for torch < 1.10.0
     from torch.nn.modules.batchnorm import _LazyBatchNorm
@@ -56,7 +55,7 @@ class BatchNormWrapper(nn.Module):
         if scale is not None:
             getattr(self.bnu, "weight").data = scale
         if B is not None:
-            getattr(self.bnu, "bias").data = scale
+            getattr(self.bnu, "bias").data = B
         if input_mean is not None:
             getattr(self.bnu, "running_mean").data = input_mean
         if input_var is not None:
