@@ -220,9 +220,10 @@ class ConvertModel(nn.Module):
                 if in_op_id in still_needed_by:
                     still_needed_by[in_op_id].discard(out_op_id)
                     if len(still_needed_by[in_op_id]) == 0:
-                        # only delete the activation of this layer if it is not an output
-                        if in_op_id not in self.output_names:
-                            del activations[in_op_id]
+                        if in_op_id in activations:
+                            # only delete the activation of this layer if it is not an output
+                            if in_op_id not in self.output_names:
+                                del activations[in_op_id]
 
             if self.debug:
                 # compare if the activations of pytorch are the same as from onnxruntime
