@@ -10,7 +10,7 @@ def tensor():
 
 
 def test_reduce_max_with_dim(tensor):
-    reduce_max = ReduceMax(dim=0, keepdim=True)
+    reduce_max = ReduceMax(opset_version=13, dim=0, keepdim=True)
     output = reduce_max(tensor)
     expected_output = torch.tensor([[7, 8, 9]])
 
@@ -19,7 +19,7 @@ def test_reduce_max_with_dim(tensor):
 
 
 def test_reduce_max(tensor):
-    reduce_max = ReduceMax(keepdim=False)
+    reduce_max = ReduceMax(opset_version=13, keepdim=False)
     output = reduce_max(tensor)
     expected_output = torch.tensor(9)
 
