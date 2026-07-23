@@ -163,7 +163,7 @@ class ConvertModel(nn.Module):
             in_op_names = [
                 self.mapping.get(in_op_id, in_op_id)
                 for in_op_id in node.input
-                if in_op_id in activations
+                if in_op_id in activations and in_op_id != ""
             ]
 
             # getting correct layer
@@ -191,6 +191,7 @@ class ConvertModel(nn.Module):
                         else get_init_parameter([self], in_op_id, inputs[0])
                     )
                     for in_op_id in node.input
+                    if in_op_id != ""
                 ]
 
             in_activations = [in_act for in_act in in_activations if in_act is not None]
