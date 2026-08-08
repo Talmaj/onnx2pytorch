@@ -57,7 +57,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Selu`](https://onnx.ai/onnx/operators/onnx__Selu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/selu.py)
 - [x] [`Shrink`](https://onnx.ai/onnx/operators/onnx__Shrink.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/shrink.py)
 - [x] [`Swish`](https://onnx.ai/onnx/operators/onnx__Swish.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/swish.py)
-- [ ] [`SwiGLU`](https://onnx.ai/onnx/operators/onnx__SwiGLU.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/swiglu.py)
+- [x] [`SwiGLU`](https://onnx.ai/onnx/operators/onnx__SwiGLU.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/swiglu.py)
 
 ## Reduction
 

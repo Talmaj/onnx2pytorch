@@ -364,6 +364,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.sub)
         elif node.op_type == "Sum":
             op = Sum()
+        elif node.op_type == "SwiGLU":
+            op = SwiGLU(**extract_attributes(node))
         elif node.op_type == "Swish":
             op = Swish(**extract_attributes(node))
         elif node.op_type == "Tan":

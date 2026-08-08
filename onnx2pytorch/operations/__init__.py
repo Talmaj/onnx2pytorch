@@ -53,6 +53,7 @@ from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
 from .sum import Sum
+from .swiglu import SwiGLU
 from .swish import Swish
 from .thresholdedrelu import ThresholdedRelu
 from .tile import Tile
@@ -116,6 +117,7 @@ __all__ = [
     "Split",
     "Squeeze",
     "Sum",
+    "SwiGLU",
     "Swish",
     "ThresholdedRelu",
     "Tile",
