@@ -100,6 +100,23 @@ def extract_padding_params_for_conv_layer(params):
         return pad_layer(convert_onnx_pads_to_torch(params), value=0)
 
 
+def get_reduce_dims(data, dim, axes=None, noop_with_empty_axes=False):
+    """
+    Resolve the dimensions to reduce over.
+
+    Axes are an attribute in older opset versions (dim) and an optional
+    input in newer ones (axes). Returns None if reduction is a no-op.
+    """
+    if torch.is_tensor(axes) and axes.numel() == 0:
+        axes = None
+    dims = dim if axes is None else axes
+    if dims is None:
+        return None if noop_with_empty_axes else tuple(range(data.ndim))
+    if isinstance(dims, int):
+        return dims
+    return tuple(int(d) for d in torch.atleast_1d(torch.as_tensor(dims)))
+
+
 def get_selection(indices, dim):
     """
     Give selection to assign values to specific indices at given dimension.

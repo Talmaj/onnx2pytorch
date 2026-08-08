@@ -36,6 +36,7 @@ from .pad import Pad
 from .prelu import PRelu
 from .range import Range
 from .randomuniformlike import RandomUniformLike
+from .reducel1 import ReduceL1
 from .reducemax import ReduceMax
 from .reducesum import ReduceSum
 from .reducesumsquare import ReduceSumSquare
@@ -100,6 +101,7 @@ __all__ = [
     "PRelu",
     "Range",
     "RandomUniformLike",
+    "ReduceL1",
     "ReduceMax",
     "ReduceSum",
     "ReduceSumSquare",

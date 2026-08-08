@@ -272,6 +272,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = RandomUniformLike(**extract_attributes(node))
         elif node.op_type == "Reciprocal":
             op = OperatorWrapper(torch.reciprocal)
+        elif node.op_type == "ReduceL1":
+            op = ReduceL1(**extract_attributes(node))
         elif node.op_type == "ReduceMax":
             op = ReduceMax(**extract_attributes(node))
         elif node.op_type == "ReduceMean":
