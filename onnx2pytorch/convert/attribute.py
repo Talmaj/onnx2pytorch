@@ -124,6 +124,8 @@ def extract_attributes(node):
                 kwargs["bias_multiplier"] = extract_attr_values(attr)
         elif attr.name == "bias" and node.op_type == "Shrink":
             kwargs["bias"] = extract_attr_values(attr)
+        elif attr.name == "blocksize":
+            kwargs["blocksize"] = extract_attr_values(attr)
         elif attr.name == "body":
             kwargs["body"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":

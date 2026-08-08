@@ -14,6 +14,7 @@ from .convinteger import ConvInteger
 from .cumprod import CumProd
 from .cumsum import CumSum
 from .deformconv import DeformConv
+from .depthtospace import DepthToSpace
 from .div import Div
 from .dropout import Dropout
 from .einsum import Einsum
@@ -104,6 +105,7 @@ __all__ = [
     "CumProd",
     "CumSum",
     "DeformConv",
+    "DepthToSpace",
     "Div",
     "Dropout",
     "Einsum",

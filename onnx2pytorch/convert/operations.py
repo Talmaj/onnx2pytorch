@@ -154,6 +154,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.det)
         elif node.op_type == "DeformConv":
             op = DeformConv(**extract_attributes(node))
+        elif node.op_type == "DepthToSpace":
+            op = DepthToSpace(**extract_attributes(node))
         elif node.op_type == "Div":
             op = Div()
         elif node.op_type == "Dropout":

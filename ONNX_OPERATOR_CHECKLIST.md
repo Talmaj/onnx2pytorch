@@ -101,7 +101,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 - [ ] [`CenterCropPad`](https://onnx.ai/onnx/operators/onnx__CenterCropPad.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/center_crop_pad.py)
 - [ ] [`Compress`](https://onnx.ai/onnx/operators/onnx__Compress.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/compress.py)
-- [ ] [`DepthToSpace`](https://onnx.ai/onnx/operators/onnx__DepthToSpace.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/depthtospace.py)
+- [x] [`DepthToSpace`](https://onnx.ai/onnx/operators/onnx__DepthToSpace.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/depthtospace.py)
 - [ ] [`SpaceToDepth`](https://onnx.ai/onnx/operators/onnx__SpaceToDepth.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/spacetodepth.py)
 - [x] [`GatherElements`](https://onnx.ai/onnx/operators/onnx__GatherElements.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/gatherelements.py)
 - [x] [`NonZero`](https://onnx.ai/onnx/operators/onnx__NonZero.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/nonzero.py)
