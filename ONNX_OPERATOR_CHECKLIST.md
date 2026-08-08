@@ -50,7 +50,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Activation Functions
 
-- [ ] [`Celu`](https://onnx.ai/onnx/operators/onnx__Celu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/celu.py)
+- [x] [`Celu`](https://onnx.ai/onnx/operators/onnx__Celu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/celu.py)
 - [ ] [`Gelu`](https://onnx.ai/onnx/operators/onnx__Gelu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/gelu.py)
 - [ ] [`Hardmax`](https://onnx.ai/onnx/operators/onnx__Hardmax.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/hardmax.py)
 - [ ] [`Mish`](https://onnx.ai/onnx/operators/onnx__Mish.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mish.py)

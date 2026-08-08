@@ -117,6 +117,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Cast(**extract_attributes(node))
         elif node.op_type == "Ceil":
             op = OperatorWrapper(torch.ceil)
+        elif node.op_type == "Celu":
+            op = nn.CELU(**extract_attributes(node))
         elif node.op_type == "Clip":
             op = Clip(**extract_attributes(node))
         elif node.op_type == "Concat":
