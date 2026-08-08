@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import onnx
 
+from onnx2pytorch.dtypes import ONNX_DTYPE_TO_TORCH
+
 try:
     import onnxruntime as ort
 except ImportError:
@@ -36,6 +38,29 @@ def resolve_omitted_inputs(in_activations):
     while in_activations and in_activations[-1] is OMITTED_INPUT:
         in_activations.pop()
     return [None if act is OMITTED_INPUT else act for act in in_activations]
+
+
+def get_random_generator(seed, device=None):
+    """
+    Build a generator seeded with the seed attribute of the ONNX random operators.
+
+    Returns None if no seed is given, which makes torch use its global generator.
+    """
+    if seed is None:
+        return None
+    generator = torch.Generator(device=device)
+    generator.manual_seed(int(seed))
+    return generator
+
+
+def get_torch_dtype(onnx_dtype):
+    """Map an ONNX TensorProto data type to the corresponding torch dtype."""
+    dtype = ONNX_DTYPE_TO_TORCH.get(onnx_dtype)
+    if dtype is None:
+        raise NotImplementedError(
+            "ONNX dtype {} is not supported in PyTorch.".format(onnx_dtype)
+        )
+    return dtype
 
 
 def is_constant(value):

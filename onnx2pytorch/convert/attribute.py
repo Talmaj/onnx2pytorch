@@ -209,6 +209,8 @@ def extract_attributes(node):
             kwargs["low"] = extract_attr_values(attr)
         elif attr.name == "max":
             kwargs["max"] = extract_attr_values(attr)
+        elif attr.name == "mean":
+            kwargs["mean"] = extract_attr_values(attr)
         elif attr.name == "min":
             kwargs["min"] = extract_attr_values(attr)
         elif attr.name == "mode":
@@ -264,6 +266,8 @@ def extract_attributes(node):
             kwargs["reverse"] = extract_attr_values(attr)
         elif attr.name == "rotary_embedding_dim":
             kwargs["rotary_embedding_dim"] = extract_attr_values(attr)
+        elif attr.name == "sample_size":
+            kwargs["sample_size"] = extract_attr_values(attr)
         elif attr.name == "sampling_ratio":
             kwargs["sampling_ratio"] = extract_attr_values(attr)
         elif attr.name == "saturate":
@@ -285,6 +289,8 @@ def extract_attributes(node):
             kwargs["softcap"] = extract_attr_values(attr)
         elif attr.name == "softmax_precision":
             kwargs["softmax_precision"] = extract_attr_values(attr)
+        elif attr.name == "shape":
+            kwargs["shape"] = extract_attr_values(attr)
         elif attr.name == "sorted":
             kwargs["sorted"] = extract_attr_values(attr)
         elif attr.name == "sparse_value":

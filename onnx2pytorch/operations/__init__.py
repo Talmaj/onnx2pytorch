@@ -5,6 +5,7 @@ from .attention import Attention
 from .argmin import ArgMin
 from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
+from .bernoulli import Bernoulli
 from .bitcast import BitCast
 from .bitshift import BitShift
 from .cast import Cast
@@ -125,6 +126,7 @@ __all__ = [
     "Attention",
     "AutoPad",
     "BatchNormWrapper",
+    "Bernoulli",
     "BitCast",
     "BitShift",
     "Cast",

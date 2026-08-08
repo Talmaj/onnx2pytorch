@@ -112,6 +112,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = convert_layer(node, "AvgPool")
         elif node.op_type == "BatchNormalization":
             op = convert_batch_norm_layer(node, params=params)
+        elif node.op_type == "Bernoulli":
+            op = Bernoulli(**extract_attributes(node))
         elif node.op_type == "BitCast":
             op = BitCast(**extract_attributes(node))
         elif node.op_type == "BitShift":
