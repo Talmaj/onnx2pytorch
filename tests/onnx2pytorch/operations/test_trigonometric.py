@@ -56,3 +56,9 @@ def test_atan():
     check_unary_op("Atan", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Atan", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_atanh():
+    check_unary_op("Atanh", np.array([-0.5, 0.0, 0.5], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Atanh", np.random.uniform(-0.9, 0.9, (3, 4, 5)).astype(np.float32))

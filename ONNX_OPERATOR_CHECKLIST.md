@@ -15,7 +15,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Asin`](https://onnx.ai/onnx/operators/onnx__Asin.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/asin.py)
 - [x] [`Asinh`](https://onnx.ai/onnx/operators/onnx__Asinh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/asinh.py)
 - [x] [`Atan`](https://onnx.ai/onnx/operators/onnx__Atan.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/atan.py)
-- [ ] [`Atanh`](https://onnx.ai/onnx/operators/onnx__Atanh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/atanh.py)
+- [x] [`Atanh`](https://onnx.ai/onnx/operators/onnx__Atanh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/atanh.py)
 - [ ] [`Cos`](https://onnx.ai/onnx/operators/onnx__Cos.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cos.py)
 - [ ] [`Cosh`](https://onnx.ai/onnx/operators/onnx__Cosh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cosh.py)
 - [ ] [`Sin`](https://onnx.ai/onnx/operators/onnx__Sin.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sin.py)

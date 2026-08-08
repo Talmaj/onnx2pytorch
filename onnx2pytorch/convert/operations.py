@@ -95,6 +95,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.asinh)
         elif node.op_type == "Atan":
             op = OperatorWrapper(torch.atan)
+        elif node.op_type == "Atanh":
+            op = OperatorWrapper(torch.atanh)
         elif node.op_type == "AveragePool":
             op = convert_layer(node, "AvgPool")
         elif node.op_type == "BatchNormalization":
