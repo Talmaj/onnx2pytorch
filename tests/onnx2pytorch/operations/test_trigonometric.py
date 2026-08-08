@@ -68,3 +68,9 @@ def test_cos():
     check_unary_op("Cos", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Cos", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_cosh():
+    check_unary_op("Cosh", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Cosh", np.random.randn(3, 4, 5).astype(np.float32))
