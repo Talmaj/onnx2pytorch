@@ -70,6 +70,7 @@ from .selu import Selu
 from .sequenceconstruct import SequenceConstruct
 from .shape import Shape
 from .shrink import Shrink
+from .size import Size
 from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
@@ -155,6 +156,7 @@ __all__ = [
     "SequenceConstruct",
     "Shape",
     "Shrink",
+    "Size",
     "Slice",
     "Split",
     "Squeeze",

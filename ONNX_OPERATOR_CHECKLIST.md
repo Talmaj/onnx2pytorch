@@ -107,7 +107,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [ ] [`NonZero`](https://onnx.ai/onnx/operators/onnx__NonZero.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/nonzero.py)
 - [ ] [`Trilu`](https://onnx.ai/onnx/operators/onnx__Trilu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/trilu.py)
 - [ ] [`Unique`](https://onnx.ai/onnx/operators/onnx__Unique.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/unique.py)
-- [ ] [`Size`](https://onnx.ai/onnx/operators/onnx__Size.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/size.py)
+- [x] [`Size`](https://onnx.ai/onnx/operators/onnx__Size.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/size.py)
 - [ ] [`EyeLike`](https://onnx.ai/onnx/operators/onnx__EyeLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/eyelike.py)
 - [ ] [`ReverseSequence`](https://onnx.ai/onnx/operators/onnx__ReverseSequence.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/reversesequence.py)
 - [ ] [`TensorScatter`](https://onnx.ai/onnx/operators/onnx__TensorScatter.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/tensorscatter.py)
