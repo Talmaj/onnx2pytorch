@@ -17,6 +17,7 @@ from onnx2pytorch.convert.layer import (
     convert_instance_norm_layer,
     convert_gru_layer,
     convert_lstm_layer,
+    convert_rnn_layer,
 )
 from onnx2pytorch.operations import *
 from onnx2pytorch.operations.base import OperatorWrapper
@@ -346,6 +347,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Resize(**extract_attributes(node))
         elif node.op_type == "RMSNormalization":
             op = RMSNormalization(**extract_attributes(node))
+        elif node.op_type == "RNN":
+            op = convert_rnn_layer(node, weights)
         elif node.op_type == "RoiAlign":
             op = RoiAlign(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Round":

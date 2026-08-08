@@ -9,6 +9,7 @@ from onnx2pytorch.operations import (
     InstanceNormWrapper,
     Loop,
     LSTMWrapper,
+    RNNWrapper,
     Split,
     TopK,
 )
@@ -22,6 +23,7 @@ MULTIOUTPUT_LAYERS = (
     If,
     Loop,
     LSTMWrapper,
+    RNNWrapper,
     Split,
     TopK,
 )
@@ -31,5 +33,6 @@ STANDARD_LAYERS = (
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
+    RNNWrapper,
     nn.Linear,
 )

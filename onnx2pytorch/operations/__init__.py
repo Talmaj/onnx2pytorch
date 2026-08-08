@@ -61,6 +61,7 @@ from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
 from .rmsnorm import RMSNormalization
+from .rnn import RNNWrapper
 from .roialign import RoiAlign
 from .scatter import Scatter
 from .scatterelements import ScatterElements
@@ -145,6 +146,7 @@ __all__ = [
     "Reshape",
     "Resize",
     "RMSNormalization",
+    "RNNWrapper",
     "RoiAlign",
     "Scatter",
     "ScatterElements",

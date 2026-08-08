@@ -9,6 +9,7 @@ from onnx2pytorch.operations import (
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
+    RNNWrapper,
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
@@ -568,4 +569,81 @@ def convert_gru_layer(node, weights):
         getattr(gru_layer, "bias_hh_l0").data = Rb_rzn
 
     layer = GRUWrapper(gru_layer, linear_before_reset=dc["linear_before_reset"])
+    return layer
+
+
+def convert_rnn_layer(node, weights):
+    """Convert RNN layer from onnx node and params."""
+    # ONNX RNN has the same input layout as GRU
+    params_tuple = extract_and_load_params_gru(node, weights)
+    (X, W, R, B, sequence_lens, initial_h) = params_tuple
+    if initial_h is not None:
+        raise NotImplementedError("RNN initial_h not yet implemented.")
+
+    dc = dict(
+        activation_alpha=None,
+        activation_beta=None,
+        activations=None,
+        clip=None,
+        direction="forward",
+        hidden_size=None,
+        layout=0,
+    )
+    dc.update(extract_attributes(node))
+    if dc["activation_alpha"] is not None:
+        raise NotImplementedError(
+            "RNN activation_alpha {}.".format(dc["activation_alpha"])
+        )
+    if dc["activation_beta"] is not None:
+        raise NotImplementedError(
+            "RNN activation_beta {}.".format(dc["activation_beta"])
+        )
+    if dc["clip"] is not None:
+        raise NotImplementedError("RNN clip {}".format(dc["clip"]))
+    if dc["direction"] not in ("forward", "bidirectional"):
+        raise ValueError("RNN direction {}.".format(dc["direction"]))
+    if dc["hidden_size"] is None:
+        raise ValueError("RNN hidden_size is None.")
+    if dc["layout"] != 0:
+        raise NotImplementedError(
+            "RNN not implemented for layout={}".format(dc["layout"])
+        )
+
+    nonlinearity = "tanh"
+    if dc["activations"] is not None:
+        activations = set(a.lower() for a in dc["activations"])
+        if activations not in ({"tanh"}, {"relu"}):
+            raise NotImplementedError("RNN activations {}.".format(dc["activations"]))
+        nonlinearity = activations.pop()
+
+    kwargs = {
+        "input_size": W.shape[2],
+        "hidden_size": dc["hidden_size"],
+        "num_layers": 1,
+        "nonlinearity": nonlinearity,
+        "bias": True,
+        "batch_first": False,
+        "dropout": 0,
+        "bidirectional": dc["direction"] == "bidirectional",
+    }
+    rnn_layer = nn.RNN(**kwargs)
+
+    hidden_size = kwargs["hidden_size"]
+    directions = [(0, "")]
+    if kwargs["bidirectional"]:
+        directions.append((1, "_reverse"))
+
+    for dir_dim, dir_str in directions:
+        getattr(rnn_layer, "weight_ih_l0{}".format(dir_str)).data = W[dir_dim]
+        getattr(rnn_layer, "weight_hh_l0{}".format(dir_str)).data = R[dir_dim]
+        if B is None:
+            Wb = torch.zeros(hidden_size, dtype=W.dtype)
+            Rb = torch.zeros(hidden_size, dtype=W.dtype)
+        else:
+            Wb = B[dir_dim, :hidden_size]
+            Rb = B[dir_dim, hidden_size:]
+        getattr(rnn_layer, "bias_ih_l0{}".format(dir_str)).data = Wb
+        getattr(rnn_layer, "bias_hh_l0{}".format(dir_str)).data = Rb
+
+    layer = RNNWrapper(rnn_layer)
     return layer
