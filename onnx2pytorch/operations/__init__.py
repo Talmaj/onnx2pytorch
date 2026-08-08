@@ -21,6 +21,7 @@ from .loop import Loop
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
+from .mod import Mod
 from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
 from .optional import Optional
@@ -72,6 +73,7 @@ __all__ = [
     "LRN",
     "LSTMWrapper",
     "MatMul",
+    "Mod",
     "NonMaxSuppression",
     "OneHot",
     "Optional",

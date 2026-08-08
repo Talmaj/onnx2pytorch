@@ -140,6 +140,8 @@ def extract_attributes(node):
             kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "epsilon":
             kwargs["eps"] = extract_attr_values(attr)
+        elif attr.name == "fmod":
+            kwargs["fmod"] = extract_attr_values(attr)
         elif attr.name == "group":
             kwargs["groups"] = extract_attr_values(attr)
         elif attr.name == "hidden_size":

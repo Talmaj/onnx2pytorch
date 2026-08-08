@@ -210,6 +210,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = convert_layer(node, "MaxPool")
         elif node.op_type == "Min":
             op = OperatorWrapper(torch.min)
+        elif node.op_type == "Mod":
+            op = Mod(**extract_attributes(node))
         elif node.op_type == "Mul":
             op = OperatorWrapper(torch.mul)
         elif node.op_type == "Neg":
