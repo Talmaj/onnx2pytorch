@@ -33,7 +33,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`CumSum`](https://onnx.ai/onnx/operators/onnx__CumSum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumsum.py)
 - [x] [`Det`](https://onnx.ai/onnx/operators/onnx__Det.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/det.py)
 - [x] [`Einsum`](https://onnx.ai/onnx/operators/onnx__Einsum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/einsum.py)
-- [ ] [`Mean`](https://onnx.ai/onnx/operators/onnx__Mean.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mean.py)
+- [x] [`Mean`](https://onnx.ai/onnx/operators/onnx__Mean.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mean.py)
 - [ ] [`Sum`](https://onnx.ai/onnx/operators/onnx__Sum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sum.py)
 
 ## Comparison, Logical & Bitwise

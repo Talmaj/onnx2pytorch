@@ -24,6 +24,7 @@ from .loop import Loop
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
+from .mean import Mean
 from .mod import Mod
 from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
@@ -79,6 +80,7 @@ __all__ = [
     "LRN",
     "LSTMWrapper",
     "MatMul",
+    "Mean",
     "Mod",
     "NonMaxSuppression",
     "OneHot",
