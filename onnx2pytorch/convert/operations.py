@@ -317,6 +317,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Optional(**extract_attributes(node))
         elif node.op_type == "OptionalGetElement":
             op = OptionalGetElement()
+        elif node.op_type == "OptionalHasElement":
+            op = OptionalHasElement()
         elif node.op_type == "Or":
             op = OperatorWrapper(torch.logical_or)
         elif node.op_type == "Pad":
