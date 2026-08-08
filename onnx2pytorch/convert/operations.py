@@ -172,6 +172,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.erf)
         elif node.op_type == "Exp":
             op = OperatorWrapper(torch.exp)
+        elif node.op_type == "EyeLike":
+            op = EyeLike(**extract_attributes(node))
         elif node.op_type == "Expand":
             op = Expand()
         elif node.op_type == "Flatten":

@@ -20,6 +20,7 @@ from .div import Div
 from .dropout import Dropout
 from .einsum import Einsum
 from .expand import Expand
+from .eyelike import EyeLike
 from .flatten import Flatten
 from .gather import Gather
 from .gatherelements import GatherElements
@@ -113,6 +114,7 @@ __all__ = [
     "Dropout",
     "Einsum",
     "Expand",
+    "EyeLike",
     "Flatten",
     "Gather",
     "GatherElements",

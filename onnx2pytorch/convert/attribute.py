@@ -177,6 +177,8 @@ def extract_attributes(node):
             kwargs["high"] = extract_attr_values(attr)
         elif attr.name == "input_forget":
             kwargs["input_forget"] = extract_attr_values(attr)
+        elif attr.name == "k":
+            kwargs["k"] = extract_attr_values(attr)
         elif attr.name == "keepdims":
             kwargs["keepdim"] = bool(extract_attr_values(attr))
         elif attr.name == "kernel_shape":
