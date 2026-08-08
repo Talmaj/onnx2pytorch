@@ -83,6 +83,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
 
         if node.op_type == "Acos":
             op = OperatorWrapper(torch.acos)
+        elif node.op_type == "Acosh":
+            op = OperatorWrapper(torch.acosh)
         elif node.op_type == "Add":
             op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
         elif node.op_type == "And":
