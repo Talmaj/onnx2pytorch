@@ -125,6 +125,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.cosh)
         elif node.op_type == "CumProd":
             op = CumProd(**extract_attributes(node))
+        elif node.op_type == "CumSum":
+            op = CumSum(**extract_attributes(node))
         elif node.op_type == "Div":
             op = Div()
         elif node.op_type == "Elu":

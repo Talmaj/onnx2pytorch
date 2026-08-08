@@ -7,6 +7,7 @@ from .clip import Clip
 from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .cumprod import CumProd
+from .cumsum import CumSum
 from .div import Div
 from .expand import Expand
 from .flatten import Flatten
@@ -61,6 +62,7 @@ __all__ = [
     "Constant",
     "ConstantOfShape",
     "CumProd",
+    "CumSum",
     "Div",
     "Expand",
     "Flatten",
