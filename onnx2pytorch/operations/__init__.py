@@ -87,6 +87,7 @@ from .sequenceempty import SequenceEmpty
 from .sequenceerase import SequenceErase
 from .sequenceinsert import SequenceInsert
 from .sequencelength import SequenceLength
+from .sequencemap import SequenceMap
 from .shape import Shape
 from .shrink import Shrink
 from .size import Size
@@ -95,6 +96,7 @@ from .spacetodepth import SpaceToDepth
 from .split import Split
 from .splittosequence import SplitToSequence
 from .squeeze import Squeeze
+from .subgraph import SubgraphOperator
 from .sum import Sum
 from .swiglu import SwiGLU
 from .swish import Swish
@@ -196,6 +198,7 @@ __all__ = [
     "SequenceErase",
     "SequenceInsert",
     "SequenceLength",
+    "SequenceMap",
     "Shape",
     "Shrink",
     "Size",
@@ -204,6 +207,7 @@ __all__ = [
     "Split",
     "SplitToSequence",
     "Squeeze",
+    "SubgraphOperator",
     "Sum",
     "SwiGLU",
     "Swish",

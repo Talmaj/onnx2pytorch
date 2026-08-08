@@ -22,7 +22,7 @@ from onnx2pytorch.convert.operations import (
     get_buffer_name,
     get_init_parameter,
     Loop,
-    Scan,
+    SubgraphOperator,
 )
 from onnx2pytorch.utils import (
     get_inputs_names,
@@ -30,6 +30,9 @@ from onnx2pytorch.utils import (
     resolve_omitted_inputs,
     OMITTED_INPUT,
 )
+
+
+SUBGRAPH_OP_TYPES = ("Loop", "Scan", "SequenceMap")
 
 
 def compute_activation_dependencies(onnx_graph, model, mapping):
@@ -55,15 +58,15 @@ def compute_activation_dependencies(onnx_graph, model, mapping):
         out_op_id = node.output[0]
         for in_op_id in node.input:
             needed_by[in_op_id].add(out_op_id)
-        if node.op_type in ("Loop", "Scan"):
+        if node.op_type in SUBGRAPH_OP_TYPES:
             # Look at nodes in the loop body
-            l1 = getattr(model, mapping[out_op_id])  # Loop or Scan object
+            l1 = getattr(model, mapping[out_op_id])  # Loop, Scan or SequenceMap
             loop_body_l1 = l1.body
             for node_l1 in loop_body_l1.node:
                 for in_op_id in node_l1.input:
                     # Treating node (outer loop) as dependent, not node_l1
                     needed_by[in_op_id].add(out_op_id)
-                if node_l1.op_type in ("Loop", "Scan"):
+                if node_l1.op_type in SUBGRAPH_OP_TYPES:
                     # Look at nodes in the loop body
                     l2 = getattr(model, l1.mapping[node_l1.output[0]])
                     loop_body_l2 = l2.body
@@ -71,7 +74,7 @@ def compute_activation_dependencies(onnx_graph, model, mapping):
                         for in_op_id in node_l2.input:
                             # Treating node (outer loop) as dependent, not node_l2
                             needed_by[in_op_id].add(out_op_id)
-                        if node_l2.op_type in ("Loop", "Scan"):
+                        if node_l2.op_type in SUBGRAPH_OP_TYPES:
                             # TODO: make this recursive for nested loops
                             raise NotImplementedError(
                                 "Activation garbage collection not implemented for >2 nested loops."
@@ -204,7 +207,7 @@ class ConvertModel(nn.Module):
             in_activations = resolve_omitted_inputs(in_activations)
 
             # store activations for next layer
-            if isinstance(op, (Loop, Scan)):
+            if isinstance(op, (Loop, SubgraphOperator)):
                 outputs = op((self,), activations, *in_activations)
                 for out_op_id, output in zip(node.output, outputs):
                     activations[out_op_id] = output

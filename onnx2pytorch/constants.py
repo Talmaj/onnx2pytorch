@@ -13,8 +13,8 @@ from onnx2pytorch.operations import (
     Loop,
     LSTMWrapper,
     RNNWrapper,
-    Scan,
     Split,
+    SubgraphOperator,
     TopK,
     Unique,
 )
@@ -32,8 +32,8 @@ MULTIOUTPUT_LAYERS = (
     Loop,
     LSTMWrapper,
     RNNWrapper,
-    Scan,
     Split,
+    SubgraphOperator,
     TopK,
     Unique,
 )

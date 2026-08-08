@@ -124,7 +124,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`SequenceErase`](https://onnx.ai/onnx/operators/onnx__SequenceErase.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [x] [`SequenceInsert`](https://onnx.ai/onnx/operators/onnx__SequenceInsert.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sequenceinsert.py)
 - [x] [`SequenceLength`](https://onnx.ai/onnx/operators/onnx__SequenceLength.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
-- [ ] [`SequenceMap`](https://onnx.ai/onnx/operators/onnx__SequenceMap.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sequence_map.py)
+- [x] [`SequenceMap`](https://onnx.ai/onnx/operators/onnx__SequenceMap.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sequence_map.py)
 - [x] [`SplitToSequence`](https://onnx.ai/onnx/operators/onnx__SplitToSequence.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/splittosequence.py)
 
 ## Optional Types

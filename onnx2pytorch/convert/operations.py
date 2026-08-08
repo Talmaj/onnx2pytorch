@@ -405,6 +405,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = SequenceInsert()
         elif node.op_type == "SequenceLength":
             op = SequenceLength()
+        elif node.op_type == "SequenceMap":
+            op = SequenceMap(
+                opset_version=opset_version,
+                batch_dim=batch_dim,
+                **extract_attributes(node),
+            )
         elif node.op_type == "Shape":
             op = Shape()
         elif node.op_type == "Sigmoid":
