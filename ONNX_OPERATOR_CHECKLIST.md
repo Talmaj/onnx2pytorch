@@ -53,7 +53,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Celu`](https://onnx.ai/onnx/operators/onnx__Celu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/celu.py)
 - [x] [`Gelu`](https://onnx.ai/onnx/operators/onnx__Gelu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/gelu.py)
 - [x] [`Hardmax`](https://onnx.ai/onnx/operators/onnx__Hardmax.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/hardmax.py)
-- [ ] [`Mish`](https://onnx.ai/onnx/operators/onnx__Mish.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mish.py)
+- [x] [`Mish`](https://onnx.ai/onnx/operators/onnx__Mish.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mish.py)
 - [ ] [`Selu`](https://onnx.ai/onnx/operators/onnx__Selu.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/selu.py)
 - [ ] [`Shrink`](https://onnx.ai/onnx/operators/onnx__Shrink.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/shrink.py)
 - [ ] [`Swish`](https://onnx.ai/onnx/operators/onnx__Swish.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/swish.py)

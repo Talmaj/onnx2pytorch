@@ -242,6 +242,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Mean()
         elif node.op_type == "Min":
             op = OperatorWrapper(torch.min)
+        elif node.op_type == "Mish":
+            op = nn.Mish()
         elif node.op_type == "Mod":
             op = Mod(**extract_attributes(node))
         elif node.op_type == "Mul":
