@@ -1,6 +1,7 @@
 from .add import Add
 from .affinegrid import AffineGrid
 from .argmax import ArgMax
+from .attention import Attention
 from .argmin import ArgMin
 from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
@@ -101,6 +102,7 @@ __all__ = [
     "AffineGrid",
     "ArgMax",
     "ArgMin",
+    "Attention",
     "AutoPad",
     "BatchNormWrapper",
     "BitCast",

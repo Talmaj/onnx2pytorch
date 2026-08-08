@@ -2,6 +2,7 @@ from torch import nn
 from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.pooling import _MaxPoolNd
 from onnx2pytorch.operations import (
+    Attention,
     BatchNormWrapper,
     Dropout,
     GRUWrapper,
@@ -19,6 +20,7 @@ from onnx2pytorch.operations import (
 COMPOSITE_LAYERS = (nn.Sequential,)
 MULTIOUTPUT_LAYERS = (
     _MaxPoolNd,
+    Attention,
     Dropout,
     GRUWrapper,
     If,

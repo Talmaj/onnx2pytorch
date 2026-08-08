@@ -91,7 +91,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Attention / Transformer
 
-- [ ] [`Attention`](https://onnx.ai/onnx/operators/onnx__Attention.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/attention.py)
+- [x] [`Attention`](https://onnx.ai/onnx/operators/onnx__Attention.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/attention.py)
 - [ ] [`LinearAttention`](https://onnx.ai/onnx/operators/onnx__LinearAttention.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/linear_attention.py)
 - [x] [`RotaryEmbedding`](https://onnx.ai/onnx/operators/onnx__RotaryEmbedding.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/rotaryembedding.py)
 - [ ] [`CausalConvWithState`](https://onnx.ai/onnx/operators/onnx__CausalConvWithState.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/causal_conv_with_state.py)

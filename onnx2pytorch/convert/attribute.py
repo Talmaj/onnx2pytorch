@@ -181,8 +181,12 @@ def extract_attributes(node):
             kwargs["input_forget"] = extract_attr_values(attr)
         elif attr.name == "interleaved":
             kwargs["interleaved"] = extract_attr_values(attr)
+        elif attr.name == "is_causal":
+            kwargs["is_causal"] = extract_attr_values(attr)
         elif attr.name == "k":
             kwargs["k"] = extract_attr_values(attr)
+        elif attr.name == "kv_num_heads":
+            kwargs["kv_num_heads"] = extract_attr_values(attr)
         elif attr.name == "keepdims":
             kwargs["keepdim"] = bool(extract_attr_values(attr))
         elif attr.name == "kernel_shape":
@@ -236,6 +240,10 @@ def extract_attributes(node):
             kwargs["pooled_shape"] = extract_attr_values(attr)
         elif attr.name == "perm":
             kwargs["dims"] = extract_attr_values(attr)
+        elif attr.name == "q_num_heads":
+            kwargs["q_num_heads"] = extract_attr_values(attr)
+        elif attr.name == "qk_matmul_output_mode":
+            kwargs["qk_matmul_output_mode"] = extract_attr_values(attr)
         elif attr.name == "ratio":
             kwargs["ratio"] = extract_attr_values(attr)
         elif attr.name == "repeats":
@@ -246,10 +254,16 @@ def extract_attributes(node):
             kwargs["rotary_embedding_dim"] = extract_attr_values(attr)
         elif attr.name == "sampling_ratio":
             kwargs["sampling_ratio"] = extract_attr_values(attr)
+        elif attr.name == "scale":
+            kwargs["scale"] = extract_attr_values(attr)
         elif attr.name == "seed":
             kwargs["seed"] = extract_attr_values(attr)
         elif attr.name == "select_last_index":
             kwargs["select_last_index"] = extract_attr_values(attr)
+        elif attr.name == "softcap":
+            kwargs["softcap"] = extract_attr_values(attr)
+        elif attr.name == "softmax_precision":
+            kwargs["softmax_precision"] = extract_attr_values(attr)
         elif attr.name == "sorted":
             kwargs["sorted"] = extract_attr_values(attr)
         elif attr.name == "sparse_value":
