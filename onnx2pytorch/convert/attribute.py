@@ -92,6 +92,8 @@ def extract_attributes(node):
                 kwargs["alpha"] = extract_attr_values(attr)
             else:
                 kwargs["weight_multiplier"] = extract_attr_values(attr)
+        elif attr.name == "align_corners":
+            kwargs["align_corners"] = extract_attr_values(attr)
         elif attr.name == "approximate":
             kwargs["approximate"] = extract_attr_values(attr)
         elif attr.name == "auto_pad":
@@ -203,6 +205,8 @@ def extract_attributes(node):
             )
         elif attr.name == "p":
             kwargs["p"] = extract_attr_values(attr)
+        elif attr.name == "padding_mode":
+            kwargs["padding_mode"] = extract_attr_values(attr)
         elif attr.name == "pads":
             params = extract_attr_values(attr)
             if node.op_type == "Pad":

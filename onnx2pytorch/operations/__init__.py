@@ -21,6 +21,7 @@ from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .globallppool import GlobalLpPool
 from .globalmaxpool import GlobalMaxPool
+from .gridsample import GridSample
 from .groupnorm import GroupNormalization
 from .gru import GRUWrapper
 from .hardmax import Hardmax
@@ -100,6 +101,7 @@ __all__ = [
     "GlobalAveragePool",
     "GlobalLpPool",
     "GlobalMaxPool",
+    "GridSample",
     "GroupNormalization",
     "GRUWrapper",
     "Hardmax",
