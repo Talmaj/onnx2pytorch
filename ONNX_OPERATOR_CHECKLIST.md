@@ -146,7 +146,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Bernoulli`](https://onnx.ai/onnx/operators/onnx__Bernoulli.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bernoulli.py)
 - [x] [`Multinomial`](https://onnx.ai/onnx/operators/onnx__Multinomial.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [x] [`RandomNormal`](https://onnx.ai/onnx/operators/onnx__RandomNormal.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
-- [ ] [`RandomNormalLike`](https://onnx.ai/onnx/operators/onnx__RandomNormalLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
+- [x] [`RandomNormalLike`](https://onnx.ai/onnx/operators/onnx__RandomNormalLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [ ] [`RandomUniform`](https://onnx.ai/onnx/operators/onnx__RandomUniform.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 
 ## Signal Processing & Windowing

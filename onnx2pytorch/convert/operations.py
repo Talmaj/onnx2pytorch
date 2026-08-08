@@ -347,6 +347,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Range()
         elif node.op_type == "RandomNormal":
             op = RandomNormal(**extract_attributes(node))
+        elif node.op_type == "RandomNormalLike":
+            op = RandomNormalLike(**extract_attributes(node))
         elif node.op_type == "RandomUniformLike":
             op = RandomUniformLike(**extract_attributes(node))
         elif node.op_type == "Reciprocal":
