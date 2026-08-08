@@ -393,6 +393,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = ScatterND()
         elif node.op_type == "Selu":
             op = Selu(**extract_attributes(node))
+        elif node.op_type == "SequenceAt":
+            op = SequenceAt()
         elif node.op_type == "SequenceConstruct":
             op = SequenceConstruct()
         elif node.op_type == "Shape":

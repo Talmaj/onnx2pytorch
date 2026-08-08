@@ -81,6 +81,7 @@ from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
 from .selu import Selu
+from .sequenceat import SequenceAt
 from .sequenceconstruct import SequenceConstruct
 from .shape import Shape
 from .shrink import Shrink
@@ -184,6 +185,7 @@ __all__ = [
     "ScatterElements",
     "ScatterND",
     "Selu",
+    "SequenceAt",
     "SequenceConstruct",
     "Shape",
     "Shrink",

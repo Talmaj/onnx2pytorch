@@ -119,7 +119,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 ## Sequence Types
 
 - [x] [`ConcatFromSequence`](https://onnx.ai/onnx/operators/onnx__ConcatFromSequence.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
-- [ ] [`SequenceAt`](https://onnx.ai/onnx/operators/onnx__SequenceAt.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
+- [x] [`SequenceAt`](https://onnx.ai/onnx/operators/onnx__SequenceAt.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [ ] [`SequenceEmpty`](https://onnx.ai/onnx/operators/onnx__SequenceEmpty.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [ ] [`SequenceErase`](https://onnx.ai/onnx/operators/onnx__SequenceErase.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [ ] [`SequenceInsert`](https://onnx.ai/onnx/operators/onnx__SequenceInsert.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sequenceinsert.py)
