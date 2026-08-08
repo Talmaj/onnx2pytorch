@@ -8,6 +8,7 @@ from .bitshift import BitShift
 from .cast import Cast
 from .clip import Clip
 from .col2im import Col2Im
+from .compress import Compress
 from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .convinteger import ConvInteger
@@ -100,6 +101,7 @@ __all__ = [
     "Cast",
     "Clip",
     "Col2Im",
+    "Compress",
     "Constant",
     "ConstantOfShape",
     "ConvInteger",

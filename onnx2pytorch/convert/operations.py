@@ -130,6 +130,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Clip(**extract_attributes(node))
         elif node.op_type == "Col2Im":
             op = Col2Im(**extract_attributes(node))
+        elif node.op_type == "Compress":
+            op = Compress(**extract_attributes(node))
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
         elif node.op_type == "Constant":
