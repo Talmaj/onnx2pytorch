@@ -214,6 +214,8 @@ def extract_attributes(node):
             kwargs["reverse"] = extract_attr_values(attr)
         elif attr.name == "seed":
             kwargs["seed"] = extract_attr_values(attr)
+        elif attr.name == "select_last_index":
+            kwargs["select_last_index"] = extract_attr_values(attr)
         elif attr.name == "sorted":
             kwargs["sorted"] = extract_attr_values(attr)
         elif attr.name == "sparse_value":

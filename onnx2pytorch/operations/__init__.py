@@ -1,4 +1,5 @@
 from .add import Add
+from .argmax import ArgMax
 from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
 from .bitcast import BitCast
@@ -67,6 +68,7 @@ from .where import Where
 
 __all__ = [
     "Add",
+    "ArgMax",
     "AutoPad",
     "BatchNormWrapper",
     "BitCast",
