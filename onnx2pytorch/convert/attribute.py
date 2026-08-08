@@ -128,6 +128,8 @@ def extract_attributes(node):
                 kwargs["bias_multiplier"] = extract_attr_values(attr)
         elif attr.name == "bias" and node.op_type == "Shrink":
             kwargs["bias"] = extract_attr_values(attr)
+        elif attr.name == "block_size":
+            kwargs["block_size"] = extract_attr_values(attr)
         elif attr.name == "blocksize":
             kwargs["blocksize"] = extract_attr_values(attr)
         elif attr.name == "body":
@@ -229,6 +231,8 @@ def extract_attributes(node):
             kwargs["output_height"] = extract_attr_values(attr)
         elif attr.name == "output_width":
             kwargs["output_width"] = extract_attr_values(attr)
+        elif attr.name == "output_dtype":
+            kwargs["output_dtype"] = extract_attr_values(attr)
         elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
             raise NotImplementedError(
                 "ConvTranspose with dynamic padding not implemented."
@@ -262,6 +266,8 @@ def extract_attributes(node):
             kwargs["rotary_embedding_dim"] = extract_attr_values(attr)
         elif attr.name == "sampling_ratio":
             kwargs["sampling_ratio"] = extract_attr_values(attr)
+        elif attr.name == "saturate":
+            kwargs["saturate"] = extract_attr_values(attr)
         elif attr.name == "scale":
             kwargs["scale"] = extract_attr_values(attr)
         elif attr.name in (
