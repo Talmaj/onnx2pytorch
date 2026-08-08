@@ -65,6 +65,7 @@ from .reducesumsquare import ReduceSumSquare
 from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
+from .reversesequence import ReverseSequence
 from .rmsnorm import RMSNormalization
 from .rnn import RNNWrapper
 from .roialign import RoiAlign
@@ -158,6 +159,7 @@ __all__ = [
     "ReduceL2",
     "Reshape",
     "Resize",
+    "ReverseSequence",
     "RMSNormalization",
     "RNNWrapper",
     "RoiAlign",

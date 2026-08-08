@@ -117,6 +117,8 @@ def extract_attributes(node):
                 kwargs["dim"] = v[0]
             else:
                 kwargs["dim"] = v
+        elif attr.name == "batch_axis":
+            kwargs["batch_axis"] = extract_attr_values(attr)
         elif attr.name == "beta":
             if node.op_type == "HardSigmoid":
                 kwargs["beta"] = extract_attr_values(attr)
@@ -260,6 +262,8 @@ def extract_attributes(node):
             kwargs["starts"] = extract_attr_values(attr)
         elif attr.name == "then_branch":
             kwargs["then_branch"] = extract_attr_values(attr)
+        elif attr.name == "time_axis":
+            kwargs["time_axis"] = extract_attr_values(attr)
         elif attr.name == "to":
             kwargs["dtype"] = TENSOR_PROTO_MAPPING[extract_attr_values(attr)].lower()
         elif attr.name == "type":
