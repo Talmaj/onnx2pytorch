@@ -154,8 +154,7 @@ class ConvertModel(nn.Module):
                 "forward-pass accepts either input_list (positional args) or "
                 "input_dict (keyword args) but not both"
             )
-        if len(input_list) > 0:
-            inputs = input_list
+        inputs = input_list
         if len(input_dict) > 0:
             inputs = [input_dict[key] for key in self.input_names]
 

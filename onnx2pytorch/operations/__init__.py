@@ -71,6 +71,7 @@ from .qlinearconv import QLinearConv
 from .qlinearmatmul import QLinearMatMul
 from .quantizelinear import QuantizeLinear
 from .range import Range
+from .randomnormal import RandomNormal
 from .randomuniformlike import RandomUniformLike
 from .reducel1 import ReduceL1
 from .reducelogsum import ReduceLogSum
@@ -192,6 +193,7 @@ __all__ = [
     "QLinearMatMul",
     "QuantizeLinear",
     "Range",
+    "RandomNormal",
     "RandomUniformLike",
     "ReduceL1",
     "ReduceLogSum",
