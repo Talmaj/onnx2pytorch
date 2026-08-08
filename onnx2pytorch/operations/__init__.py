@@ -7,6 +7,7 @@ from .bitcast import BitCast
 from .bitshift import BitShift
 from .cast import Cast
 from .clip import Clip
+from .col2im import Col2Im
 from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .cumprod import CumProd
@@ -84,6 +85,7 @@ __all__ = [
     "BitShift",
     "Cast",
     "Clip",
+    "Col2Im",
     "Constant",
     "ConstantOfShape",
     "CumProd",
