@@ -65,6 +65,7 @@ from .optionalgetelement import OptionalGetElement
 from .optionalhaselement import OptionalHasElement
 from .pad import Pad
 from .prelu import PRelu
+from .qlinearconv import QLinearConv
 from .qlinearmatmul import QLinearMatMul
 from .quantizelinear import QuantizeLinear
 from .range import Range
@@ -183,6 +184,7 @@ __all__ = [
     "OptionalHasElement",
     "Pad",
     "PRelu",
+    "QLinearConv",
     "QLinearMatMul",
     "QuantizeLinear",
     "Range",
