@@ -89,6 +89,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
         elif node.op_type == "And":
             op = OperatorWrapper(torch.logical_and)
+        elif node.op_type == "Asin":
+            op = OperatorWrapper(torch.asin)
         elif node.op_type == "AveragePool":
             op = convert_layer(node, "AvgPool")
         elif node.op_type == "BatchNormalization":

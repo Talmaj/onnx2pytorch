@@ -38,3 +38,9 @@ def test_acosh():
     check_unary_op("Acosh", np.array([10.0, np.e, 1.0], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Acosh", np.random.uniform(1, 10, (3, 4, 5)).astype(np.float32))
+
+
+def test_asin():
+    check_unary_op("Asin", np.array([-0.5, 0.0, 0.5], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Asin", np.random.uniform(-1, 1, (3, 4, 5)).astype(np.float32))
