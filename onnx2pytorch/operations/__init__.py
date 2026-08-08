@@ -1,4 +1,5 @@
 from .add import Add
+from .affinegrid import AffineGrid
 from .argmax import ArgMax
 from .argmin import ArgMin
 from .autopad import AutoPad
@@ -96,6 +97,7 @@ from .where import Where
 
 __all__ = [
     "Add",
+    "AffineGrid",
     "ArgMax",
     "ArgMin",
     "AutoPad",
