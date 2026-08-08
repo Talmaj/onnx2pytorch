@@ -449,6 +449,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             if "split_size_or_sections" not in kwargs:
                 kwargs["number_of_splits"] = len(node.output)
             op = Split(enable_pruning, **kwargs)
+        elif node.op_type == "SplitToSequence":
+            op = SplitToSequence(**extract_attributes(node))
         elif node.op_type == "Sqrt":
             op = OperatorWrapper(torch.sqrt)
         elif node.op_type == "Squeeze":

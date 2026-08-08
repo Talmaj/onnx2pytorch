@@ -93,6 +93,7 @@ from .size import Size
 from .slice import Slice
 from .spacetodepth import SpaceToDepth
 from .split import Split
+from .splittosequence import SplitToSequence
 from .squeeze import Squeeze
 from .sum import Sum
 from .swiglu import SwiGLU
@@ -201,6 +202,7 @@ __all__ = [
     "Slice",
     "SpaceToDepth",
     "Split",
+    "SplitToSequence",
     "Squeeze",
     "Sum",
     "SwiGLU",
