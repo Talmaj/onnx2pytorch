@@ -27,6 +27,7 @@ from .instancenorm import InstanceNormWrapper
 from .isinf import IsInf
 from .layernorm import LayerNorm
 from .loop import Loop
+from .lpnormalization import LpNormalization
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
@@ -97,6 +98,7 @@ __all__ = [
     "IsInf",
     "LayerNorm",
     "Loop",
+    "LpNormalization",
     "LRN",
     "LSTMWrapper",
     "MatMul",

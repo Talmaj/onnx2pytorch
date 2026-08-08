@@ -201,6 +201,8 @@ def extract_attributes(node):
             raise NotImplementedError(
                 "ConvTranspose with dynamic padding not implemented."
             )
+        elif attr.name == "p":
+            kwargs["p"] = extract_attr_values(attr)
         elif attr.name == "pads":
             params = extract_attr_values(attr)
             if node.op_type == "Pad":
