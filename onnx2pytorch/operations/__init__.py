@@ -85,6 +85,7 @@ from .sequenceat import SequenceAt
 from .sequenceconstruct import SequenceConstruct
 from .sequenceempty import SequenceEmpty
 from .sequenceerase import SequenceErase
+from .sequenceinsert import SequenceInsert
 from .shape import Shape
 from .shrink import Shrink
 from .size import Size
@@ -191,6 +192,7 @@ __all__ = [
     "SequenceConstruct",
     "SequenceEmpty",
     "SequenceErase",
+    "SequenceInsert",
     "Shape",
     "Shrink",
     "Size",
