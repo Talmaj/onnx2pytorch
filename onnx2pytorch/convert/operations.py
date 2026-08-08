@@ -340,6 +340,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Resize(**extract_attributes(node))
         elif node.op_type == "RMSNormalization":
             op = RMSNormalization(**extract_attributes(node))
+        elif node.op_type == "RoiAlign":
+            op = RoiAlign(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Round":
             op = OperatorWrapper(torch.round)
         elif node.op_type == "Scatter":

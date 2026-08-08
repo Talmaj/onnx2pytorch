@@ -134,7 +134,9 @@ def extract_attributes(node):
             kwargs["clip"] = extract_attr_values(attr)
         elif attr.name == "coordinate_transformation_mode":
             arg = extract_attr_values(attr)
-            if arg == "align_corners":
+            if node.op_type == "RoiAlign":
+                kwargs["coordinate_transformation_mode"] = arg
+            elif arg == "align_corners":
                 kwargs["align_corners"] = True
             else:
                 warnings.warn(
@@ -199,6 +201,10 @@ def extract_attributes(node):
             kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
         elif attr.name == "num_groups":
             kwargs["num_groups"] = extract_attr_values(attr)
+        elif attr.name == "output_height":
+            kwargs["output_height"] = extract_attr_values(attr)
+        elif attr.name == "output_width":
+            kwargs["output_width"] = extract_attr_values(attr)
         elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
             raise NotImplementedError(
                 "ConvTranspose with dynamic padding not implemented."
@@ -222,6 +228,8 @@ def extract_attributes(node):
             kwargs["repeats"] = extract_attr_values(attr)
         elif attr.name == "reverse":
             kwargs["reverse"] = extract_attr_values(attr)
+        elif attr.name == "sampling_ratio":
+            kwargs["sampling_ratio"] = extract_attr_values(attr)
         elif attr.name == "seed":
             kwargs["seed"] = extract_attr_values(attr)
         elif attr.name == "select_last_index":
@@ -230,6 +238,8 @@ def extract_attributes(node):
             kwargs["sorted"] = extract_attr_values(attr)
         elif attr.name == "sparse_value":
             kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name == "spatial_scale":
+            kwargs["spatial_scale"] = extract_attr_values(attr)
         elif attr.name == "spatial":
             kwargs["spatial"] = extract_attr_values(attr)  # Batch norm parameter
         elif attr.name == "split":

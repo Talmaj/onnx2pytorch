@@ -58,6 +58,7 @@ from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
 from .rmsnorm import RMSNormalization
+from .roialign import RoiAlign
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
@@ -138,6 +139,7 @@ __all__ = [
     "Reshape",
     "Resize",
     "RMSNormalization",
+    "RoiAlign",
     "Scatter",
     "ScatterElements",
     "ScatterND",
