@@ -24,6 +24,7 @@ from .depthtospace import DepthToSpace
 from .dequantizelinear import DequantizeLinear
 from .div import Div
 from .dropout import Dropout
+from .dynamicquantizelinear import DynamicQuantizeLinear
 from .einsum import Einsum
 from .expand import Expand
 from .eyelike import EyeLike
@@ -140,6 +141,7 @@ __all__ = [
     "DequantizeLinear",
     "Div",
     "Dropout",
+    "DynamicQuantizeLinear",
     "Einsum",
     "Expand",
     "EyeLike",

@@ -174,6 +174,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Div()
         elif node.op_type == "Dropout":
             op = Dropout(**extract_attributes(node))
+        elif node.op_type == "DynamicQuantizeLinear":
+            op = DynamicQuantizeLinear()
         elif node.op_type == "Einsum":
             op = Einsum(**extract_attributes(node))
         elif node.op_type == "Elu":
