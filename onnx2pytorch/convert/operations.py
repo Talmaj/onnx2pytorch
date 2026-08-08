@@ -241,6 +241,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.less_equal)
         elif node.op_type == "LRN":
             op = LRN(**extract_attributes(node))
+        elif node.op_type == "LinearAttention":
+            op = LinearAttention(**extract_attributes(node))
         elif node.op_type == "Log":
             op = OperatorWrapper(torch.log)
         elif node.op_type == "Loop":

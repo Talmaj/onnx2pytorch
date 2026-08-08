@@ -40,6 +40,7 @@ from .if_op import If
 from .instancenorm import InstanceNormWrapper
 from .isinf import IsInf
 from .layernorm import LayerNorm
+from .linearattention import LinearAttention
 from .loop import Loop
 from .lpnormalization import LpNormalization
 from .lppool import LpPool
@@ -139,6 +140,7 @@ __all__ = [
     "InstanceNormWrapper",
     "IsInf",
     "LayerNorm",
+    "LinearAttention",
     "Loop",
     "LpNormalization",
     "LpPool",

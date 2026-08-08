@@ -134,6 +134,8 @@ def extract_attributes(node):
             kwargs["ceil_mode"] = bool(extract_attr_values(attr))
         elif attr.name == "center_point_box":
             kwargs["center_point_box"] = extract_attr_values(attr)
+        elif attr.name == "chunk_size":
+            kwargs["chunk_size"] = extract_attr_values(attr)
         elif attr.name == "clip":
             kwargs["clip"] = extract_attr_values(attr)
         elif attr.name == "coordinate_transformation_mode":
@@ -292,6 +294,8 @@ def extract_attributes(node):
             kwargs["transpose_weight"] = not extract_attr_values(attr)
         elif attr.name == "transA":
             kwargs["transpose_activation"] = bool(extract_attr_values(attr))
+        elif attr.name == "update_rule":
+            kwargs["update_rule"] = extract_attr_values(attr)
         elif attr.name == "upper":
             kwargs["upper"] = extract_attr_values(attr)
         elif attr.name == "value":
