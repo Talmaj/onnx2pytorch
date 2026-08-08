@@ -114,6 +114,10 @@ def test_get_activation_value_2():
         ([1, 2], nn.ConstantPad1d([1, 2], 0)),
         ([1, 1, 0, 0], nn.ConstantPad2d([1, 0, 1, 0], 0)),
         ([1, 1, 1, 0, 0, 0], nn.ConstantPad3d([1, 0, 1, 0, 1, 0], 0)),
+        # Asymmetric across dimensions, so begin/end order cannot be inferred
+        # from a coincidence of equal values.
+        ([1, 2, 3, 4], nn.ConstantPad2d([2, 4, 1, 3], 0)),
+        ([0, 1, 2, 3, 0, 0], nn.ConstantPad3d([2, 0, 1, 0, 0, 3], 0)),
     ],
 )
 def test_extract_padding_params_for_conv_layer(pads, output):
@@ -143,11 +147,34 @@ def weight():
         ([1, 2, 1, 2], [2, 2, 1, 1]),
         ([1, 2, 3, 4, 1, 2, 3, 4], [4, 4, 3, 3, 2, 2, 1, 1]),
         ([0, 0, 1, 2, 0, 0, 1, 2], [2, 2, 1, 1]),
+        # Asymmetric: begin and end of a dimension must not be swapped.
+        ([0, 0, 1, 2, 0, 0, 30, 40], [2, 40, 1, 30]),
+        ([5, 0, 1, 2, 6, 0, 30, 40], [2, 40, 1, 30, 0, 0, 5, 6]),
     ],
 )
 def test_extract_padding_params(weight, onnx_pads, torch_pads):
     out_pads = extract_padding_params(onnx_pads)
     assert out_pads == torch_pads
+
+
+@pytest.mark.parametrize(
+    "onnx_pads",
+    [
+        [0, 0, 1, 2, 0, 0, 30, 40],
+        [1, 2, 3, 4, 5, 6, 7, 8],
+        [0, 0, 0, 3, 0, 0, 2, 0],
+    ],
+)
+def test_extract_padding_params_matches_onnx_reference(onnx_pads):
+    """Padding a tensor with the converted params must equal the ONNX result."""
+    inp = np.random.rand(2, 3, 4, 5)
+    expected = pad_impl(inp, np.array(onnx_pads), "constant", 0)
+
+    torch_pads = extract_padding_params(onnx_pads)
+    out = torch.nn.functional.pad(torch.tensor(inp), torch_pads, value=0).numpy()
+
+    assert out.shape == expected.shape
+    assert (out == expected).all()
 
 
 def test_get_ops_names():

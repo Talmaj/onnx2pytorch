@@ -181,7 +181,7 @@ class ConvertModel(nn.Module):
                 in_activations = [
                     activations[in_op_id]
                     for in_op_id in node.input
-                    if in_op_id in activations and in_op_id != ""
+                    if in_op_id in activations
                 ]
             else:
                 in_activations = [

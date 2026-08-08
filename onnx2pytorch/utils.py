@@ -55,20 +55,34 @@ def is_symmetric(params):
     return True
 
 
-def extract_padding_params(params):
-    """Extract padding parameters for Pad layers."""
-    pad_dim = len(params) // 2
+def convert_onnx_pads_to_torch(pads):
+    """
+    Convert pads from ONNX to PyTorch convention.
+
+    ONNX groups all dimension begins first, then all ends, in dimension order:
+        [begin_d0, ..., begin_dN, end_d0, ..., end_dN]
+    PyTorch interleaves begin and end per dimension, last dimension first:
+        [begin_dN, end_dN, ..., begin_d0, end_d0]
+    """
+    pad_dim = len(pads) // 2
     if pad_dim == 0:
         return []
-    pads = np.array(params).reshape(-1, pad_dim).T.flatten()  # .tolist()
+    begins = pads[:pad_dim]
+    ends = pads[pad_dim:]
+    torch_pads = []
+    for i in range(pad_dim - 1, -1, -1):
+        torch_pads.extend([begins[i], ends[i]])
+    return torch_pads
+
+
+def extract_padding_params(params):
+    """Extract padding parameters for Pad layers."""
+    pads = convert_onnx_pads_to_torch(params)
 
     # Some padding modes do not support padding in batch and channel dimension.
-    # If batch and channel dimension have no padding, discard.
-    if (pads[:4] == 0).all():
-        pads = pads[4:]
-    pads = pads.tolist()
-    # Reverse, because for pytorch first two numbers correspond to last dimension, etc.
-    pads.reverse()
+    # In torch convention those are the trailing four values.
+    if len(pads) > 4 and not any(pads[-4:]):
+        pads = pads[:-4]
     return pads
 
 
@@ -82,8 +96,8 @@ def extract_padding_params_for_conv_layer(params):
     else:
         pad_dim = len(params) // 2
         pad_layer = getattr(torch.nn, "ConstantPad{}d".format(pad_dim))
-        pads = extract_padding_params(params)[::-1]
-        return pad_layer(pads, value=0)
+        # Conv pads cover spatial dimensions only, so nothing may be discarded.
+        return pad_layer(convert_onnx_pads_to_torch(params), value=0)
 
 
 def get_selection(indices, dim):
