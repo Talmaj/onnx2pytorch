@@ -1,6 +1,7 @@
 from .add import Add
 from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
+from .bitcast import BitCast
 from .bitshift import BitShift
 from .cast import Cast
 from .clip import Clip
@@ -60,6 +61,7 @@ __all__ = [
     "Add",
     "AutoPad",
     "BatchNormWrapper",
+    "BitCast",
     "BitShift",
     "Cast",
     "Clip",
