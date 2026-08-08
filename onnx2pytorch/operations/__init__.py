@@ -45,6 +45,7 @@ from .mean import Mean
 from .meanvariancenormalization import MeanVarianceNormalization
 from .mod import Mod
 from .nonmaxsuppression import NonMaxSuppression
+from .nonzero import NonZero
 from .onehot import OneHot
 from .optional import Optional
 from .pad import Pad
@@ -131,6 +132,7 @@ __all__ = [
     "MeanVarianceNormalization",
     "Mod",
     "NonMaxSuppression",
+    "NonZero",
     "OneHot",
     "Optional",
     "Pad",
