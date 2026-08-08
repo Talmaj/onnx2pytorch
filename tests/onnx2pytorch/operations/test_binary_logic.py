@@ -63,6 +63,24 @@ def test_bitwise_and_uint8_broadcast():
     )
 
 
+def test_bitwise_or():
+    np.random.seed(0)
+    x = np.random.randint(-100, 100, (3, 4, 5)).astype(np.int32)
+    y = np.random.randint(-100, 100, (3, 4, 5)).astype(np.int32)
+    check_binary_op(
+        "BitwiseOr", x, y, TensorProto.INT32, TensorProto.INT32, opset_version=18
+    )
+
+
+def test_bitwise_or_uint8_broadcast():
+    np.random.seed(0)
+    x = np.random.randint(0, 255, (3, 4, 5)).astype(np.uint8)
+    y = np.random.randint(0, 255, (5,)).astype(np.uint8)
+    check_binary_op(
+        "BitwiseOr", x, y, TensorProto.UINT8, TensorProto.UINT8, opset_version=18
+    )
+
+
 def test_xor():
     np.random.seed(0)
     x = np.random.randn(3, 4, 5) > 0
