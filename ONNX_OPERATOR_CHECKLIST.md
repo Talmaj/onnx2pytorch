@@ -19,7 +19,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Cos`](https://onnx.ai/onnx/operators/onnx__Cos.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cos.py)
 - [x] [`Cosh`](https://onnx.ai/onnx/operators/onnx__Cosh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cosh.py)
 - [x] [`Sin`](https://onnx.ai/onnx/operators/onnx__Sin.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sin.py)
-- [ ] [`Sinh`](https://onnx.ai/onnx/operators/onnx__Sinh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sinh.py)
+- [x] [`Sinh`](https://onnx.ai/onnx/operators/onnx__Sinh.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sinh.py)
 - [ ] [`Tan`](https://onnx.ai/onnx/operators/onnx__Tan.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/tan.py)
 
 ## Basic Math & Elementwise

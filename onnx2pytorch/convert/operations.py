@@ -282,6 +282,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = nn.Hardswish()
         elif node.op_type == "Sin":
             op = OperatorWrapper(torch.sin)
+        elif node.op_type == "Sinh":
+            op = OperatorWrapper(torch.sinh)
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
         elif node.op_type == "Softmax":

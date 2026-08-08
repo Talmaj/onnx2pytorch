@@ -80,3 +80,9 @@ def test_sin():
     check_unary_op("Sin", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Sin", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_sinh():
+    check_unary_op("Sinh", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Sinh", np.random.randn(3, 4, 5).astype(np.float32))
