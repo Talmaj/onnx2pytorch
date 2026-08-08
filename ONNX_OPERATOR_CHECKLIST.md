@@ -129,7 +129,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Optional Types
 
-- [ ] [`OptionalGetElement`](https://onnx.ai/onnx/operators/onnx__OptionalGetElement.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/optionalgetelement.py)
+- [x] [`OptionalGetElement`](https://onnx.ai/onnx/operators/onnx__OptionalGetElement.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/optionalgetelement.py)
 - [ ] [`OptionalHasElement`](https://onnx.ai/onnx/operators/onnx__OptionalHasElement.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/optionalhaselement.py)
 
 ## Quantization

@@ -58,6 +58,7 @@ from .nonmaxsuppression import NonMaxSuppression
 from .nonzero import NonZero
 from .onehot import OneHot
 from .optional import Optional
+from .optionalgetelement import OptionalGetElement
 from .pad import Pad
 from .prelu import PRelu
 from .range import Range
@@ -169,6 +170,7 @@ __all__ = [
     "NonZero",
     "OneHot",
     "Optional",
+    "OptionalGetElement",
     "Pad",
     "PRelu",
     "Range",
