@@ -83,7 +83,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`GlobalMaxPool`](https://onnx.ai/onnx/operators/onnx__GlobalMaxPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/globalmaxpool.py)
 - [x] [`LpPool`](https://onnx.ai/onnx/operators/onnx__LpPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/lppool.py)
 - [ ] [`MaxRoiPool`](https://onnx.ai/onnx/operators/onnx__MaxRoiPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
-- [ ] [`MaxUnpool`](https://onnx.ai/onnx/operators/onnx__MaxUnpool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/maxunpool.py)
+- [x] [`MaxUnpool`](https://onnx.ai/onnx/operators/onnx__MaxUnpool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/maxunpool.py)
 - [ ] [`RoiAlign`](https://onnx.ai/onnx/operators/onnx__RoiAlign.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/roialign.py)
 - [ ] [`GridSample`](https://onnx.ai/onnx/operators/onnx__GridSample.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/gridsample.py)
 - [ ] [`RNN`](https://onnx.ai/onnx/operators/onnx__RNN.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/rnn.py)

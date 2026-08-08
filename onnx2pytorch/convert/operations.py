@@ -258,6 +258,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.max)
         elif node.op_type == "MaxPool":
             op = convert_layer(node, "MaxPool")
+        elif node.op_type == "MaxUnpool":
+            op = MaxUnpool(**extract_attributes(node))
         elif node.op_type == "Mean":
             op = Mean()
         elif node.op_type == "MeanVarianceNormalization":
