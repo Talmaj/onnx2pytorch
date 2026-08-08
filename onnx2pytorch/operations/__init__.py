@@ -50,6 +50,7 @@ from .reducesumsquare import ReduceSumSquare
 from .reducel2 import ReduceL2
 from .reshape import Reshape
 from .resize import Resize, Upsample
+from .rmsnorm import RMSNormalization
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
@@ -122,6 +123,7 @@ __all__ = [
     "ReduceL2",
     "Reshape",
     "Resize",
+    "RMSNormalization",
     "Scatter",
     "ScatterElements",
     "ScatterND",
