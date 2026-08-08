@@ -177,6 +177,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.floor)
         elif node.op_type == "Gather":
             op = Gather(**extract_attributes(node))
+        elif node.op_type == "GatherElements":
+            op = GatherElements(**extract_attributes(node))
         elif node.op_type == "GatherND":
             op = GatherND(**extract_attributes(node))
         elif node.op_type == "Gelu":

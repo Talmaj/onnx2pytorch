@@ -20,6 +20,7 @@ from .einsum import Einsum
 from .expand import Expand
 from .flatten import Flatten
 from .gather import Gather
+from .gatherelements import GatherElements
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .globallppool import GlobalLpPool
@@ -109,6 +110,7 @@ __all__ = [
     "Expand",
     "Flatten",
     "Gather",
+    "GatherElements",
     "GatherND",
     "GlobalAveragePool",
     "GlobalLpPool",
