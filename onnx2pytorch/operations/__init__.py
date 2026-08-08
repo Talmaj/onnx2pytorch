@@ -21,6 +21,7 @@ from .cumprod import CumProd
 from .cumsum import CumSum
 from .deformconv import DeformConv
 from .depthtospace import DepthToSpace
+from .dequantizelinear import DequantizeLinear
 from .div import Div
 from .dropout import Dropout
 from .einsum import Einsum
@@ -136,6 +137,7 @@ __all__ = [
     "CumSum",
     "DeformConv",
     "DepthToSpace",
+    "DequantizeLinear",
     "Div",
     "Dropout",
     "Einsum",

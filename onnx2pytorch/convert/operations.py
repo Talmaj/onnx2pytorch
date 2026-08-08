@@ -168,6 +168,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = DeformConv(**extract_attributes(node))
         elif node.op_type == "DepthToSpace":
             op = DepthToSpace(**extract_attributes(node))
+        elif node.op_type == "DequantizeLinear":
+            op = DequantizeLinear(**extract_attributes(node))
         elif node.op_type == "Div":
             op = Div()
         elif node.op_type == "Dropout":
