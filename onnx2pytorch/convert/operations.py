@@ -399,6 +399,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = SequenceConstruct()
         elif node.op_type == "SequenceEmpty":
             op = SequenceEmpty(**extract_attributes(node))
+        elif node.op_type == "SequenceErase":
+            op = SequenceErase()
         elif node.op_type == "Shape":
             op = Shape()
         elif node.op_type == "Sigmoid":
