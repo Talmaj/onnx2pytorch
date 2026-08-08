@@ -216,6 +216,8 @@ def extract_attributes(node):
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)
         elif attr.name == "perm":
             kwargs["dims"] = extract_attr_values(attr)
+        elif attr.name == "ratio":
+            kwargs["ratio"] = extract_attr_values(attr)
         elif attr.name == "repeats":
             kwargs["repeats"] = extract_attr_values(attr)
         elif attr.name == "reverse":
