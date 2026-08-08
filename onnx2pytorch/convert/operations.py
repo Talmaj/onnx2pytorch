@@ -268,6 +268,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Reshape(enable_pruning, shape)
         elif node.op_type == "Resize":
             op = Resize(**extract_attributes(node))
+        elif node.op_type == "Round":
+            op = OperatorWrapper(torch.round)
         elif node.op_type == "Scatter":
             op = Scatter(**extract_attributes(node))
         elif node.op_type == "ScatterElements":

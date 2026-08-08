@@ -47,3 +47,14 @@ def test_sign():
     )
     np.random.seed(0)
     check_unary_op("Sign", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_round():
+    # Halfway cases round to the nearest even value
+    x = np.array(
+        [0.1, 0.5, 0.9, 1.2, 1.5, 1.8, 2.3, 2.5, 2.8, -1.5, -1.2, -0.5, -0.9],
+        dtype=np.float32,
+    )
+    check_unary_op("Round", x)
+    np.random.seed(0)
+    check_unary_op("Round", np.random.uniform(-5, 5, (3, 4, 5)).astype(np.float32))

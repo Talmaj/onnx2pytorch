@@ -27,7 +27,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Abs`](https://onnx.ai/onnx/operators/onnx__Abs.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/abs.py)
 - [x] [`Neg`](https://onnx.ai/onnx/operators/onnx__Neg.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/neg.py)
 - [x] [`Sign`](https://onnx.ai/onnx/operators/onnx__Sign.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sign.py)
-- [ ] [`Round`](https://onnx.ai/onnx/operators/onnx__Round.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/round.py)
+- [x] [`Round`](https://onnx.ai/onnx/operators/onnx__Round.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/round.py)
 - [ ] [`Mod`](https://onnx.ai/onnx/operators/onnx__Mod.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mod.py)
 - [ ] [`CumProd`](https://onnx.ai/onnx/operators/onnx__CumProd.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumprod.py)
 - [ ] [`CumSum`](https://onnx.ai/onnx/operators/onnx__CumSum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumsum.py)
