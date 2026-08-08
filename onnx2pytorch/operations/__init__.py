@@ -32,6 +32,7 @@ from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .mean import Mean
+from .meanvariancenormalization import MeanVarianceNormalization
 from .mod import Mod
 from .nonmaxsuppression import NonMaxSuppression
 from .onehot import OneHot
@@ -103,6 +104,7 @@ __all__ = [
     "LSTMWrapper",
     "MatMul",
     "Mean",
+    "MeanVarianceNormalization",
     "Mod",
     "NonMaxSuppression",
     "OneHot",
