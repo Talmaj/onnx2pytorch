@@ -19,6 +19,7 @@ from .gru import GRUWrapper
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
 from .instancenorm import InstanceNormWrapper
+from .isinf import IsInf
 from .layernorm import LayerNorm
 from .loop import Loop
 from .lrn import LRN
@@ -76,6 +77,7 @@ __all__ = [
     "GRUWrapper",
     "If",
     "InstanceNormWrapper",
+    "IsInf",
     "LayerNorm",
     "Loop",
     "LRN",

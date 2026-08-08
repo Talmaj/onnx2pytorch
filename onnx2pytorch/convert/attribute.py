@@ -128,6 +128,10 @@ def extract_attributes(node):
                     "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
                     "Result might differ.".format(arg)
                 )
+        elif attr.name == "detect_negative":
+            kwargs["detect_negative"] = extract_attr_values(attr)
+        elif attr.name == "detect_positive":
+            kwargs["detect_positive"] = extract_attr_values(attr)
         elif attr.name == "dilations":
             kwargs["dilation"] = extract_attr_values(attr)
         elif attr.name == "direction":
