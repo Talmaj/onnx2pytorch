@@ -138,6 +138,8 @@ def extract_attributes(node):
             kwargs["else_branch"] = extract_attr_values(attr)
         elif attr.name == "ends":
             kwargs["ends"] = extract_attr_values(attr)
+        elif attr.name == "equation":
+            kwargs["equation"] = extract_attr_values(attr)
         elif attr.name == "epsilon":
             kwargs["eps"] = extract_attr_values(attr)
         elif attr.name == "exclusive":

@@ -131,6 +131,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.det)
         elif node.op_type == "Div":
             op = Div()
+        elif node.op_type == "Einsum":
+            op = Einsum(**extract_attributes(node))
         elif node.op_type == "Elu":
             op = nn.ELU(**extract_attributes(node), inplace=True)
         elif node.op_type == "Equal":

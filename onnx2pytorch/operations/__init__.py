@@ -9,6 +9,7 @@ from .constantofshape import ConstantOfShape
 from .cumprod import CumProd
 from .cumsum import CumSum
 from .div import Div
+from .einsum import Einsum
 from .expand import Expand
 from .flatten import Flatten
 from .gather import Gather
@@ -64,6 +65,7 @@ __all__ = [
     "CumProd",
     "CumSum",
     "Div",
+    "Einsum",
     "Expand",
     "Flatten",
     "Gather",
