@@ -41,7 +41,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`IsInf`](https://onnx.ai/onnx/operators/onnx__IsInf.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/isinf.py)
 - [x] [`IsNaN`](https://onnx.ai/onnx/operators/onnx__IsNaN.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/isnan.py)
 - [x] [`LessOrEqual`](https://onnx.ai/onnx/operators/onnx__LessOrEqual.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/less_equal.py)
-- [ ] [`Xor`](https://onnx.ai/onnx/operators/onnx__Xor.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/xor.py)
+- [x] [`Xor`](https://onnx.ai/onnx/operators/onnx__Xor.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/xor.py)
 - [ ] [`BitCast`](https://onnx.ai/onnx/operators/onnx__BitCast.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitcast.py)
 - [ ] [`BitwiseAnd`](https://onnx.ai/onnx/operators/onnx__BitwiseAnd.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwiseand.py)
 - [ ] [`BitwiseNot`](https://onnx.ai/onnx/operators/onnx__BitwiseNot.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwisenot.py)

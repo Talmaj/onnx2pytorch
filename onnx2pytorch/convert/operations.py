@@ -358,6 +358,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Upsample":
             op = Upsample(**extract_attributes(node))
+        elif node.op_type == "Xor":
+            op = OperatorWrapper(torch.logical_xor)
         elif node.op_type == "Where":
             op = Where()
         else:

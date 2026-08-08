@@ -43,3 +43,17 @@ def test_less_or_equal_broadcast():
     x = np.random.randn(3, 4, 5).astype(np.float32)
     y = np.random.randn(5).astype(np.float32)
     check_binary_op("LessOrEqual", x, y, TensorProto.FLOAT, TensorProto.BOOL)
+
+
+def test_xor():
+    np.random.seed(0)
+    x = np.random.randn(3, 4, 5) > 0
+    y = np.random.randn(3, 4, 5) > 0
+    check_binary_op("Xor", x, y, TensorProto.BOOL, TensorProto.BOOL)
+
+
+def test_xor_broadcast():
+    np.random.seed(0)
+    x = np.random.randn(3, 4, 5) > 0
+    y = np.random.randn(4, 5) > 0
+    check_binary_op("Xor", x, y, TensorProto.BOOL, TensorProto.BOOL)
