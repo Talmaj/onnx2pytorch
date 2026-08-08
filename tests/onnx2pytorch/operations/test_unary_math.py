@@ -32,3 +32,9 @@ def test_abs():
     check_unary_op("Abs", np.array([-1.5, 0.0, 1.5], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Abs", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_neg():
+    check_unary_op("Neg", np.array([-4.0, 2.0, 0.0], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Neg", np.random.randn(3, 4, 5).astype(np.float32))
