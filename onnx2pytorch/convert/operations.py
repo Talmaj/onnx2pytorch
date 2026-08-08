@@ -287,6 +287,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                         onnx_graph.node.pop(i + 1)  # remove next node
             else:
                 op = MatMul()
+        elif node.op_type == "MatMulInteger":
+            op = MatMulInteger()
         elif node.op_type == "Max":
             op = OperatorWrapper(torch.max)
         elif node.op_type == "MaxPool":

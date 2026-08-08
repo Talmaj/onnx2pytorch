@@ -51,6 +51,7 @@ from .lppool import LpPool
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
+from .matmulinteger import MatMulInteger
 from .maxroipool import MaxRoiPool
 from .maxunpool import MaxUnpool
 from .mean import Mean
@@ -167,6 +168,7 @@ __all__ = [
     "LRN",
     "LSTMWrapper",
     "MatMul",
+    "MatMulInteger",
     "MaxRoiPool",
     "MaxUnpool",
     "Mean",

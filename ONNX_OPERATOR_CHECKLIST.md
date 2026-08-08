@@ -139,7 +139,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [ ] [`QLinearConv`](https://onnx.ai/onnx/operators/onnx__QLinearConv.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/qlinearconv.py)
 - [ ] [`QLinearMatMul`](https://onnx.ai/onnx/operators/onnx__QLinearMatMul.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/qlinearmatmul.py)
 - [x] [`QuantizeLinear`](https://onnx.ai/onnx/operators/onnx__QuantizeLinear.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/quantizelinear.py)
-- [ ] [`MatMulInteger`](https://onnx.ai/onnx/operators/onnx__MatMulInteger.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/matmulinteger.py)
+- [x] [`MatMulInteger`](https://onnx.ai/onnx/operators/onnx__MatMulInteger.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/matmulinteger.py)
 
 ## Random / Sampling
 
