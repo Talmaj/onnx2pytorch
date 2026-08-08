@@ -18,6 +18,7 @@ from .flatten import Flatten
 from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
+from .globallppool import GlobalLpPool
 from .globalmaxpool import GlobalMaxPool
 from .groupnorm import GroupNormalization
 from .gru import GRUWrapper
@@ -93,6 +94,7 @@ __all__ = [
     "Gather",
     "GatherND",
     "GlobalAveragePool",
+    "GlobalLpPool",
     "GlobalMaxPool",
     "GroupNormalization",
     "GRUWrapper",

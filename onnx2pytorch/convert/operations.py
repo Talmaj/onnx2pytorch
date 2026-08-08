@@ -176,6 +176,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = convert_linear_layer(node, params)
         elif node.op_type == "GlobalAveragePool":
             op = GlobalAveragePool()
+        elif node.op_type == "GlobalLpPool":
+            op = GlobalLpPool(**extract_attributes(node))
         elif node.op_type == "GlobalMaxPool":
             op = GlobalMaxPool()
         elif node.op_type == "Greater":
