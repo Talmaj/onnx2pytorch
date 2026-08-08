@@ -276,6 +276,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = ReduceL1(**extract_attributes(node))
         elif node.op_type == "ReduceLogSum":
             op = ReduceLogSum(**extract_attributes(node))
+        elif node.op_type == "ReduceLogSumExp":
+            op = ReduceLogSumExp(**extract_attributes(node))
         elif node.op_type == "ReduceMax":
             op = ReduceMax(**extract_attributes(node))
         elif node.op_type == "ReduceMean":

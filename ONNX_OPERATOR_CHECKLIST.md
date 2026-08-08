@@ -63,7 +63,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 - [x] [`ReduceL1`](https://onnx.ai/onnx/operators/onnx__ReduceL1.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/reducel1.py)
 - [x] [`ReduceLogSum`](https://onnx.ai/onnx/operators/onnx__ReduceLogSum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/reduce_log_sum.py)
-- [ ] [`ReduceLogSumExp`](https://onnx.ai/onnx/operators/onnx__ReduceLogSumExp.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/reduce_log_sum_exp.py)
+- [x] [`ReduceLogSumExp`](https://onnx.ai/onnx/operators/onnx__ReduceLogSumExp.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/reduce_log_sum_exp.py)
 - [ ] [`ArgMax`](https://onnx.ai/onnx/operators/onnx__ArgMax.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/argmax.py)
 - [ ] [`ArgMin`](https://onnx.ai/onnx/operators/onnx__ArgMin.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/argmin.py)
 
