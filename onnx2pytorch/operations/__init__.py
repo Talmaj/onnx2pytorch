@@ -37,6 +37,7 @@ from .lppool import LpPool
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
+from .maxroipool import MaxRoiPool
 from .maxunpool import MaxUnpool
 from .mean import Mean
 from .meanvariancenormalization import MeanVarianceNormalization
@@ -118,6 +119,7 @@ __all__ = [
     "LRN",
     "LSTMWrapper",
     "MatMul",
+    "MaxRoiPool",
     "MaxUnpool",
     "Mean",
     "MeanVarianceNormalization",
