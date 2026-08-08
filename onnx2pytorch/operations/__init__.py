@@ -6,6 +6,7 @@ from .batchnorm import BatchNormWrapper
 from .bitcast import BitCast
 from .bitshift import BitShift
 from .cast import Cast
+from .centercroppad import CenterCropPad
 from .clip import Clip
 from .col2im import Col2Im
 from .compress import Compress
@@ -101,6 +102,7 @@ __all__ = [
     "BitCast",
     "BitShift",
     "Cast",
+    "CenterCropPad",
     "Clip",
     "Col2Im",
     "Compress",

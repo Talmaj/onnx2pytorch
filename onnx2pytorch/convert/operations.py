@@ -126,6 +126,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.ceil)
         elif node.op_type == "Celu":
             op = nn.CELU(**extract_attributes(node))
+        elif node.op_type == "CenterCropPad":
+            op = CenterCropPad(**extract_attributes(node))
         elif node.op_type == "Clip":
             op = Clip(**extract_attributes(node))
         elif node.op_type == "Col2Im":
