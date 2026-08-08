@@ -24,7 +24,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Basic Math & Elementwise
 
-- [ ] [`Abs`](https://onnx.ai/onnx/operators/onnx__Abs.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/abs.py)
+- [x] [`Abs`](https://onnx.ai/onnx/operators/onnx__Abs.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/abs.py)
 - [ ] [`Neg`](https://onnx.ai/onnx/operators/onnx__Neg.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/neg.py)
 - [ ] [`Sign`](https://onnx.ai/onnx/operators/onnx__Sign.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sign.py)
 - [ ] [`Round`](https://onnx.ai/onnx/operators/onnx__Round.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/round.py)

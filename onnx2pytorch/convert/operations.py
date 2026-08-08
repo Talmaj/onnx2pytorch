@@ -81,7 +81,9 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         # extract only useful inputs
         params = [weights[par_name] for par_name in node.input if par_name in weights]
 
-        if node.op_type == "Acos":
+        if node.op_type == "Abs":
+            op = OperatorWrapper(torch.abs)
+        elif node.op_type == "Acos":
             op = OperatorWrapper(torch.acos)
         elif node.op_type == "Acosh":
             op = OperatorWrapper(torch.acosh)
