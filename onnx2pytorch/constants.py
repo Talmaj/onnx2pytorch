@@ -12,6 +12,7 @@ from onnx2pytorch.operations import (
     RNNWrapper,
     Split,
     TopK,
+    Unique,
 )
 
 
@@ -26,6 +27,7 @@ MULTIOUTPUT_LAYERS = (
     RNNWrapper,
     Split,
     TopK,
+    Unique,
 )
 STANDARD_LAYERS = (
     _ConvNd,

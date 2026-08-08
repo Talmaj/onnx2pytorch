@@ -90,6 +90,7 @@ from .tile import Tile
 from .topk import TopK
 from .transpose import Transpose
 from .trilu import Trilu
+from .unique import Unique
 from .unsqueeze import Unsqueeze
 from .where import Where
 
@@ -185,6 +186,7 @@ __all__ = [
     "TopK",
     "Transpose",
     "Trilu",
+    "Unique",
     "Unsqueeze",
     "Upsample",
     "Where",
