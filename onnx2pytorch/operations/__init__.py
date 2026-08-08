@@ -30,6 +30,7 @@ from .isinf import IsInf
 from .layernorm import LayerNorm
 from .loop import Loop
 from .lpnormalization import LpNormalization
+from .lppool import LpPool
 from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
@@ -105,6 +106,7 @@ __all__ = [
     "LayerNorm",
     "Loop",
     "LpNormalization",
+    "LpPool",
     "LRN",
     "LSTMWrapper",
     "MatMul",

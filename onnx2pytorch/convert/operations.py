@@ -226,6 +226,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             )
         elif node.op_type == "LpNormalization":
             op = LpNormalization(**extract_attributes(node))
+        elif node.op_type == "LpPool":
+            op = LpPool(**extract_attributes(node))
         elif node.op_type == "LSTM":
             op = convert_lstm_layer(node, weights)
         elif node.op_type == "MatMul":
