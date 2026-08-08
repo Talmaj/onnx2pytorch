@@ -17,6 +17,7 @@ from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
 from .gru import GRUWrapper
+from .hardmax import Hardmax
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
 from .instancenorm import InstanceNormWrapper
@@ -77,6 +78,7 @@ __all__ = [
     "GatherND",
     "GlobalAveragePool",
     "GRUWrapper",
+    "Hardmax",
     "If",
     "InstanceNormWrapper",
     "IsInf",
