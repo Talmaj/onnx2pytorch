@@ -82,6 +82,7 @@ from .thresholdedrelu import ThresholdedRelu
 from .tile import Tile
 from .topk import TopK
 from .transpose import Transpose
+from .trilu import Trilu
 from .unsqueeze import Unsqueeze
 from .where import Where
 
@@ -169,6 +170,7 @@ __all__ = [
     "Tile",
     "TopK",
     "Transpose",
+    "Trilu",
     "Unsqueeze",
     "Upsample",
     "Where",

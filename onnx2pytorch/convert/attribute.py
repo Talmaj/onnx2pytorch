@@ -264,6 +264,8 @@ def extract_attributes(node):
             kwargs["transpose_weight"] = not extract_attr_values(attr)
         elif attr.name == "transA":
             kwargs["transpose_activation"] = bool(extract_attr_values(attr))
+        elif attr.name == "upper":
+            kwargs["upper"] = extract_attr_values(attr)
         elif attr.name == "value":
             kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "value_float":
