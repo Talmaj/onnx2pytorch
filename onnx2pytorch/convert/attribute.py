@@ -113,6 +113,8 @@ def extract_attributes(node):
                 kwargs["beta"] = extract_attr_values(attr)
             else:
                 kwargs["bias_multiplier"] = extract_attr_values(attr)
+        elif attr.name == "bias" and node.op_type == "Shrink":
+            kwargs["bias"] = extract_attr_values(attr)
         elif attr.name == "body":
             kwargs["body"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":
@@ -166,6 +168,8 @@ def extract_attributes(node):
             kwargs["keepdim"] = bool(extract_attr_values(attr))
         elif attr.name == "kernel_shape":
             kwargs["kernel_size"] = extract_attr_values(attr)
+        elif attr.name == "lambd":
+            kwargs["lambd"] = extract_attr_values(attr)
         elif attr.name == "largest":
             kwargs["largest"] = extract_attr_values(attr)
         elif attr.name == "layout":

@@ -48,6 +48,7 @@ from .scatternd import ScatterND
 from .selu import Selu
 from .sequenceconstruct import SequenceConstruct
 from .shape import Shape
+from .shrink import Shrink
 from .slice import Slice
 from .split import Split
 from .squeeze import Squeeze
@@ -109,6 +110,7 @@ __all__ = [
     "Selu",
     "SequenceConstruct",
     "Shape",
+    "Shrink",
     "Slice",
     "Split",
     "Squeeze",
