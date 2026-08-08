@@ -75,6 +75,7 @@ from .shape import Shape
 from .shrink import Shrink
 from .size import Size
 from .slice import Slice
+from .spacetodepth import SpaceToDepth
 from .split import Split
 from .squeeze import Squeeze
 from .sum import Sum
@@ -165,6 +166,7 @@ __all__ = [
     "Shrink",
     "Size",
     "Slice",
+    "SpaceToDepth",
     "Split",
     "Squeeze",
     "Sum",

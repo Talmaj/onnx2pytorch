@@ -404,6 +404,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Softsign":
             # ONNX Softsign has no attributes: y = x / (1 + |x|)
             op = nn.Softsign()
+        elif node.op_type == "SpaceToDepth":
+            op = SpaceToDepth(**extract_attributes(node))
         elif node.op_type == "Split":
             kwargs = extract_attributes(node)
             # if the split_size_or_sections is not in node attributes,
