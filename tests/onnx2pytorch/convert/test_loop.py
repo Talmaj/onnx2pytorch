@@ -151,5 +151,93 @@ def test_loop_sum():
     )
 
 
+def test_loop_with_omitted_optional_input():
+    """Loop body containing a Clip node whose optional min input is omitted."""
+    iter_count = onnx.helper.make_tensor_value_info(
+        "iter_count", onnx.TensorProto.INT64, []
+    )
+    cond_in = onnx.helper.make_tensor_value_info("cond_in", onnx.TensorProto.BOOL, [])
+    cond_out = onnx.helper.make_tensor_value_info("cond_out", onnx.TensorProto.BOOL, [])
+    y_in = onnx.helper.make_tensor_value_info("y_in", onnx.TensorProto.FLOAT, [1])
+    y_out = onnx.helper.make_tensor_value_info("y_out", onnx.TensorProto.FLOAT, [1])
+
+    identity_node = onnx.helper.make_node(
+        "Identity", inputs=["cond_in"], outputs=["cond_out"]
+    )
+    one_const_node = onnx.helper.make_node(
+        "Constant",
+        inputs=[],
+        outputs=["one"],
+        value=onnx.helper.make_tensor(
+            name="const_tensor_one",
+            data_type=onnx.TensorProto.FLOAT,
+            dims=(1,),
+            vals=[1.0],
+        ),
+    )
+    max_const_node = onnx.helper.make_node(
+        "Constant",
+        inputs=[],
+        outputs=["max"],
+        value=onnx.helper.make_tensor(
+            name="const_tensor_max",
+            data_type=onnx.TensorProto.FLOAT,
+            dims=(),
+            vals=[10.0],
+        ),
+    )
+    add_node = onnx.helper.make_node("Add", inputs=["y_in", "one"], outputs=["y_sum"])
+    clip_node = onnx.helper.make_node(
+        "Clip", inputs=["y_sum", "", "max"], outputs=["y_out"]
+    )
+
+    loop_body = onnx.helper.make_graph(
+        [identity_node, one_const_node, max_const_node, add_node, clip_node],
+        "loop_body",
+        [iter_count, cond_in, y_in],
+        [cond_out, y_out],
+    )
+
+    trip_count = onnx.helper.make_tensor_value_info(
+        "trip_count", onnx.TensorProto.INT64, []
+    )
+    cond = onnx.helper.make_tensor_value_info("cond", onnx.TensorProto.BOOL, [])
+    y = onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, [1])
+    res_y = onnx.helper.make_tensor_value_info("res_y", onnx.TensorProto.FLOAT, [1])
+
+    node = onnx.helper.make_node(
+        "Loop",
+        inputs=["trip_count", "cond", "y"],
+        outputs=["res_y"],
+        body=loop_body,
+    )
+    graph_def = onnx.helper.make_graph(
+        nodes=[node],
+        name="test-model",
+        inputs=[trip_count, cond, y],
+        outputs=[res_y],
+    )
+    model_def = onnx.helper.make_model_gen_version(
+        graph_def,
+        producer_name="loop-example",
+        opset_imports=[onnx.helper.make_opsetid("", 13)],
+    )
+    onnx.checker.check_model(model_def)
+
+    inputs = {
+        "trip_count": np.array(5).astype(np.int64),
+        "cond": np.array(True),
+        "y": np.array([0]).astype(np.float32),
+    }
+
+    ort_session = ort.InferenceSession(model_def.SerializeToString())
+    exp_res_y = ort_session.run(None, inputs)[0]
+
+    o2p_model = ConvertModel(model_def, experimental=True)
+    res = o2p_model(**{k: torch.tensor(v) for k, v in inputs.items()})
+
+    np.testing.assert_allclose(res.detach().numpy(), exp_res_y, rtol=1e-5, atol=1e-5)
+
+
 if __name__ == "__main__":
     test_loop_sum()

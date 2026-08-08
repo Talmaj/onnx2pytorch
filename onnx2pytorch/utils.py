@@ -17,6 +17,27 @@ def value_wrapper(value):
     return callback
 
 
+class _OmittedInput:
+    def __repr__(self):
+        return "OMITTED_INPUT"
+
+
+# ONNX marks an omitted optional node input with an empty input name.
+OMITTED_INPUT = _OmittedInput()
+
+
+def resolve_omitted_inputs(in_activations):
+    """
+    Drop omitted optional inputs at the end and pass on the remaining ones as None.
+
+    Omitted inputs cannot simply be removed, as that would shift the inputs that
+    follow them into the wrong positional argument of the operation.
+    """
+    while in_activations and in_activations[-1] is OMITTED_INPUT:
+        in_activations.pop()
+    return [None if act is OMITTED_INPUT else act for act in in_activations]
+
+
 def is_constant(value):
     return value.ndim == 0 or value.shape == torch.Size([1])
 

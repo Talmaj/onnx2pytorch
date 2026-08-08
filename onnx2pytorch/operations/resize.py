@@ -18,12 +18,18 @@ class Resize(Operator):
             )
         super().__init__()
 
-    def forward(self, inp, roi=empty_tensor, scales=empty_tensor, sizes=empty_tensor):
+    def forward(self, inp, roi=None, scales=None, sizes=None):
+        # Optional inputs that were omitted in the onnx graph are passed on as None
+        roi = empty_tensor if roi is None else roi
+        scales = empty_tensor if scales is None else scales
+        sizes = empty_tensor if sizes is None else sizes
+
         if roi.nelement() > 0:
             warnings.warn("Pytorch's interpolate uses no roi. Result might differ.")
 
-        scales = list(scales)
-        sizes = list(sizes)
+        # Interpolate does not accept the tensors that the onnx graph provides
+        scales = [float(scale) for scale in scales]
+        sizes = [int(size) for size in sizes]
         shape = list(inp.shape)
         if shape[:2] == sizes[:2]:
             sizes = sizes[2:]  # Pytorch's interpolate takes only H and W params

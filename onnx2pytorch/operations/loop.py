@@ -11,6 +11,8 @@ from torch.nn.modules.linear import Identity
 from onnx2pytorch.utils import (
     get_inputs_names,
     get_outputs_names,
+    resolve_omitted_inputs,
+    OMITTED_INPUT,
 )
 
 
@@ -119,12 +121,16 @@ class Loop(nn.Module):
                 else:
                     in_activations = [
                         (
-                            activations[in_op_id]
-                            if in_op_id in activations
-                            # if in_op_id not in activations neither in parameters then
-                            # it must be the initial input
-                            else self.ops.get_init_parameter(
-                                buffer_modules, in_op_id, inputs[0]
+                            OMITTED_INPUT
+                            if in_op_id == ""
+                            else (
+                                activations[in_op_id]
+                                if in_op_id in activations
+                                # if in_op_id not in activations neither in
+                                # parameters then it must be the initial input
+                                else self.ops.get_init_parameter(
+                                    buffer_modules, in_op_id, inputs[0]
+                                )
                             )
                         )
                         for in_op_id in node.input
@@ -133,6 +139,7 @@ class Loop(nn.Module):
                 in_activations = [
                     in_act for in_act in in_activations if in_act is not None
                 ]
+                in_activations = resolve_omitted_inputs(in_activations)
 
                 # store activations for next layer
                 if isinstance(op, Loop):
