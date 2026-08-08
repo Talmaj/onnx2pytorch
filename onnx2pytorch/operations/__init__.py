@@ -65,6 +65,7 @@ from .optionalgetelement import OptionalGetElement
 from .optionalhaselement import OptionalHasElement
 from .pad import Pad
 from .prelu import PRelu
+from .qlinearmatmul import QLinearMatMul
 from .quantizelinear import QuantizeLinear
 from .range import Range
 from .randomuniformlike import RandomUniformLike
@@ -182,6 +183,7 @@ __all__ = [
     "OptionalHasElement",
     "Pad",
     "PRelu",
+    "QLinearMatMul",
     "QuantizeLinear",
     "Range",
     "RandomUniformLike",

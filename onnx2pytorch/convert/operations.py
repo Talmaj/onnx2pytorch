@@ -333,6 +333,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.pow)
         elif node.op_type == "PRelu":
             op = PRelu()
+        elif node.op_type == "QLinearMatMul":
+            op = QLinearMatMul()
         elif node.op_type == "QuantizeLinear":
             op = QuantizeLinear(**extract_attributes(node))
         elif node.op_type == "Range":
