@@ -195,6 +195,8 @@ def extract_attributes(node):
             kwargs["momentum"] = extract_attr_values(attr)
         elif attr.name == "noop_with_empty_axes":
             kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
+        elif attr.name == "num_groups":
+            kwargs["num_groups"] = extract_attr_values(attr)
         elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
             raise NotImplementedError(
                 "ConvTranspose with dynamic padding not implemented."
@@ -224,6 +226,8 @@ def extract_attributes(node):
             kwargs["spatial"] = extract_attr_values(attr)  # Batch norm parameter
         elif attr.name == "split":
             kwargs["split_size_or_sections"] = extract_attr_values(attr)
+        elif attr.name == "stash_type":
+            kwargs["stash_type"] = extract_attr_values(attr)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "starts":

@@ -69,7 +69,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Normalization
 
-- [ ] [`GroupNormalization`](https://onnx.ai/onnx/operators/onnx__GroupNormalization.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/groupnormalization.py)
+- [x] [`GroupNormalization`](https://onnx.ai/onnx/operators/onnx__GroupNormalization.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/groupnormalization.py)
 - [ ] [`LpNormalization`](https://onnx.ai/onnx/operators/onnx__LpNormalization.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/lpnormalization.py)
 - [ ] [`MeanVarianceNormalization`](https://onnx.ai/onnx/operators/onnx__MeanVarianceNormalization.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/meanvariancenormalization.py)
 - [ ] [`RMSNormalization`](https://onnx.ai/onnx/operators/onnx__RMSNormalization.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/rmsnormalization.py)

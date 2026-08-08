@@ -180,6 +180,10 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.greater)
         elif node.op_type == "GreaterOrEqual":
             op = OperatorWrapper(torch.greater_equal)
+        elif node.op_type == "GroupNormalization":
+            op = GroupNormalization(
+                opset_version=opset_version, **extract_attributes(node)
+            )
         elif node.op_type == "GRU":
             op = convert_gru_layer(node, weights)
         elif node.op_type == "Hardmax":

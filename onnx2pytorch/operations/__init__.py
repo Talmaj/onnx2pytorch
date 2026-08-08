@@ -18,6 +18,7 @@ from .flatten import Flatten
 from .gather import Gather
 from .gathernd import GatherND
 from .globalaveragepool import GlobalAveragePool
+from .groupnorm import GroupNormalization
 from .gru import GRUWrapper
 from .hardmax import Hardmax
 from .hardsigmoid import Hardsigmoid
@@ -88,6 +89,7 @@ __all__ = [
     "Gather",
     "GatherND",
     "GlobalAveragePool",
+    "GroupNormalization",
     "GRUWrapper",
     "Hardmax",
     "If",
