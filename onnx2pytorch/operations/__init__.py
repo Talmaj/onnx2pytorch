@@ -45,6 +45,7 @@ from .resize import Resize, Upsample
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
+from .selu import Selu
 from .sequenceconstruct import SequenceConstruct
 from .shape import Shape
 from .slice import Slice
@@ -105,6 +106,7 @@ __all__ = [
     "Scatter",
     "ScatterElements",
     "ScatterND",
+    "Selu",
     "SequenceConstruct",
     "Shape",
     "Slice",

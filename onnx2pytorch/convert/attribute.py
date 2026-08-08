@@ -79,7 +79,7 @@ def extract_attributes(node):
         elif attr.name == "alpha":
             if node.op_type == "LeakyRelu":
                 kwargs["negative_slope"] = extract_attr_values(attr)
-            elif node.op_type in ("Celu", "Elu", "ThresholdedRelu"):
+            elif node.op_type in ("Celu", "Elu", "Selu", "ThresholdedRelu"):
                 kwargs["alpha"] = extract_attr_values(attr)
             elif node.op_type == "HardSigmoid":
                 kwargs["alpha"] = extract_attr_values(attr)
@@ -152,6 +152,8 @@ def extract_attributes(node):
             kwargs["exclusive"] = extract_attr_values(attr)
         elif attr.name == "fmod":
             kwargs["fmod"] = extract_attr_values(attr)
+        elif attr.name == "gamma":
+            kwargs["gamma"] = extract_attr_values(attr)
         elif attr.name == "group":
             kwargs["groups"] = extract_attr_values(attr)
         elif attr.name == "hidden_size":
