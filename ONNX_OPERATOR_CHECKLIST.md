@@ -175,7 +175,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Bit Shifting
 
-- [ ] [`BitShift`](https://onnx.ai/onnx/operators/onnx__BitShift.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitshift.py)
+- [x] [`BitShift`](https://onnx.ai/onnx/operators/onnx__BitShift.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitshift.py)
   - ⚠️ Custom `BitShift` class already exists in `onnx2pytorch/operations/bitshift.py` but is **not wired** into `convert_operations()` — currently non-functional. Should just need registration.
 
 ---

@@ -109,6 +109,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = convert_batch_norm_layer(node, params=params)
         elif node.op_type == "BitCast":
             op = BitCast(**extract_attributes(node))
+        elif node.op_type == "BitShift":
+            op = BitShift(**extract_attributes(node))
         elif node.op_type == "BitwiseAnd":
             op = OperatorWrapper(torch.bitwise_and)
         elif node.op_type == "BitwiseNot":
