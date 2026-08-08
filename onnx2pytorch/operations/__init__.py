@@ -58,6 +58,7 @@ from .maxunpool import MaxUnpool
 from .mean import Mean
 from .meanvariancenormalization import MeanVarianceNormalization
 from .mod import Mod
+from .multinomial import Multinomial
 from .nonmaxsuppression import NonMaxSuppression
 from .nonzero import NonZero
 from .onehot import OneHot
@@ -178,6 +179,7 @@ __all__ = [
     "Mean",
     "MeanVarianceNormalization",
     "Mod",
+    "Multinomial",
     "NonMaxSuppression",
     "NonZero",
     "OneHot",

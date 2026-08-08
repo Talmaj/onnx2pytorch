@@ -311,6 +311,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Mod(**extract_attributes(node))
         elif node.op_type == "Mul":
             op = OperatorWrapper(torch.mul)
+        elif node.op_type == "Multinomial":
+            op = Multinomial(**extract_attributes(node))
         elif node.op_type == "Neg":
             op = OperatorWrapper(torch.neg)
         elif node.op_type == "NonMaxSuppression":
