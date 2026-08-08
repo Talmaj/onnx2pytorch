@@ -46,7 +46,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`BitwiseAnd`](https://onnx.ai/onnx/operators/onnx__BitwiseAnd.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwiseand.py)
 - [x] [`BitwiseNot`](https://onnx.ai/onnx/operators/onnx__BitwiseNot.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwisenot.py)
 - [x] [`BitwiseOr`](https://onnx.ai/onnx/operators/onnx__BitwiseOr.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwiseor.py)
-- [ ] [`BitwiseXor`](https://onnx.ai/onnx/operators/onnx__BitwiseXor.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwisexor.py)
+- [x] [`BitwiseXor`](https://onnx.ai/onnx/operators/onnx__BitwiseXor.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitwisexor.py)
 
 ## Activation Functions
 

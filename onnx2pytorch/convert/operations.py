@@ -111,6 +111,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.bitwise_not)
         elif node.op_type == "BitwiseOr":
             op = OperatorWrapper(torch.bitwise_or)
+        elif node.op_type == "BitwiseXor":
+            op = OperatorWrapper(torch.bitwise_xor)
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
         elif node.op_type == "Ceil":
