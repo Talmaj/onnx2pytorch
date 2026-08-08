@@ -201,6 +201,8 @@ def extract_attributes(node):
             kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
         elif attr.name == "num_groups":
             kwargs["num_groups"] = extract_attr_values(attr)
+        elif attr.name == "offset_group":
+            kwargs["offset_group"] = extract_attr_values(attr)
         elif attr.name == "output_height":
             kwargs["output_height"] = extract_attr_values(attr)
         elif attr.name == "output_width":

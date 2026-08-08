@@ -78,7 +78,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 - [x] [`Col2Im`](https://onnx.ai/onnx/operators/onnx__Col2Im.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/col2im.py)
 - [ ] [`ConvInteger`](https://onnx.ai/onnx/operators/onnx__ConvInteger.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/convinteger.py)
-- [ ] [`DeformConv`](https://onnx.ai/onnx/operators/onnx__DeformConv.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/deformconv.py)
+- [x] [`DeformConv`](https://onnx.ai/onnx/operators/onnx__DeformConv.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/deformconv.py)
 - [x] [`GlobalLpPool`](https://onnx.ai/onnx/operators/onnx__GlobalLpPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node) *(no dedicated generator script at this commit)*
 - [x] [`GlobalMaxPool`](https://onnx.ai/onnx/operators/onnx__GlobalMaxPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/globalmaxpool.py)
 - [x] [`LpPool`](https://onnx.ai/onnx/operators/onnx__LpPool.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/lppool.py)

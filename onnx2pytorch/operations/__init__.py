@@ -12,6 +12,7 @@ from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .cumprod import CumProd
 from .cumsum import CumSum
+from .deformconv import DeformConv
 from .div import Div
 from .dropout import Dropout
 from .einsum import Einsum
@@ -95,6 +96,7 @@ __all__ = [
     "ConstantOfShape",
     "CumProd",
     "CumSum",
+    "DeformConv",
     "Div",
     "Dropout",
     "Einsum",
