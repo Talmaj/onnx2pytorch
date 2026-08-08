@@ -50,3 +50,9 @@ def test_asinh():
     check_unary_op("Asinh", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
     np.random.seed(0)
     check_unary_op("Asinh", np.random.randn(3, 4, 5).astype(np.float32))
+
+
+def test_atan():
+    check_unary_op("Atan", np.array([-1.0, 0.0, 1.0], dtype=np.float32))
+    np.random.seed(0)
+    check_unary_op("Atan", np.random.randn(3, 4, 5).astype(np.float32))
