@@ -29,7 +29,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [x] [`Sign`](https://onnx.ai/onnx/operators/onnx__Sign.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/sign.py)
 - [x] [`Round`](https://onnx.ai/onnx/operators/onnx__Round.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/round.py)
 - [x] [`Mod`](https://onnx.ai/onnx/operators/onnx__Mod.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/mod.py)
-- [ ] [`CumProd`](https://onnx.ai/onnx/operators/onnx__CumProd.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumprod.py)
+- [x] [`CumProd`](https://onnx.ai/onnx/operators/onnx__CumProd.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumprod.py)
 - [ ] [`CumSum`](https://onnx.ai/onnx/operators/onnx__CumSum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/cumsum.py)
 - [ ] [`Det`](https://onnx.ai/onnx/operators/onnx__Det.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/det.py)
 - [ ] [`Einsum`](https://onnx.ai/onnx/operators/onnx__Einsum.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/einsum.py)

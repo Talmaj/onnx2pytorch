@@ -140,6 +140,8 @@ def extract_attributes(node):
             kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "epsilon":
             kwargs["eps"] = extract_attr_values(attr)
+        elif attr.name == "exclusive":
+            kwargs["exclusive"] = extract_attr_values(attr)
         elif attr.name == "fmod":
             kwargs["fmod"] = extract_attr_values(attr)
         elif attr.name == "group":
@@ -187,6 +189,8 @@ def extract_attributes(node):
             kwargs["dims"] = extract_attr_values(attr)
         elif attr.name == "repeats":
             kwargs["repeats"] = extract_attr_values(attr)
+        elif attr.name == "reverse":
+            kwargs["reverse"] = extract_attr_values(attr)
         elif attr.name == "seed":
             kwargs["seed"] = extract_attr_values(attr)
         elif attr.name == "sorted":
