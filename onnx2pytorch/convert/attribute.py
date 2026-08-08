@@ -219,6 +219,8 @@ def extract_attributes(node):
             kwargs["num_groups"] = extract_attr_values(attr)
         elif attr.name == "num_heads":
             kwargs["num_heads"] = extract_attr_values(attr)
+        elif attr.name == "num_scan_inputs":
+            kwargs["num_scan_inputs"] = extract_attr_values(attr)
         elif attr.name == "offset_group":
             kwargs["offset_group"] = extract_attr_values(attr)
         elif attr.name == "output_height":
@@ -260,6 +262,13 @@ def extract_attributes(node):
             kwargs["sampling_ratio"] = extract_attr_values(attr)
         elif attr.name == "scale":
             kwargs["scale"] = extract_attr_values(attr)
+        elif attr.name in (
+            "scan_input_axes",
+            "scan_input_directions",
+            "scan_output_axes",
+            "scan_output_directions",
+        ):
+            kwargs[attr.name] = extract_attr_values(attr)
         elif attr.name == "seed":
             kwargs["seed"] = extract_attr_values(attr)
         elif attr.name == "select_last_index":

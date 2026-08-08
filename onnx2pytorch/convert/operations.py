@@ -377,6 +377,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = RotaryEmbedding(**extract_attributes(node))
         elif node.op_type == "Round":
             op = OperatorWrapper(torch.round)
+        elif node.op_type == "Scan":
+            op = Scan(
+                opset_version=opset_version,
+                batch_dim=batch_dim,
+                **extract_attributes(node),
+            )
         elif node.op_type == "Scatter":
             op = Scatter(**extract_attributes(node))
         elif node.op_type == "ScatterElements":

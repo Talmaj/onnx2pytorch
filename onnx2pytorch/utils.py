@@ -261,7 +261,7 @@ def get_outputs_names(onnx_graph):
 def get_ops_names(onnx_graph):
     ops_used = set(node.op_type for node in onnx_graph.node)
     for node in onnx_graph.node:
-        if node.op_type == "Loop":
+        if node.op_type in ("Loop", "Scan"):
             for attr in node.attribute:
                 if attr.name == "body":
                     ops_used |= get_ops_names(attr.g)

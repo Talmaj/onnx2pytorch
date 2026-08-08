@@ -114,7 +114,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## Control Flow
 
-- [ ] [`Scan`](https://onnx.ai/onnx/operators/onnx__Scan.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/scan.py)
+- [x] [`Scan`](https://onnx.ai/onnx/operators/onnx__Scan.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/scan.py)
 
 ## Sequence Types
 

@@ -75,6 +75,7 @@ from .rmsnorm import RMSNormalization
 from .rnn import RNNWrapper
 from .roialign import RoiAlign
 from .rotaryembedding import RotaryEmbedding
+from .scan import Scan
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
@@ -176,6 +177,7 @@ __all__ = [
     "RNNWrapper",
     "RoiAlign",
     "RotaryEmbedding",
+    "Scan",
     "Scatter",
     "ScatterElements",
     "ScatterND",
