@@ -142,6 +142,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Compress(**extract_attributes(node))
         elif node.op_type == "Concat":
             op = partial(torch.cat, **extract_attributes(node))
+        elif node.op_type == "ConcatFromSequence":
+            op = ConcatFromSequence(**extract_attributes(node))
         elif node.op_type == "Constant":
             op = Constant(**extract_attributes(node))
         elif node.op_type == "ConstantOfShape":

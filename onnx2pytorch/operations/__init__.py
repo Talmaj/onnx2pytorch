@@ -13,6 +13,7 @@ from .centercroppad import CenterCropPad
 from .clip import Clip
 from .col2im import Col2Im
 from .compress import Compress
+from .concatfromsequence import ConcatFromSequence
 from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .convinteger import ConvInteger
@@ -116,6 +117,7 @@ __all__ = [
     "Clip",
     "Col2Im",
     "Compress",
+    "ConcatFromSequence",
     "Constant",
     "ConstantOfShape",
     "ConvInteger",

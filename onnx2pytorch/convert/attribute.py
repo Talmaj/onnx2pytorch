@@ -213,6 +213,8 @@ def extract_attributes(node):
             kwargs["mode"] = extract_attr_values(attr)
         elif attr.name == "momentum":
             kwargs["momentum"] = extract_attr_values(attr)
+        elif attr.name == "new_axis":
+            kwargs["new_axis"] = extract_attr_values(attr)
         elif attr.name == "noop_with_empty_axes":
             kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
         elif attr.name == "num_groups":
