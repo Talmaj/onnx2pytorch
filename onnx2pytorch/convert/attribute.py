@@ -179,6 +179,8 @@ def extract_attributes(node):
             kwargs["high"] = extract_attr_values(attr)
         elif attr.name == "input_forget":
             kwargs["input_forget"] = extract_attr_values(attr)
+        elif attr.name == "interleaved":
+            kwargs["interleaved"] = extract_attr_values(attr)
         elif attr.name == "k":
             kwargs["k"] = extract_attr_values(attr)
         elif attr.name == "keepdims":
@@ -207,6 +209,8 @@ def extract_attributes(node):
             kwargs["noop_with_empty_axes"] = extract_attr_values(attr)
         elif attr.name == "num_groups":
             kwargs["num_groups"] = extract_attr_values(attr)
+        elif attr.name == "num_heads":
+            kwargs["num_heads"] = extract_attr_values(attr)
         elif attr.name == "offset_group":
             kwargs["offset_group"] = extract_attr_values(attr)
         elif attr.name == "output_height":
@@ -238,6 +242,8 @@ def extract_attributes(node):
             kwargs["repeats"] = extract_attr_values(attr)
         elif attr.name == "reverse":
             kwargs["reverse"] = extract_attr_values(attr)
+        elif attr.name == "rotary_embedding_dim":
+            kwargs["rotary_embedding_dim"] = extract_attr_values(attr)
         elif attr.name == "sampling_ratio":
             kwargs["sampling_ratio"] = extract_attr_values(attr)
         elif attr.name == "seed":

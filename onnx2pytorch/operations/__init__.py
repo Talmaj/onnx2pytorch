@@ -71,6 +71,7 @@ from .reversesequence import ReverseSequence
 from .rmsnorm import RMSNormalization
 from .rnn import RNNWrapper
 from .roialign import RoiAlign
+from .rotaryembedding import RotaryEmbedding
 from .scatter import Scatter
 from .scatterelements import ScatterElements
 from .scatternd import ScatterND
@@ -168,6 +169,7 @@ __all__ = [
     "RMSNormalization",
     "RNNWrapper",
     "RoiAlign",
+    "RotaryEmbedding",
     "Scatter",
     "ScatterElements",
     "ScatterND",
