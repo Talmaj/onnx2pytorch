@@ -70,7 +70,9 @@ def extract_attributes(node):
     """Extract onnx attributes. Map onnx feature naming to pytorch."""
     kwargs = {}
     for attr in node.attribute:
-        if attr.name == "activation_alpha":
+        if attr.name == "activation":
+            kwargs["activation"] = extract_attr_values(attr)
+        elif attr.name == "activation_alpha":
             kwargs["activation_alpha"] = extract_attr_values(attr)
         elif attr.name == "activation_beta":
             kwargs["activation_beta"] = extract_attr_values(attr)

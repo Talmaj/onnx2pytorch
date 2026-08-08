@@ -8,6 +8,7 @@ from .batchnorm import BatchNormWrapper
 from .bitcast import BitCast
 from .bitshift import BitShift
 from .cast import Cast
+from .causalconvwithstate import CausalConvWithState
 from .centercroppad import CenterCropPad
 from .clip import Clip
 from .col2im import Col2Im
@@ -109,6 +110,7 @@ __all__ = [
     "BitCast",
     "BitShift",
     "Cast",
+    "CausalConvWithState",
     "CenterCropPad",
     "Clip",
     "Col2Im",
