@@ -137,6 +137,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = ConstantOfShape(**extract_attributes(node))
         elif node.op_type == "Conv":
             op = convert_layer(node, "Conv", params)
+        elif node.op_type == "ConvInteger":
+            op = ConvInteger(**extract_attributes(node))
         elif node.op_type == "ConvTranspose":
             op = convert_layer(node, "ConvTranspose", params)
         elif node.op_type == "Cos":

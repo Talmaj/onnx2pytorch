@@ -10,6 +10,7 @@ from .clip import Clip
 from .col2im import Col2Im
 from .constant import Constant
 from .constantofshape import ConstantOfShape
+from .convinteger import ConvInteger
 from .cumprod import CumProd
 from .cumsum import CumSum
 from .deformconv import DeformConv
@@ -94,6 +95,7 @@ __all__ = [
     "Col2Im",
     "Constant",
     "ConstantOfShape",
+    "ConvInteger",
     "CumProd",
     "CumSum",
     "DeformConv",
