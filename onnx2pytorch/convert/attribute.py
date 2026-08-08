@@ -79,7 +79,7 @@ def extract_attributes(node):
         elif attr.name == "alpha":
             if node.op_type == "LeakyRelu":
                 kwargs["negative_slope"] = extract_attr_values(attr)
-            elif node.op_type in ("Celu", "Elu", "Selu", "ThresholdedRelu"):
+            elif node.op_type in ("Celu", "Elu", "Selu", "Swish", "ThresholdedRelu"):
                 kwargs["alpha"] = extract_attr_values(attr)
             elif node.op_type == "HardSigmoid":
                 kwargs["alpha"] = extract_attr_values(attr)
