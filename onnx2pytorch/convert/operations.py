@@ -409,10 +409,16 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Relu":
             op = nn.ReLU(inplace=True)
         elif node.op_type == "Reshape":
-            shape = list(
-                filter(lambda x: x.name == node.input[1], onnx_graph.initializer)
+            shape = (
+                list(filter(lambda x: x.name == node.input[1], onnx_graph.initializer))
+                if len(node.input) > 1
+                else []
             )
-            shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
+            if shape:
+                shape = np.copy(numpy_helper.to_array(shape[0]))
+            else:
+                # Before opset 5 the target shape is an attribute
+                shape = extract_attributes(node).get("shape")
             op = Reshape(enable_pruning, shape)
         elif node.op_type == "Resize":
             op = Resize(opset_version=opset_version, **extract_attributes(node))
