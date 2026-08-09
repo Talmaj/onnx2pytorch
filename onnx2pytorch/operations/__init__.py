@@ -40,6 +40,7 @@ from .globalmaxpool import GlobalMaxPool
 from .gridsample import GridSample
 from .groupnorm import GroupNormalization
 from .gru import GRUWrapper
+from .hammingwindow import HammingWindow
 from .hardmax import Hardmax
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
@@ -166,6 +167,7 @@ __all__ = [
     "GridSample",
     "GroupNormalization",
     "GRUWrapper",
+    "HammingWindow",
     "Hardmax",
     "If",
     "InstanceNormWrapper",

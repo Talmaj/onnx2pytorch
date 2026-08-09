@@ -227,6 +227,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             )
         elif node.op_type == "GRU":
             op = convert_gru_layer(node, weights)
+        elif node.op_type == "HammingWindow":
+            op = HammingWindow(**extract_attributes(node))
         elif node.op_type == "Hardmax":
             op = Hardmax(**extract_attributes(node))
         elif node.op_type == "Identity":

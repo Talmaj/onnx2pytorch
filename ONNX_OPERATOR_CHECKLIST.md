@@ -154,7 +154,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [ ] [`DFT`](https://onnx.ai/onnx/operators/onnx__DFT.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/dft.py)
 - [ ] [`STFT`](https://onnx.ai/onnx/operators/onnx__STFT.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/stft.py)
 - [x] [`BlackmanWindow`](https://onnx.ai/onnx/operators/onnx__BlackmanWindow.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/blackmanwindow.py)
-- [ ] [`HammingWindow`](https://onnx.ai/onnx/operators/onnx__HammingWindow.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/hammingwindow.py)
+- [x] [`HammingWindow`](https://onnx.ai/onnx/operators/onnx__HammingWindow.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/hammingwindow.py)
 - [ ] [`HannWindow`](https://onnx.ai/onnx/operators/onnx__HannWindow.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/hannwindow.py)
 - [ ] [`MelWeightMatrix`](https://onnx.ai/onnx/operators/onnx__MelWeightMatrix.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/melweightmatrix.py)
 - [ ] [`ImageDecoder`](https://onnx.ai/onnx/operators/onnx__ImageDecoder.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/image_decoder.py)
