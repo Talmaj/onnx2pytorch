@@ -128,12 +128,18 @@ def extract_attributes(node):
                 kwargs["bias_multiplier"] = extract_attr_values(attr)
         elif attr.name == "bias" and node.op_type == "Shrink":
             kwargs["bias"] = extract_attr_values(attr)
+        elif attr.name == "batch_dims":
+            kwargs["batch_dims"] = extract_attr_values(attr)
         elif attr.name == "block_size":
             kwargs["block_size"] = extract_attr_values(attr)
         elif attr.name == "blocksize":
             kwargs["blocksize"] = extract_attr_values(attr)
         elif attr.name == "body":
             kwargs["body"] = extract_attr_values(attr)
+        elif attr.name == "broadcast":
+            if node.op_type != "Gemm":
+                # Gemm's legacy broadcast attribute is implied by numpy semantics
+                kwargs["broadcast"] = extract_attr_values(attr)
         elif attr.name == "case_change_action":
             kwargs["case_change_action"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":
@@ -144,6 +150,9 @@ def extract_attributes(node):
             kwargs["chunk_size"] = extract_attr_values(attr)
         elif attr.name == "clip":
             kwargs["clip"] = extract_attr_values(attr)
+        elif attr.name == "consumed_inputs":
+            # Dead opset-1 hint about in-place inputs, carries no semantics
+            pass
         elif attr.name == "coordinate_transformation_mode":
             arg = extract_attr_values(attr)
             if node.op_type == "RoiAlign":

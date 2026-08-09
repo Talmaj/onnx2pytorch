@@ -32,7 +32,29 @@ from onnx2pytorch.utils import (
 )
 
 
-SUBGRAPH_OP_TYPES = ("Loop", "Scan", "SequenceMap")
+SUBGRAPH_OP_TYPES = ("Loop", "Scan", "SequenceMap", "If")
+
+DEFAULT_DOMAINS = ("", "ai.onnx")
+
+
+def get_opset_version(onnx_model):
+    """Look up the version the model imports for the default ONNX domain."""
+    versions = {imp.domain: imp.version for imp in onnx_model.opset_import}
+    for domain in DEFAULT_DOMAINS:
+        if domain in versions:
+            unknown = sorted(set(versions) - set(DEFAULT_DOMAINS))
+            if unknown:
+                warnings.warn(
+                    "Model imports domains that are not understood: {}.".format(
+                        ", ".join(unknown)
+                    )
+                )
+            return versions[domain]
+    raise ValueError(
+        "Model does not import the default ONNX domain. Imported domains: {}.".format(
+            ", ".join(repr(d) for d in versions) or "none"
+        )
+    )
 
 
 def compute_activation_dependencies(onnx_graph, model, mapping):
@@ -59,26 +81,26 @@ def compute_activation_dependencies(onnx_graph, model, mapping):
         for in_op_id in node.input:
             needed_by[in_op_id].add(out_op_id)
         if node.op_type in SUBGRAPH_OP_TYPES:
-            # Look at nodes in the loop body
-            l1 = getattr(model, mapping[out_op_id])  # Loop, Scan or SequenceMap
-            loop_body_l1 = l1.body
-            for node_l1 in loop_body_l1.node:
-                for in_op_id in node_l1.input:
-                    # Treating node (outer loop) as dependent, not node_l1
-                    needed_by[in_op_id].add(out_op_id)
-                if node_l1.op_type in SUBGRAPH_OP_TYPES:
-                    # Look at nodes in the loop body
-                    l2 = getattr(model, l1.mapping[node_l1.output[0]])
-                    loop_body_l2 = l2.body
-                    for node_l2 in loop_body_l2.node:
-                        for in_op_id in node_l2.input:
-                            # Treating node (outer loop) as dependent, not node_l2
-                            needed_by[in_op_id].add(out_op_id)
-                        if node_l2.op_type in SUBGRAPH_OP_TYPES:
-                            # TODO: make this recursive for nested loops
-                            raise NotImplementedError(
-                                "Activation garbage collection not implemented for >2 nested loops."
-                            )
+            # Look at nodes in the subgraph(s)
+            l1 = getattr(model, mapping[out_op_id])  # If, Loop, Scan or SequenceMap
+            for body_l1, mapping_l1 in l1.subgraph_mappings:
+                for node_l1 in body_l1.node:
+                    for in_op_id in node_l1.input:
+                        # Treating node (outer loop) as dependent, not node_l1
+                        needed_by[in_op_id].add(out_op_id)
+                    if node_l1.op_type in SUBGRAPH_OP_TYPES:
+                        l2 = getattr(l1, mapping_l1[node_l1.output[0]])
+                        for body_l2, _ in l2.subgraph_mappings:
+                            for node_l2 in body_l2.node:
+                                for in_op_id in node_l2.input:
+                                    # Treating node (outer loop) as dependent
+                                    needed_by[in_op_id].add(out_op_id)
+                                if node_l2.op_type in SUBGRAPH_OP_TYPES:
+                                    # TODO: make this recursive for nested loops
+                                    raise NotImplementedError(
+                                        "Activation garbage collection not implemented "
+                                        "for >2 nested loops."
+                                    )
     needed_by.default_factory = None
     return needed_by
 
@@ -120,7 +142,7 @@ class ConvertModel(nn.Module):
 
         self.input_names = get_inputs_names(onnx_model.graph)
         self.output_names = get_outputs_names(onnx_model.graph)
-        opset_version = onnx_model.opset_import[0].version
+        opset_version = get_opset_version(onnx_model)
 
         # Create mapping from node (identified by first output) to submodule
         self.mapping = {}

@@ -105,6 +105,32 @@ def test_extract_attr_values(kwargs, value):
             onnx.helper.make_node("LeakyRelu", inputs=["x"], outputs=["y"], alpha=0.5),
             dict(negative_slope=0.5),
         ],
+        [
+            onnx.helper.make_node(
+                "Relu", inputs=["x"], outputs=["y"], consumed_inputs=[1]
+            ),
+            dict(),
+        ],
+        [
+            onnx.helper.make_node(
+                "BatchNormalization",
+                inputs=["x", "s", "b", "mean", "var"],
+                outputs=["y"],
+                consumed_inputs=[0, 0, 0, 1, 1],
+                spatial=1,
+            ),
+            dict(spatial=1),
+        ],
+        [
+            onnx.helper.make_node(
+                "Gemm",
+                inputs=["a", "b", "c"],
+                outputs=["y"],
+                broadcast=1,
+                transB=1,
+            ),
+            dict(transpose_weight=False),
+        ],
     ],
 )
 def test_extract_attributes(node, exp_kwargs):
