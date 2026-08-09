@@ -5,10 +5,10 @@ import pytest
 from onnx2pytorch.operations.constantofshape import ConstantOfShape
 
 
-def test_constantofshape_float_ones():
+def test_constantofshape_default_is_float_zeros():
     op = ConstantOfShape()
     x = torch.tensor([4, 3, 2], dtype=torch.int64)
-    y = torch.ones(*x, dtype=torch.float32)
+    y = torch.zeros(*x, dtype=torch.float32)
     assert torch.equal(op(x), y)
 
 

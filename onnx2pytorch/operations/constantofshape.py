@@ -7,7 +7,8 @@ class ConstantOfShape(nn.Module):
     def __init__(self, constant=None):
         super().__init__()
         if constant is None:
-            const = torch.tensor(1.0, dtype=torch.float32)
+            # ONNX defaults to a float32 zero when the value attribute is absent
+            const = torch.tensor(0.0, dtype=torch.float32)
         else:
             const = torch.tensor(np.copy(constant))
         self.register_buffer("constant", const)
