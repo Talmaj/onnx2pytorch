@@ -2,7 +2,6 @@ import numpy as np
 import onnxruntime as ort
 import torch
 from onnx import helper, TensorProto
-from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -47,14 +46,9 @@ def build_model(a, b, a_zero_point=None, b_zero_point=None):
     return model, feed
 
 
-def check_matmul_integer(
-    a, b, a_zero_point=None, b_zero_point=None, use_reference=False
-):
+def check_matmul_integer(a, b, a_zero_point=None, b_zero_point=None):
     model, feed = build_model(a, b, a_zero_point, b_zero_point)
-    if use_reference:
-        exp_y = ReferenceEvaluator(model).run(None, feed)[0]
-    else:
-        exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
+    exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
     with torch.no_grad():
         y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
     assert y.dtype == torch.int32
@@ -90,10 +84,18 @@ def test_matmul_integer_per_row_zero_point():
     b = np.random.randint(0, 255, size=(3, 2)).astype(np.uint8)
     a_zero_point = np.random.randint(0, 255, size=(4,)).astype(np.uint8)
 
-    # neither onnxruntime nor the onnx reference support per-row zero points
-    exp_y = (a.astype(np.int32) - a_zero_point.astype(np.int32)[:, None]) @ b.astype(
-        np.int32
-    )
+    # onnxruntime rejects per-row zero points, so the oracle is one onnxruntime
+    # run per row with that row's scalar zero point
+    rows = []
+    for row, zero_point in enumerate(a_zero_point):
+        row_model, row_feed = build_model(
+            a[row : row + 1], b, np.array(zero_point, dtype=np.uint8)
+        )
+        rows.append(
+            ort.InferenceSession(row_model.SerializeToString()).run(None, row_feed)[0]
+        )
+    exp_y = np.concatenate(rows, axis=0)
+
     model, feed = build_model(a, b, a_zero_point)
     with torch.no_grad():
         y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
@@ -105,8 +107,7 @@ def test_matmul_integer_per_column_zero_point():
     a = np.random.randint(0, 255, size=(4, 3)).astype(np.uint8)
     b = np.random.randint(0, 255, size=(3, 2)).astype(np.uint8)
     b_zero_point = np.random.randint(0, 255, size=(2,)).astype(np.uint8)
-    # onnxruntime only supports per-tensor zero points
-    check_matmul_integer(a, b, None, b_zero_point, use_reference=True)
+    check_matmul_integer(a, b, None, b_zero_point)
 
 
 def test_matmul_integer_batched():
