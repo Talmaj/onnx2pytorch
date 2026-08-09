@@ -1,7 +1,12 @@
+import numpy as np
 import torch
 import pytest
 
 from onnx2pytorch.operations.topk import TopK
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 def test_topk():
@@ -105,3 +110,50 @@ def test_topk_smallest():
     values, indices = op(X, K)
     assert torch.equal(values_exp, values)
     assert torch.equal(indices_exp, indices)
+
+
+@pytest.mark.parametrize("largest", [0, 1])
+@pytest.mark.parametrize("axis", [-1, 0, 1, 2])
+@pytest.mark.parametrize("opset_version", [11, 21])
+def test_topk_attributes_reach_the_operator(opset_version, axis, largest):
+    """axis, largest and sorted used to be dropped on the floor."""
+    np.random.seed(0)
+    x = np.random.randn(3, 4, 5).astype(np.float32)
+    k = np.array([2], dtype=np.int64)
+    model = make_single_node_model(
+        "TopK",
+        {"x": x},
+        opset_version,
+        outputs=("values", "indices"),
+        initializers={"k": k},
+        axis=axis,
+        largest=largest,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("axis", [-1, 1])
+def test_topk_axis_opset_10(axis):
+    np.random.seed(0)
+    x = np.random.randn(3, 4, 5).astype(np.float32)
+    k = np.array([2], dtype=np.int64)
+    model = make_single_node_model(
+        "TopK",
+        {"x": x},
+        10,
+        outputs=("values", "indices"),
+        initializers={"k": k},
+        axis=axis,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("axis", [-1, 0, 1])
+def test_topk_k_as_attribute(axis):
+    """At opset 1 k is an attribute rather than an input."""
+    np.random.seed(0)
+    x = np.random.randn(3, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "TopK", {"x": x}, 1, outputs=("values", "indices"), axis=axis, k=2
+    )
+    assert_matches_oracle(model, {"x": x})

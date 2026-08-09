@@ -526,7 +526,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Tile":
             op = Tile()
         elif node.op_type == "TopK":
-            op = TopK()
+            op = TopK(**extract_attributes(node))
         elif node.op_type == "Transpose":
             op = Transpose(**extract_attributes(node))
         elif node.op_type == "Trilu":
