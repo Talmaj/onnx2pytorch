@@ -4,6 +4,7 @@ from .argmax import ArgMax
 from .attention import Attention
 from .argmin import ArgMin
 from .autopad import AutoPad
+from .averagepool import AveragePool, DilatedAvgPool
 from .batchnorm import BatchNormWrapper
 from .bernoulli import Bernoulli
 from .bitcast import BitCast
@@ -152,6 +153,7 @@ __all__ = [
     "ArgMin",
     "Attention",
     "AutoPad",
+    "AveragePool",
     "BatchNormWrapper",
     "Bernoulli",
     "BitCast",
@@ -175,6 +177,7 @@ __all__ = [
     "DepthToSpace",
     "DequantizeLinear",
     "DFT",
+    "DilatedAvgPool",
     "Div",
     "Dropout",
     "DynamicQuantizeLinear",

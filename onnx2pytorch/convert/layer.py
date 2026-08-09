@@ -5,8 +5,10 @@ from onnx import numpy_helper
 
 from onnx2pytorch.operations import (
     AutoPad,
+    AveragePool,
     BatchNormWrapper,
     ConvTranspose,
+    DilatedAvgPool,
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
@@ -15,6 +17,13 @@ from onnx2pytorch.operations import (
     Transpose,
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
+from onnx2pytorch.utils import as_tuple
+
+
+def symmetric_pad_layer(padding, ndim):
+    """Turn a symmetric conv-style padding back into a padding layer."""
+    pads = [p for p in reversed(as_tuple(padding, ndim)) for _ in range(2)]
+    return getattr(nn, "ConstantPad{}d".format(ndim))(pads, value=0)
 
 
 def extract_params(params):
@@ -91,17 +100,31 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
     if isinstance(kwargs.get("padding"), nn.Module):
         pad_layer = kwargs.pop("padding")
 
+    count_include_pad = True
+    dilated_pool = None
     if layer_type == "AvgPool":
         # ONNX excludes the pads from the average since opset 7, torch includes them
         default = opset_version is not None and opset_version < 7
-        kwargs["count_include_pad"] = bool(kwargs.pop("count_include_pad", default))
-        if pad_layer is not None and not kwargs["count_include_pad"]:
-            raise NotImplementedError(
-                "AveragePool with count_include_pad=0 and non-symmetric padding "
-                "not implemented."
+        count_include_pad = bool(kwargs.pop("count_include_pad", default))
+        dilation = kwargs.pop("dilation", 1)
+        if any(d != 1 for d in as_tuple(dilation, kernel_size_length)):
+            if kwargs.pop("ceil_mode", False):
+                raise NotImplementedError(
+                    "AveragePool with both dilations and ceil_mode not implemented."
+                )
+            padding = kwargs.pop("padding", 0)
+            if pad_layer is None and any(as_tuple(padding, kernel_size_length)):
+                pad_layer = symmetric_pad_layer(padding, kernel_size_length)
+            dilated_pool = DilatedAvgPool(
+                kwargs["kernel_size"], kwargs.get("stride", 1), dilation
             )
+        else:
+            # A materialised pad reaches the pool as a value, corrected for below
+            kwargs["count_include_pad"] = pad_layer is not None or count_include_pad
 
-    if params:
+    if dilated_pool is not None:
+        layer = dilated_pool
+    elif params:
         weight, bias = extract_params(params)
         kwargs["bias"] = bias is not None
         kwargs["in_channels"] = weight.dims[1] * kwargs.get("groups", 1)
@@ -124,6 +147,11 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
 
     if layer_type == "ConvTranspose":
         layer = ConvTranspose(layer, transpose_pads, output_shape, auto_pad)
+
+    if layer_type == "AvgPool" and pad_layer is not None and not count_include_pad:
+        # The pad is part of the tensor, so divide by the real elements per window
+        layer = AveragePool(layer, pad_layer)
+        pad_layer = None
 
     if pad_layer is not None:
         layer = nn.Sequential(pad_layer, layer)

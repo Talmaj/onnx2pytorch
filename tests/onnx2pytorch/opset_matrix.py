@@ -340,11 +340,6 @@ CASES.update(
 # (op_type, opset, case_name) -> reason. opset=None applies to every opset.
 # Marked strict, so fixing one of these without deleting the entry fails the suite.
 XFAILS = {
-    ("AveragePool", None, "same_upper"): (
-        "auto_pad prepends the padding as input values, so count_include_pad=0 "
-        "cannot exclude it again"
-    ),
-    ("AveragePool", None, "dilations"): "torch's AvgPool has no dilation argument",
     ("GRU", 1, "reverse"): (
         "no trustworthy oracle: onnxruntime has no GRU-1 kernel and onnx's "
         "reference GRU disagrees with onnxruntime for direction=reverse"
@@ -1158,10 +1153,32 @@ CASES.update(
                 since=7,
             ),
             case(
+                "same_lower",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_LOWER",
+                since=7,
+            ),
+            case(
                 "same_upper_count_include_pad",
                 {"x": CONV_X},
                 kernel_shape=[3, 3],
                 auto_pad="SAME_UPPER",
+                count_include_pad=1,
+                since=7,
+            ),
+            case(
+                "asymmetric_pads",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                pads=[1, 0, 2, 1],
+                since=7,
+            ),
+            case(
+                "asymmetric_pads_count_include_pad",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                pads=[1, 0, 2, 1],
                 count_include_pad=1,
                 since=7,
             ),
@@ -1173,6 +1190,30 @@ CASES.update(
                 {"x": CONV_X},
                 kernel_shape=[2, 2],
                 dilations=[2, 2],
+                since=19,
+            ),
+            case(
+                "dilations_strides",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                strides=[2, 2],
+                since=19,
+            ),
+            case(
+                "dilations_pads",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                pads=[1, 1, 1, 1],
+                count_include_pad=1,
+                since=19,
+            ),
+            case(
+                "dilations1d",
+                {"x": rand(1, 2, 8)},
+                kernel_shape=[3],
+                dilations=[2],
                 since=19,
             ),
         ],

@@ -116,6 +116,13 @@ def convert_onnx_pads_to_torch(pads):
     return torch_pads
 
 
+def as_tuple(value, length):
+    """Broadcast a scalar layer parameter to one value per spatial dimension."""
+    if isinstance(value, (tuple, list)):
+        return tuple(value)
+    return (value,) * length
+
+
 def extract_padding_params(params):
     """Extract padding parameters for Pad layers."""
     pads = convert_onnx_pads_to_torch(params)
