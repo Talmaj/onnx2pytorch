@@ -2,85 +2,9 @@ import numpy as np
 import pytest
 import torch
 from onnx import helper, TensorProto
+from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
-
-
-def unpack_heads_reference(x, num_heads):
-    batch_size, sequence_length, hidden_size = x.shape
-    x = x.reshape(batch_size, sequence_length, num_heads, hidden_size // num_heads)
-    return x.transpose(0, 2, 1, 3)
-
-
-def linear_attention_reference(
-    query,
-    key,
-    value,
-    past_state=None,
-    decay=None,
-    beta=None,
-    q_num_heads=None,
-    kv_num_heads=None,
-    scale=None,
-    update_rule="gated_delta",
-    chunk_size=None,
-):
-    """Numpy reference following the ONNX LinearAttention specification."""
-    gating = update_rule in ("gated", "gated_delta")
-    delta_correction = update_rule in ("delta", "gated_delta")
-
-    batch_size, sequence_length, _ = query.shape
-    key_dim = query.shape[-1] // q_num_heads
-    value_dim = value.shape[-1] // kv_num_heads
-    group_size = q_num_heads // kv_num_heads
-
-    q4 = unpack_heads_reference(query, q_num_heads).astype(np.float32)
-    k4 = unpack_heads_reference(key, kv_num_heads).astype(np.float32)
-    v4 = unpack_heads_reference(value, kv_num_heads).astype(np.float32)
-
-    if gating:
-        if decay.shape[-1] == kv_num_heads:
-            decay4 = decay.reshape(
-                batch_size, sequence_length, kv_num_heads, 1
-            ).transpose(0, 2, 1, 3)
-        else:
-            decay4 = unpack_heads_reference(decay, kv_num_heads)
-        decay4 = decay4.astype(np.float32)
-    if delta_correction:
-        beta4 = beta.reshape(batch_size, sequence_length, beta.shape[-1], 1).transpose(
-            0, 2, 1, 3
-        )
-        beta4 = beta4.astype(np.float32)
-
-    if past_state is None:
-        state_dtype = query.dtype
-        state = np.zeros(
-            (batch_size, kv_num_heads, key_dim, value_dim), dtype=np.float32
-        )
-    else:
-        state_dtype = past_state.dtype
-        state = past_state.astype(np.float32).copy()
-
-    scale_val = 1.0 / np.sqrt(key_dim) if not scale else float(scale)
-
-    outputs = np.zeros(
-        (batch_size, q_num_heads, sequence_length, value_dim), dtype=np.float32
-    )
-    for i in range(sequence_length):
-        q_t, k_t, v_t = q4[:, :, i, :], k4[:, :, i, :], v4[:, :, i, :]
-        if gating:
-            state = state * np.exp(decay4[:, :, i, :])[..., None]
-        if delta_correction:
-            retrieved = np.einsum("bhdm,bhd->bhm", state, k_t)
-            v_t = beta4[:, :, i, :] * (v_t - retrieved)
-        state = state + k_t[..., :, None] * v_t[..., None, :]
-        read_state = state if group_size == 1 else np.repeat(state, group_size, axis=1)
-        outputs[:, :, i, :] = scale_val * np.einsum("bhd,bhdm->bhm", q_t, read_state)
-
-    output = outputs.transpose(0, 2, 1, 3).reshape(
-        batch_size, sequence_length, q_num_heads * value_dim
-    )
-    return output.astype(query.dtype), state.astype(state_dtype)
 
 
 def check_linear_attention(inputs, **attrs):
@@ -112,9 +36,10 @@ def check_linear_attention(inputs, **attrs):
             helper.make_tensor_value_info("present_state", TensorProto.FLOAT, None),
         ],
     )
-    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 24)])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 27)])
 
-    expected = linear_attention_reference(**inputs, **attrs)
+    # onnxruntime 1.28 has no LinearAttention kernel
+    expected = ReferenceEvaluator(model).run(None, feeds)
 
     o2p_model = ConvertModel(model)
     with torch.no_grad():
