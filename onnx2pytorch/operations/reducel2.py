@@ -13,13 +13,13 @@ class ReduceL2(nn.Module):
         super().__init__()
 
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
-        if self.opset_version < 13:
+        if self.opset_version < 18:
             dims = self.dim
         else:
             dims = axes
         if dims is None:
             if self.noop_with_empty_axes:
-                return data
+                return torch.abs(data)
             else:
                 dims = tuple(range(data.ndim))
 

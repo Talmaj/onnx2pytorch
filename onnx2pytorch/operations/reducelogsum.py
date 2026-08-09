@@ -14,5 +14,5 @@ class ReduceLogSum(nn.Module):
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
         dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
         if dim is None:
-            return data
+            return torch.log(data)
         return torch.log(torch.sum(data, dim=dim, keepdim=self.keepdim))

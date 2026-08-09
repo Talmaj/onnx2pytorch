@@ -19,16 +19,16 @@ class ReduceSumSquare(nn.Module):
         super().__init__()
 
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
-        # In opset < 13, axes is an attribute (self.dim)
-        # In opset >= 13, axes is an optional input
-        if self.opset_version < 13:
+        # In opset < 18, axes is an attribute (self.dim)
+        # In opset >= 18, axes is an optional input
+        if self.opset_version < 18:
             dims = self.dim
         else:
             dims = axes
 
         if dims is None:
             if self.noop_with_empty_axes:
-                return data
+                return torch.square(data)
             else:
                 # Reduce over all dimensions
                 dims = tuple(range(data.ndim))

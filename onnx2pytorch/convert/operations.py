@@ -380,17 +380,11 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "ReduceMax":
             op = ReduceMax(**extract_attributes(node))
         elif node.op_type == "ReduceMean":
-            kwargs = dict(keepdim=True)
-            kwargs.update(extract_attributes(node))
-            op = partial(torch.mean, **kwargs)
+            op = ReduceMean(**extract_attributes(node))
         elif node.op_type == "ReduceMin":
-            kwargs = dict(keepdim=True)
-            kwargs.update(extract_attributes(node))
-            op = partial(torch.min, **kwargs)
+            op = ReduceMin(**extract_attributes(node))
         elif node.op_type == "ReduceProd":
-            kwargs = dict(keepdim=True)
-            kwargs.update(extract_attributes(node))
-            op = partial(torch.prod, **kwargs)
+            op = ReduceProd(**extract_attributes(node))
         elif node.op_type == "ReduceSum":
             op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "ReduceSumSquare":

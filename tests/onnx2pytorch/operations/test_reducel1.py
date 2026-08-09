@@ -55,8 +55,9 @@ def test_reduce_l1(opset_version, keepdims, axes):
 def test_reduce_l1_noop_with_empty_axes():
     x = torch.randn(2, 3, 4)
 
+    # ReduceL1 without a reduction still takes the absolute value
     op = ReduceL1(noop_with_empty_axes=True)
-    torch.testing.assert_close(op(x), x)
+    torch.testing.assert_close(op(x), torch.abs(x))
 
     op = ReduceL1()
     torch.testing.assert_close(op(x), torch.abs(x).sum().view(1, 1, 1))

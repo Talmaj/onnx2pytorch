@@ -142,12 +142,12 @@ def test_reducesumsquare_noop_with_empty_axes():
     """Test noop_with_empty_axes parameter."""
     X = torch.randn(2, 3, 4)
 
-    # With noop_with_empty_axes=True and no axes, should return input unchanged
+    # With noop_with_empty_axes=True and no axes, only the square is applied
     op_noop = ReduceSumSquare(
-        opset_version=13, dim=None, keepdim=True, noop_with_empty_axes=True
+        opset_version=18, dim=None, keepdim=True, noop_with_empty_axes=True
     )
     result_noop = op_noop(X)
-    torch.testing.assert_close(result_noop, X, rtol=1e-6, atol=1e-6)
+    torch.testing.assert_close(result_noop, X**2, rtol=1e-6, atol=1e-6)
 
     # With noop_with_empty_axes=False and no axes, should reduce all
     op_reduce = ReduceSumSquare(
@@ -162,8 +162,8 @@ def test_reducesumsquare_with_axes_input():
     """Test with axes as an input tensor (for frameworks that support it)."""
     X = torch.randn(2, 3, 4)
 
-    # Opset 13+ supports axes as input
-    op = ReduceSumSquare(opset_version=13, dim=None, keepdim=True)
+    # Opset 18+ supports axes as input
+    op = ReduceSumSquare(opset_version=18, dim=None, keepdim=True)
 
     # Provide axes as a tensor
     axes = torch.tensor([0, 2], dtype=torch.int64)

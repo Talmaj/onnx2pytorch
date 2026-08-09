@@ -89,6 +89,9 @@ from .regexfullmatch import RegexFullMatch
 from .reducelogsum import ReduceLogSum
 from .reducelogsumexp import ReduceLogSumExp
 from .reducemax import ReduceMax
+from .reducemean import ReduceMean
+from .reducemin import ReduceMin
+from .reduceprod import ReduceProd
 from .reducesum import ReduceSum
 from .reducesumsquare import ReduceSumSquare
 from .reducel2 import ReduceL2
@@ -230,6 +233,9 @@ __all__ = [
     "ReduceLogSum",
     "ReduceLogSumExp",
     "ReduceMax",
+    "ReduceMean",
+    "ReduceMin",
+    "ReduceProd",
     "ReduceSum",
     "ReduceSumSquare",
     "ReduceL2",

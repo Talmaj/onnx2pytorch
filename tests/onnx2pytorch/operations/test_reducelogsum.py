@@ -55,8 +55,9 @@ def test_reduce_log_sum(opset_version, keepdims, axes):
 def test_reduce_log_sum_noop_with_empty_axes():
     x = torch.rand(2, 3, 4) + 0.1
 
+    # ReduceLogSum without a reduction still takes the logarithm
     op = ReduceLogSum(noop_with_empty_axes=True)
-    torch.testing.assert_close(op(x), x)
+    torch.testing.assert_close(op(x), torch.log(x))
 
     op = ReduceLogSum()
     torch.testing.assert_close(op(x), torch.log(x.sum()).view(1, 1, 1))

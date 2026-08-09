@@ -1,15 +1,18 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import get_reduce_dims
+
 
 class ReduceMax(nn.Module):
-    def __init__(self, dim=None, keepdim=True):
+    def __init__(self, dim=None, keepdim=True, noop_with_empty_axes=False):
         self.dim = dim
-        self.keepdim = keepdim
+        self.keepdim = bool(keepdim)
+        self.noop_with_empty_axes = noop_with_empty_axes
         super().__init__()
 
-    def forward(self, data: torch.Tensor):
-        dim = self.dim
+    def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
+        dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
         if dim is None:
-            dim = tuple(range(data.ndim))
+            return data
         return torch.amax(data, dim=dim, keepdim=self.keepdim)
