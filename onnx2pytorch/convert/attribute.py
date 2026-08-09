@@ -256,6 +256,8 @@ def extract_attributes(node):
             else:
                 # Works for Conv, MaxPooling and other layers from convert_layer func
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)
+        elif attr.name == "pixel_format":
+            kwargs["pixel_format"] = extract_attr_values(attr)
         elif attr.name == "pooled_shape":
             kwargs["pooled_shape"] = extract_attr_values(attr)
         elif attr.name == "periodic":

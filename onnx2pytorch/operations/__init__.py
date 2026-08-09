@@ -46,6 +46,7 @@ from .hannwindow import HannWindow
 from .hardmax import Hardmax
 from .hardsigmoid import Hardsigmoid
 from .if_op import If
+from .imagedecoder import ImageDecoder
 from .instancenorm import InstanceNormWrapper
 from .isinf import IsInf
 from .layernorm import LayerNorm
@@ -176,6 +177,7 @@ __all__ = [
     "HannWindow",
     "Hardmax",
     "If",
+    "ImageDecoder",
     "InstanceNormWrapper",
     "IsInf",
     "LayerNorm",
