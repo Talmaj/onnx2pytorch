@@ -183,6 +183,8 @@ def extract_attributes(node):
             kwargs["hidden_size"] = extract_attr_values(attr)
         elif attr.name == "high":
             kwargs["high"] = extract_attr_values(attr)
+        elif attr.name == "ignore_index":
+            kwargs["ignore_index"] = extract_attr_values(attr)
         elif attr.name == "input_forget":
             kwargs["input_forget"] = extract_attr_values(attr)
         elif attr.name == "interleaved":
@@ -286,6 +288,8 @@ def extract_attributes(node):
             kwargs["qk_matmul_output_mode"] = extract_attr_values(attr)
         elif attr.name == "ratio":
             kwargs["ratio"] = extract_attr_values(attr)
+        elif attr.name == "reduction":
+            kwargs["reduction"] = extract_attr_values(attr)
         elif attr.name == "repeats":
             kwargs["repeats"] = extract_attr_values(attr)
         elif attr.name == "reverse":

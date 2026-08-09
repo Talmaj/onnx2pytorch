@@ -66,6 +66,7 @@ from .meanvariancenormalization import MeanVarianceNormalization
 from .melweightmatrix import MelWeightMatrix
 from .mod import Mod
 from .multinomial import Multinomial
+from .negativeloglikelihoodloss import NegativeLogLikelihoodLoss
 from .nonmaxsuppression import NonMaxSuppression
 from .nonzero import NonZero
 from .onehot import OneHot
@@ -199,6 +200,7 @@ __all__ = [
     "MelWeightMatrix",
     "Mod",
     "Multinomial",
+    "NegativeLogLikelihoodLoss",
     "NonMaxSuppression",
     "NonZero",
     "OneHot",

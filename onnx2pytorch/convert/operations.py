@@ -329,6 +329,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Multinomial(**extract_attributes(node))
         elif node.op_type == "Neg":
             op = OperatorWrapper(torch.neg)
+        elif node.op_type == "NegativeLogLikelihoodLoss":
+            op = NegativeLogLikelihoodLoss(**extract_attributes(node))
         elif node.op_type == "NonMaxSuppression":
             op = NonMaxSuppression(**extract_attributes(node))
         elif node.op_type == "NonZero":
