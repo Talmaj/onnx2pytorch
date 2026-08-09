@@ -60,6 +60,7 @@ from .maxroipool import MaxRoiPool
 from .maxunpool import MaxUnpool
 from .mean import Mean
 from .meanvariancenormalization import MeanVarianceNormalization
+from .melweightmatrix import MelWeightMatrix
 from .mod import Mod
 from .multinomial import Multinomial
 from .nonmaxsuppression import NonMaxSuppression
@@ -187,6 +188,7 @@ __all__ = [
     "MaxUnpool",
     "Mean",
     "MeanVarianceNormalization",
+    "MelWeightMatrix",
     "Mod",
     "Multinomial",
     "NonMaxSuppression",
