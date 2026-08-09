@@ -107,22 +107,30 @@ def test_qlinear_matmul_per_axis_scales():
     np.random.seed(5)
     a = np.random.randint(0, 255, size=(4, 3)).astype(np.uint8)
     a_scale = np.array([0.02, 0.03, 0.01, 0.04], dtype=np.float32)
-    a_zero_point = np.array(120, dtype=np.uint8)
+    a_zero_point = np.array([120, 121, 122, 123], dtype=np.uint8)
     b = np.random.randint(0, 255, size=(3, 5)).astype(np.uint8)
     b_scale = np.array([0.03, 0.02, 0.05, 0.01, 0.04], dtype=np.float32)
-    b_zero_point = np.array(130, dtype=np.uint8)
+    b_zero_point = np.array([130, 131, 132, 133, 134], dtype=np.uint8)
     y_scale = np.array([0.05, 0.04, 0.03, 0.06], dtype=np.float32)
-    y_zero_point = np.array(100, dtype=np.uint8)
+    y_zero_point = np.array([100, 101, 102, 103], dtype=np.uint8)
 
-    # neither onnxruntime nor the onnx reference support per-axis scales
-    acc = (a.astype(np.int32) - np.int32(a_zero_point)) @ (
-        b.astype(np.int32) - np.int32(b_zero_point)
-    )
-    scaled = acc * a_scale[:, None].astype(np.float64) * b_scale.astype(np.float64)
-    scaled = scaled / y_scale[:, None].astype(np.float64)
-    exp_y = np.clip(np.round(scaled) + np.float64(y_zero_point), 0, 255).astype(
-        np.uint8
-    )
+    # onnxruntime only supports per-tensor scales, so the oracle is one
+    # onnxruntime run per output element with that element's scalars
+    exp_y = np.empty((a.shape[0], b.shape[1]), dtype=np.uint8)
+    for row in range(a.shape[0]):
+        for col in range(b.shape[1]):
+            element_model, element_feed = build_model(
+                a[row : row + 1],
+                np.asarray(a_scale[row]),
+                np.asarray(a_zero_point[row]),
+                b[:, col : col + 1],
+                np.asarray(b_scale[col]),
+                np.asarray(b_zero_point[col]),
+                np.asarray(y_scale[row]),
+                np.asarray(y_zero_point[row]),
+            )
+            session = ort.InferenceSession(element_model.SerializeToString())
+            exp_y[row, col] = session.run(None, element_feed)[0].item()
 
     model, feed = build_model(
         a, a_scale, a_zero_point, b, b_scale, b_zero_point, y_scale, y_zero_point
