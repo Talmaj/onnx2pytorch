@@ -73,3 +73,26 @@ def test_pad_with_unknown_mode_is_rejected():
     )
     with pytest.raises(NotImplementedError, match="Pad mode"):
         ConvertModel(model)
+
+
+def test_no_onnx_operator_relies_on_the_torch_name_fallback():
+    """convert_operations ends in getattr(torch, op_type.lower()), which guesses.
+
+    Every ai.onnx operator must be dispatched explicitly instead, so that a new
+    onnx release cannot silently start resolving an operator by name alone.
+    """
+    import inspect
+    import re
+
+    from onnx import defs
+
+    from onnx2pytorch.convert.operations import convert_operations
+
+    source = inspect.getsource(convert_operations)
+    dispatched = set(re.findall(r'node\.op_type == "([A-Za-z0-9_]+)"', source))
+    schemas = {
+        s.name
+        for s in defs.get_all_schemas_with_history()
+        if s.domain in ("", "ai.onnx")
+    }
+    assert sorted(schemas - dispatched) == []
