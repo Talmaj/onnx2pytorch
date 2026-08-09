@@ -287,7 +287,7 @@ def convert_lstm_layer(node, weights):
         raise NotImplementedError("LSTM activations {}.".format(dc["activations"]))
     if dc["clip"] is not None:
         raise NotImplementedError("LSTM clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "bidirectional"):
+    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
         raise ValueError("LSTM direction {}.".format(dc["direction"]))
     if dc["hidden_size"] is None:
         raise ValueError("LSTM hidden_size is None.")
@@ -417,7 +417,7 @@ def convert_lstm_layer(node, weights):
         )
         getattr(lstm_layer, "bias_hh_l0").data = Rb_ifco
 
-    layer = LSTMWrapper(lstm_layer)
+    layer = LSTMWrapper(lstm_layer, reverse=dc["direction"] == "reverse")
     return layer
 
 
@@ -452,7 +452,7 @@ def convert_gru_layer(node, weights):
         raise NotImplementedError("GRU activations {}.".format(dc["activations"]))
     if dc["clip"] is not None:
         raise NotImplementedError("GRU clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "bidirectional"):
+    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
         raise ValueError("GRU direction {}.".format(dc["direction"]))
     if dc["hidden_size"] is None:
         raise ValueError("GRU hidden_size is None.")
@@ -594,7 +594,11 @@ def convert_gru_layer(node, weights):
         )
         getattr(gru_layer, "bias_hh_l0").data = Rb_rzn
 
-    layer = GRUWrapper(gru_layer, linear_before_reset=dc["linear_before_reset"])
+    layer = GRUWrapper(
+        gru_layer,
+        linear_before_reset=dc["linear_before_reset"],
+        reverse=dc["direction"] == "reverse",
+    )
     return layer
 
 
@@ -626,7 +630,7 @@ def convert_rnn_layer(node, weights):
         )
     if dc["clip"] is not None:
         raise NotImplementedError("RNN clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "bidirectional"):
+    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
         raise ValueError("RNN direction {}.".format(dc["direction"]))
     if dc["hidden_size"] is None:
         raise ValueError("RNN hidden_size is None.")
@@ -671,5 +675,5 @@ def convert_rnn_layer(node, weights):
         getattr(rnn_layer, "bias_ih_l0{}".format(dir_str)).data = Wb
         getattr(rnn_layer, "bias_hh_l0{}".format(dir_str)).data = Rb
 
-    layer = RNNWrapper(rnn_layer)
+    layer = RNNWrapper(rnn_layer, reverse=dc["direction"] == "reverse")
     return layer

@@ -351,14 +351,20 @@ XFAILS = {
     ("ConvTranspose", None, "same_upper"): (
         "auto_pad pads the input, ConvTranspose instead has to crop the output"
     ),
-    ("GRU", None, "reverse"): "the converter only builds forward or bidirectional",
+    ("GRU", 1, "reverse"): (
+        "no trustworthy oracle: onnxruntime has no GRU-1 kernel and onnx's "
+        "reference GRU disagrees with onnxruntime for direction=reverse"
+    ),
+    ("GRU", 3, "reverse"): (
+        "no trustworthy oracle: onnxruntime has no GRU-3 kernel and onnx's "
+        "reference GRU disagrees with onnxruntime for direction=reverse"
+    ),
     ("GRU", None, "clip"): "cell clipping has no torch equivalent",
     ("GRU", None, "initial_h"): "initial_h is rejected by convert_gru_layer",
     ("GRU", None, "sequence_lens"): (
         "sequence_lens is parsed but never applied, so padded steps are not zeroed"
     ),
     ("GRU", None, "layout"): "layout=1 is rejected by convert_gru_layer",
-    ("LSTM", None, "reverse"): "the converter only builds forward or bidirectional",
     ("LSTM", None, "clip"): "cell clipping has no torch equivalent",
     ("LSTM", None, "initial_h"): "initial_h is rejected by convert_lstm_layer",
     ("LSTM", None, "sequence_lens"): (
@@ -371,7 +377,6 @@ XFAILS = {
         None,
         "input_forget",
     ): "torch's LSTM cannot couple the input and forget gates",
-    ("RNN", None, "reverse"): "the converter only builds forward or bidirectional",
     ("RNN", None, "clip"): "cell clipping has no torch equivalent",
     ("RNN", None, "initial_h"): "initial_h is rejected by convert_rnn_layer",
     ("RNN", None, "sequence_lens"): (

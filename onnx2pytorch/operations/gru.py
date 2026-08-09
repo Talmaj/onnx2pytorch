@@ -11,10 +11,11 @@ class GRUWrapper(nn.Module):
     Supports both linear_before_reset=0 and linear_before_reset=1.
     """
 
-    def __init__(self, gru_module, linear_before_reset=1):
+    def __init__(self, gru_module, linear_before_reset=1, reverse=False):
         super().__init__()
         self.gru = gru_module
         self.linear_before_reset = linear_before_reset
+        self.reverse = reverse
 
         # For linear_before_reset=0, we need custom forward pass
         if linear_before_reset == 0 and isinstance(gru_module, nn.GRU):
@@ -34,12 +35,16 @@ class GRUWrapper(nn.Module):
         if h_0 is None or h_0.numel() == 0:
             h_0 = None
 
+        if self.reverse:
+            input = input.flip(0)
         if self.linear_before_reset == 1:
             # Use standard PyTorch GRU (linear_before_reset=1 is PyTorch's default)
             output, h_n = self.gru(input, h_0)
         else:
             # Custom implementation for linear_before_reset=0
             output, h_n = self._forward_linear_before_reset_0(input, h_0)
+        if self.reverse:
+            output = output.flip(0)
 
         # Y has shape (seq_length, num_directions, batch_size, hidden_size)
         Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
