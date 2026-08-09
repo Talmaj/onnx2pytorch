@@ -1841,3 +1841,99 @@ CASES.update(
         ],
     }
 )
+
+
+CASES.update(
+    {
+        "Constant": [
+            case(
+                "value",
+                {},
+                value=onnx.helper.make_tensor(
+                    "v", onnx.TensorProto.FLOAT, [2, 2], [1.0, 2.0, 3.0, 4.0]
+                ),
+            ),
+            case("value_floats", {}, value_floats=[1.0, 2.0], since=12),
+            case("value_ints", {}, value_ints=[1, 2], since=12),
+        ],
+        "IsInf": [
+            case("default", {"x": arr([1.0, np.inf, -np.inf, np.nan])}),
+            case(
+                "no_negative",
+                {"x": arr([1.0, np.inf, -np.inf, np.nan])},
+                detect_negative=0,
+            ),
+            case(
+                "no_positive",
+                {"x": arr([1.0, np.inf, -np.inf, np.nan])},
+                detect_positive=0,
+            ),
+        ],
+        "MaxUnpool": [
+            case(
+                "default",
+                {"x": rand(1, 1, 2, 2), "i": arr([[[[0, 3], [12, 15]]]], np.int64)},
+                kernel_shape=[2, 2],
+                strides=[2, 2],
+            )
+        ],
+        "CumProd": [
+            case(
+                "default",
+                {"x": np.abs(rand(2, 4)) + 0.5},
+                initializers={"a": arr(1, np.int64)},
+            ),
+            case(
+                "reverse",
+                {"x": np.abs(rand(2, 4)) + 0.5},
+                initializers={"a": arr(1, np.int64)},
+                reverse=1,
+            ),
+        ],
+        "Swish": [
+            case("default", {"x": X3}),
+            case("alpha", {"x": X3}, alpha=1.5),
+        ],
+        "RMSNormalization": [
+            case(
+                "default",
+                {"x": rand(2, 3, 4)},
+                initializers={"scale": np.abs(rand(4)) + 0.5},
+            ),
+        ],
+        "HannWindow": [case("default", {"n": arr(8, np.int64)})],
+        "HammingWindow": [case("default", {"n": arr(8, np.int64)})],
+        "BlackmanWindow": [case("default", {"n": arr(8, np.int64)})],
+        "AffineGrid": [
+            case(
+                "default",
+                {"theta": arr([[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]])},
+                initializers={"s": arr([1, 1, 3, 3], np.int64)},
+            )
+        ],
+    }
+)
+
+# A handful of non-float32 paths, which the operator tests barely touch.
+CASES["Softmax"].append(case("float64", {"x": rand(2, 3, 4).astype("float64")}))
+CASES["Gemm"].append(
+    case(
+        "float64",
+        {"a": rand(2, 3).astype("float64")},
+        initializers={"b": rand(3, 4).astype("float64")},
+        since=7,
+    )
+)
+CASES["MatMul"].append(
+    case(
+        "int32",
+        {"a": randint(2, 3, dtype=np.int32), "b": randint(3, 4, dtype=np.int32)},
+    )
+)
+CASES["Transpose"].append(case("int64", {"x": randint(2, 3, 4)}, perm=[2, 0, 1]))
+CASES["Concat"].append(
+    case("int64_axis0", {"a": randint(2, 3), "b": randint(2, 3)}, axis=0)
+)
+CASES["Gather"].append(
+    case("int32_data", {"x": randint(5, 4, dtype=np.int32), "i": IDX})
+)
