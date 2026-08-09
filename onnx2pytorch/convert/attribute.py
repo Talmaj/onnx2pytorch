@@ -358,6 +358,8 @@ def extract_attributes(node):
             kwargs["stash_type"] = extract_attr_values(attr)
         elif attr.name == "stopwords":
             kwargs["stopwords"] = extract_attr_values(attr)
+        elif attr.name == "storage_order":
+            kwargs["storage_order"] = extract_attr_values(attr)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "starts":

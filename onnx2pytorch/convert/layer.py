@@ -9,6 +9,7 @@ from onnx2pytorch.operations import (
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
+    MaxPool,
     RNNWrapper,
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
@@ -54,6 +55,8 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
         raise ValueError(
             "Unexpected length of kernel_size dimension: {}".format(kernel_size_length)
         )
+
+    storage_order = kwargs.pop("storage_order", 0)
 
     # Handle auto_pad attribute
     pad_layer = None
@@ -109,6 +112,10 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
 
     if pad_layer is not None:
         layer = nn.Sequential(pad_layer, layer)
+
+    if layer_type == "MaxPool" and len(node.output) > 1:
+        # ONNX indices are flattened over channels too, torch's are not
+        layer = MaxPool(layer, storage_order)
 
     return layer
 
