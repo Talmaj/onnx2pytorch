@@ -52,6 +52,11 @@ class Loop(nn.Module):
         # We do not track dependencies (for memory reduction) within loops.
         # This would be complicated due to loop-carried dependencies.
 
+    @property
+    def subgraph_mappings(self):
+        """Pairs of subgraph and the mapping from node id to submodule name."""
+        return ((self.body, self.mapping),)
+
     def forward(self, enclosing_modules, enclosing_activations, *inputs):
         """
         Parameters

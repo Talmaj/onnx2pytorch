@@ -5,6 +5,7 @@ import torch
 from onnx import helper, numpy_helper
 
 from onnx2pytorch.operations.if_op import If
+from tests.onnx2pytorch.differential import assert_matches_oracle
 
 
 def test_if_basic_true():
@@ -558,3 +559,78 @@ def test_if_opset_version_24():
 
     assert len(outputs) == 1
     assert torch.allclose(outputs[0], torch.tensor(x))
+
+
+def make_if_model(opset_version, num_outputs=1):
+    """Model whose If branches read x from the enclosing scope."""
+    then_nodes = [helper.make_node("Mul", ["x", "two"], ["then_out"])]
+    else_nodes = [helper.make_node("Add", ["x", "ten"], ["else_out"])]
+    then_outputs = [
+        helper.make_tensor_value_info("then_out", onnx.TensorProto.FLOAT, [3])
+    ]
+    else_outputs = [
+        helper.make_tensor_value_info("else_out", onnx.TensorProto.FLOAT, [3])
+    ]
+    if num_outputs == 2:
+        then_nodes.append(helper.make_node("Neg", ["then_out"], ["then_out2"]))
+        else_nodes.append(helper.make_node("Neg", ["else_out"], ["else_out2"]))
+        then_outputs.append(
+            helper.make_tensor_value_info("then_out2", onnx.TensorProto.FLOAT, [3])
+        )
+        else_outputs.append(
+            helper.make_tensor_value_info("else_out2", onnx.TensorProto.FLOAT, [3])
+        )
+
+    initializers = [
+        numpy_helper.from_array(np.array([2.0] * 3, dtype=np.float32), "two"),
+        numpy_helper.from_array(np.array([10.0] * 3, dtype=np.float32), "ten"),
+    ]
+    then_branch = helper.make_graph(then_nodes, "then_body", [], then_outputs)
+    else_branch = helper.make_graph(else_nodes, "else_body", [], else_outputs)
+
+    output_names = ["y", "z"][:num_outputs]
+    node = helper.make_node(
+        "If",
+        ["cond"],
+        output_names,
+        then_branch=then_branch,
+        else_branch=else_branch,
+    )
+    graph = helper.make_graph(
+        [node],
+        "if_test",
+        [
+            helper.make_tensor_value_info("cond", onnx.TensorProto.BOOL, []),
+            helper.make_tensor_value_info("x", onnx.TensorProto.FLOAT, [3]),
+        ],
+        [
+            helper.make_tensor_value_info(name, onnx.TensorProto.FLOAT, [3])
+            for name in output_names
+        ],
+        initializer=initializers,
+    )
+    return helper.make_model(
+        graph, opset_imports=[helper.make_opsetid("", opset_version)]
+    )
+
+
+@pytest.mark.parametrize("opset_version", [11, 13, 16, 19, 21])
+@pytest.mark.parametrize("cond", [True, False])
+def test_if_convert_model(opset_version, cond):
+    """If must run end-to-end through ConvertModel, not only as a bare module."""
+    model = make_if_model(opset_version)
+    inputs = {
+        "cond": np.array(cond),
+        "x": np.array([1.0, 2.0, 3.0], dtype=np.float32),
+    }
+    assert_matches_oracle(model, inputs)
+
+
+@pytest.mark.parametrize("cond", [True, False])
+def test_if_convert_model_two_outputs(cond):
+    model = make_if_model(13, num_outputs=2)
+    inputs = {
+        "cond": np.array(cond),
+        "x": np.array([1.0, 2.0, 3.0], dtype=np.float32),
+    }
+    assert_matches_oracle(model, inputs)

@@ -7,7 +7,6 @@ from onnx import numpy_helper
 from torch import nn
 from torch.nn.modules.linear import Identity
 
-from onnx2pytorch.operations.if_op import If
 from onnx2pytorch.operations.loop import Loop
 from onnx2pytorch.utils import (
     get_inputs_names,
@@ -19,53 +18,90 @@ from onnx2pytorch.utils import (
 
 class SubgraphOperator(nn.Module):
     """
-    Base for operators that repeatedly execute an ONNX subgraph, such as Scan
-    and SequenceMap. Subclasses receive the enclosing scope in their forward
-    pass and drive the body through execute_body.
+    Base for operators that execute one or more ONNX subgraphs, such as If,
+    Scan and SequenceMap. Subclasses receive the enclosing scope in their
+    forward pass and drive their subgraphs through execute_graph.
     """
 
-    def __init__(self, opset_version, batch_dim, body: onnx.GraphProto):
+    def __init__(self, opset_version, batch_dim, body: onnx.GraphProto = None):
         super().__init__()
         self.ops = import_module("onnx2pytorch.convert.operations")
         self.c = import_module("onnx2pytorch.constants")
 
-        self.body = body
+        self.opset_version = opset_version
         self.batch_dim = batch_dim
 
-        self.input_names = get_inputs_names(body)
-        self.output_names = get_outputs_names(body)
+        if body is not None:
+            self.body = body
+            self.input_names = get_inputs_names(body)
+            self.output_names = get_outputs_names(body)
+            self.mapping = self.add_subgraph(body)
 
-        # Creates mapping from node (identified by first output) to submodule
-        self.mapping = {}
+    @property
+    def subgraph_mappings(self):
+        """Pairs of subgraph and the mapping from node id to submodule name."""
+        return ((self.body, self.mapping),)
+
+    def add_subgraph(self, graph, prefix=""):
+        """Convert a subgraph's nodes to submodules and its initializers to buffers."""
+        mapping = {}
         for op_id, op_name, op in self.ops.convert_operations(
-            body, opset_version, batch_dim
+            graph, self.opset_version, self.batch_dim
         ):
-            setattr(self, op_name, op)
-            self.mapping[op_id] = op_name
+            submodule_name = prefix + op_name
+            setattr(self, submodule_name, op)
+            mapping[op_id] = submodule_name
 
-        # Store initializers as buffers
-        for tensor in self.body.initializer:
+        for tensor in graph.initializer:
             self.register_buffer(
-                self.ops.get_buffer_name(tensor.name),
+                self.ops.get_buffer_name(prefix + tensor.name),
                 torch.tensor(numpy_helper.to_array(tensor)),
             )
+        return mapping
 
     def execute_body(self, buffer_modules, activations, fallback):
+        return self.execute_graph(
+            self.body, self.mapping, buffer_modules, activations, fallback
+        )
+
+    def execute_graph(
+        self, graph, mapping, buffer_modules, activations, fallback, prefix=""
+    ):
         """
-        Run all body nodes once, adding their outputs to activations.
+        Run all nodes of a subgraph once, adding their outputs to activations.
 
         Parameters
         ----------
+        graph: onnx.GraphProto
+            Subgraph to execute.
+        mapping: dict
+            Mapping from node id to the name of the corresponding submodule.
         buffer_modules: tuple of nn.Modules
             Modules whose buffers may hold initializers.
         activations: dict
-            Activations visible to the body, including its inputs.
+            Activations visible to the subgraph, including its inputs.
         fallback: torch.Tensor
             Value used for inputs that resolve to neither activation nor buffer.
+        prefix: str
+            Prefix under which this subgraph's initializers were registered.
         """
-        for node in self.body.node:
+
+        def resolve(in_op_id):
+            if in_op_id == "":
+                return OMITTED_INPUT
+            if in_op_id in activations:
+                return activations[in_op_id]
+            if prefix:
+                param = self.ops.get_init_parameter(
+                    buffer_modules, prefix + in_op_id, None
+                )
+                if param is not None:
+                    return param
+            return self.ops.get_init_parameter(buffer_modules, in_op_id, fallback)
+
+        for node in graph.node:
             out_op_id = node.output[0]
-            op = getattr(self, self.mapping[out_op_id])
+            op = getattr(self, mapping[out_op_id])
 
             if isinstance(op, self.c.STANDARD_LAYERS) or (
                 isinstance(op, self.c.COMPOSITE_LAYERS)
@@ -77,25 +113,12 @@ class SubgraphOperator(nn.Module):
                     if in_op_id in activations
                 ]
             else:
-                in_activations = [
-                    (
-                        OMITTED_INPUT
-                        if in_op_id == ""
-                        else (
-                            activations[in_op_id]
-                            if in_op_id in activations
-                            else self.ops.get_init_parameter(
-                                buffer_modules, in_op_id, fallback
-                            )
-                        )
-                    )
-                    for in_op_id in node.input
-                ]
+                in_activations = [resolve(in_op_id) for in_op_id in node.input]
 
             in_activations = [in_act for in_act in in_activations if in_act is not None]
             in_activations = resolve_omitted_inputs(in_activations)
 
-            if isinstance(op, (If, Loop, SubgraphOperator)):
+            if isinstance(op, (Loop, SubgraphOperator)):
                 outputs = op(buffer_modules, activations, *in_activations)
                 for out_act_name, output in zip(node.output, outputs):
                     activations[out_act_name] = output
