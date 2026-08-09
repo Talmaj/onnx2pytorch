@@ -180,6 +180,8 @@ def extract_attributes(node):
             kwargs["dtype"] = extract_attr_values(attr)
         elif attr.name == "else_branch":
             kwargs["else_branch"] = extract_attr_values(attr)
+        elif attr.name == "end":
+            kwargs["end"] = extract_attr_values(attr)
         elif attr.name == "ends":
             kwargs["ends"] = extract_attr_values(attr)
         elif attr.name == "equation":
@@ -362,6 +364,8 @@ def extract_attributes(node):
             kwargs["storage_order"] = extract_attr_values(attr)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
+        elif attr.name == "start":
+            kwargs["start"] = extract_attr_values(attr)
         elif attr.name == "starts":
             kwargs["starts"] = extract_attr_values(attr)
         elif attr.name == "then_branch":

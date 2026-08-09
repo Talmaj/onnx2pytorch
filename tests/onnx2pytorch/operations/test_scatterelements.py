@@ -1,5 +1,11 @@
+import numpy as np
 import torch
 import pytest
+
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 from onnx2pytorch.operations.scatterelements import ScatterElements
 
@@ -34,3 +40,20 @@ def test_scatter_elements_without_axis():
     )
     output = op(data, indices, updates)
     assert torch.equal(output, exp_output)
+
+
+@pytest.mark.parametrize("axis", [0, 1])
+@pytest.mark.parametrize("reduction", ["none", "add", "mul", "max", "min"])
+def test_scatterelements_reduction(reduction, axis):
+    """The reduction attribute was not even accepted by the constructor."""
+    np.random.seed(0)
+    data = np.random.randn(3, 4).astype(np.float32)
+    indices = np.array([[0, 1, 2, 0], [1, 1, 0, 2], [2, 0, 1, 1]], dtype=np.int64)
+    if axis == 1:
+        indices = indices % 4
+    updates = np.random.randn(3, 4).astype(np.float32)
+    inputs = {"data": data, "indices": indices, "updates": updates}
+    model = make_single_node_model(
+        "ScatterElements", inputs, 18, axis=axis, reduction=reduction
+    )
+    assert_matches_oracle(model, inputs)

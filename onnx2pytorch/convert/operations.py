@@ -428,7 +428,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "ScatterElements":
             op = ScatterElements(**extract_attributes(node))
         elif node.op_type == "ScatterND":
-            op = ScatterND()
+            op = ScatterND(**extract_attributes(node))
         elif node.op_type == "Selu":
             op = Selu(**extract_attributes(node))
         elif node.op_type == "SequenceAt":
@@ -450,7 +450,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 **extract_attributes(node),
             )
         elif node.op_type == "Shape":
-            op = Shape()
+            op = Shape(**extract_attributes(node))
         elif node.op_type == "Sigmoid":
             op = nn.Sigmoid()
         elif node.op_type == "HardSigmoid":
