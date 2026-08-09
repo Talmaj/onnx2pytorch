@@ -1,4 +1,5 @@
 import io
+import math
 
 import torch
 import numpy as np
@@ -38,6 +39,21 @@ def resolve_omitted_inputs(in_activations):
     while in_activations and in_activations[-1] is OMITTED_INPUT:
         in_activations.pop()
     return [None if act is OMITTED_INPUT else act for act in in_activations]
+
+
+def cosine_window(size, periodic, coefficients):
+    """
+    Evaluate a cosine-sum window as defined by the ONNX windowing operators.
+
+    Unlike torch.hann_window and friends there is no special case for size 1.
+    """
+    size = int(size)
+    n = torch.arange(size, dtype=torch.float64)
+    angle = 2 * math.pi * n / (size if periodic else size - 1)
+    window = torch.zeros_like(n)
+    for k, coefficient in enumerate(coefficients):
+        window = window + coefficient * torch.cos(k * angle)
+    return window
 
 
 def get_random_generator(seed, device=None):

@@ -233,6 +233,8 @@ def extract_attributes(node):
             kwargs["output_height"] = extract_attr_values(attr)
         elif attr.name == "output_width":
             kwargs["output_width"] = extract_attr_values(attr)
+        elif attr.name == "output_datatype":
+            kwargs["output_datatype"] = extract_attr_values(attr)
         elif attr.name == "output_dtype":
             kwargs["output_dtype"] = extract_attr_values(attr)
         elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
@@ -252,6 +254,8 @@ def extract_attributes(node):
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)
         elif attr.name == "pooled_shape":
             kwargs["pooled_shape"] = extract_attr_values(attr)
+        elif attr.name == "periodic":
+            kwargs["periodic"] = extract_attr_values(attr)
         elif attr.name == "perm":
             kwargs["dims"] = extract_attr_values(attr)
         elif attr.name == "q_num_heads":

@@ -7,6 +7,7 @@ from .autopad import AutoPad
 from .batchnorm import BatchNormWrapper
 from .bernoulli import Bernoulli
 from .bitcast import BitCast
+from .blackmanwindow import BlackmanWindow
 from .bitshift import BitShift
 from .cast import Cast
 from .causalconvwithstate import CausalConvWithState
@@ -133,6 +134,7 @@ __all__ = [
     "Bernoulli",
     "BitCast",
     "BitShift",
+    "BlackmanWindow",
     "Cast",
     "CausalConvWithState",
     "CenterCropPad",
