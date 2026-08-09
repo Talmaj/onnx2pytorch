@@ -2,35 +2,9 @@ import numpy as np
 import pytest
 import torch
 from onnx import helper, numpy_helper, TensorProto
+from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
-
-
-def causal_conv_with_state_reference(
-    input, weight, bias=None, past_state=None, activation="none"
-):
-    """Numpy reference following the ONNX CausalConvWithState specification."""
-    batch_size, channels, length = input.shape
-    kernel_size = weight.shape[2]
-
-    if past_state is None:
-        past_state = np.zeros((batch_size, channels, kernel_size - 1), input.dtype)
-    padded = np.concatenate([past_state, input], axis=2)
-
-    output = np.zeros((batch_size, channels, length), dtype=np.float32)
-    for b in range(batch_size):
-        for c in range(channels):
-            for t in range(length):
-                window = padded[b, c, t : t + kernel_size]
-                output[b, c, t] = np.dot(window, weight[c, 0])
-            if bias is not None:
-                output[b, c] += bias[c]
-
-    if activation in ("silu", "swish"):
-        output = output / (1.0 + np.exp(-output))
-
-    present_state = padded[:, :, padded.shape[2] - (kernel_size - 1) :]
-    return output.astype(input.dtype), present_state
 
 
 def check_causal_conv_with_state(
@@ -78,11 +52,10 @@ def check_causal_conv_with_state(
         ],
         initializer=initializers,
     )
-    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 24)])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 27)])
 
-    expected = causal_conv_with_state_reference(
-        input, weight, bias=bias, past_state=past_state, **attrs
-    )
+    # onnxruntime 1.28 has no CausalConvWithState kernel
+    expected = ReferenceEvaluator(model).run(None, feeds)
 
     o2p_model = ConvertModel(model)
     with torch.no_grad():
