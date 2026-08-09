@@ -155,6 +155,8 @@ def extract_attributes(node):
                     "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
                     "Result might differ.".format(arg)
                 )
+        elif attr.name == "delimiter":
+            kwargs["delimiter"] = extract_attr_values(attr)
         elif attr.name == "detect_negative":
             kwargs["detect_negative"] = extract_attr_values(attr)
         elif attr.name == "detect_positive":
@@ -219,6 +221,8 @@ def extract_attributes(node):
             kwargs["low"] = extract_attr_values(attr)
         elif attr.name == "max_gram_length":
             kwargs["max_gram_length"] = extract_attr_values(attr)
+        elif attr.name == "maxsplit":
+            kwargs["maxsplit"] = extract_attr_values(attr)
         elif attr.name == "max_skip_count":
             kwargs["max_skip_count"] = extract_attr_values(attr)
         elif attr.name == "min_gram_length":

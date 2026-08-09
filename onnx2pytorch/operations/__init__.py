@@ -122,6 +122,7 @@ from .squeeze import Squeeze
 from .stft import STFT
 from .stringconcat import StringConcat
 from .stringnormalizer import StringNormalizer
+from .stringsplit import StringSplit
 from .subgraph import SubgraphOperator
 from .sum import Sum
 from .swiglu import SwiGLU
@@ -261,6 +262,7 @@ __all__ = [
     "STFT",
     "StringConcat",
     "StringNormalizer",
+    "StringSplit",
     "SubgraphOperator",
     "Sum",
     "SwiGLU",
