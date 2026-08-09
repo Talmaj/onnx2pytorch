@@ -3,7 +3,6 @@ import onnxruntime as ort
 import pytest
 import torch
 from onnx import helper, TensorProto
-from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -42,13 +41,10 @@ def build_model(x, y_scale, y_zero_point=None, opset=21, out_type=None, **attrs)
 
 
 def check_quantize_linear(
-    x, y_scale, y_zero_point=None, opset=21, out_type=None, use_reference=False, **attrs
+    x, y_scale, y_zero_point=None, opset=21, out_type=None, **attrs
 ):
     model, feed = build_model(x, y_scale, y_zero_point, opset, out_type, **attrs)
-    if use_reference:
-        exp_y = ReferenceEvaluator(model).run(None, feed)[0]
-    else:
-        exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
+    exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
     with torch.no_grad():
         y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
     assert y.numpy().dtype == exp_y.dtype
@@ -131,7 +127,6 @@ def test_quantize_linear_blocked():
         y_scale,
         y_zero_point,
         opset=21,
-        use_reference=True,
         axis=0,
         block_size=2,
     )
