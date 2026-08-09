@@ -25,7 +25,7 @@ setup(
     license="apache-2.0",
     author="Talmaj Marinc",
     packages=PACKAGES,
-    install_requires=["torch>=1.4.0", "onnx>=1.6.0", "torchvision>=0.9.0"],
+    install_requires=["torch>=2.0.0", "onnx>=1.16.0", "torchvision>=0.15.0"],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ToriML/onnx2pytorch",
@@ -34,5 +34,5 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
 )
