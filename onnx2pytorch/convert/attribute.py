@@ -267,6 +267,8 @@ def extract_attributes(node):
             kwargs["p"] = extract_attr_values(attr)
         elif attr.name == "padding_mode":
             kwargs["padding_mode"] = extract_attr_values(attr)
+        elif attr.name == "pattern":
+            kwargs["pattern"] = extract_attr_values(attr)
         elif attr.name == "pads":
             params = extract_attr_values(attr)
             if node.op_type == "Pad":

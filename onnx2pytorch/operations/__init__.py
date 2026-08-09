@@ -84,6 +84,7 @@ from .randomnormallike import RandomNormalLike
 from .randomuniform import RandomUniform
 from .randomuniformlike import RandomUniformLike
 from .reducel1 import ReduceL1
+from .regexfullmatch import RegexFullMatch
 from .reducelogsum import ReduceLogSum
 from .reducelogsumexp import ReduceLogSumExp
 from .reducemax import ReduceMax
@@ -227,6 +228,7 @@ __all__ = [
     "ReduceSum",
     "ReduceSumSquare",
     "ReduceL2",
+    "RegexFullMatch",
     "Reshape",
     "Resize",
     "ReverseSequence",
