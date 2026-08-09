@@ -131,6 +131,28 @@ def test_extract_attr_values(kwargs, value):
             ),
             dict(transpose_weight=False),
         ],
+        [
+            onnx.helper.make_node(
+                "LSTM",
+                inputs=["x", "w", "r"],
+                outputs=["y"],
+                hidden_size=3,
+                output_sequence=1,
+            ),
+            dict(hidden_size=3),
+        ],
+        [
+            onnx.helper.make_node(
+                "LRN",
+                inputs=["x"],
+                outputs=["y"],
+                size=3,
+                alpha=0.5,
+                beta=0.25,
+                bias=2.0,
+            ),
+            dict(size=3, alpha=0.5, beta=0.25, bias=2.0),
+        ],
     ],
 )
 def test_extract_attributes(node, exp_kwargs):

@@ -90,7 +90,7 @@ def extract_attributes(node):
                 "ThresholdedRelu",
             ):
                 kwargs["alpha"] = extract_attr_values(attr)
-            elif node.op_type == "HardSigmoid":
+            elif node.op_type in ("HardSigmoid", "LRN"):
                 kwargs["alpha"] = extract_attr_values(attr)
             else:
                 kwargs["weight_multiplier"] = extract_attr_values(attr)
@@ -122,11 +122,11 @@ def extract_attributes(node):
         elif attr.name == "batch_axis":
             kwargs["batch_axis"] = extract_attr_values(attr)
         elif attr.name == "beta":
-            if node.op_type == "HardSigmoid":
+            if node.op_type in ("HardSigmoid", "LRN"):
                 kwargs["beta"] = extract_attr_values(attr)
             else:
                 kwargs["bias_multiplier"] = extract_attr_values(attr)
-        elif attr.name == "bias" and node.op_type == "Shrink":
+        elif attr.name == "bias" and node.op_type in ("LRN", "Shrink"):
             kwargs["bias"] = extract_attr_values(attr)
         elif attr.name == "batch_dims":
             kwargs["batch_dims"] = extract_attr_values(attr)
@@ -297,6 +297,9 @@ def extract_attributes(node):
             kwargs["p"] = extract_attr_values(attr)
         elif attr.name == "padding_mode":
             kwargs["padding_mode"] = extract_attr_values(attr)
+        elif attr.name == "output_sequence":
+            # Legacy LSTM hint, the node's output list already says what is wanted
+            pass
         elif attr.name == "pattern":
             kwargs["pattern"] = extract_attr_values(attr)
         elif attr.name == "paddings" and node.op_type == "Pad":
@@ -335,6 +338,8 @@ def extract_attributes(node):
             kwargs["sample_size"] = extract_attr_values(attr)
         elif attr.name == "sampling_ratio":
             kwargs["sampling_ratio"] = extract_attr_values(attr)
+        elif attr.name == "size" and node.op_type == "LRN":
+            kwargs["size"] = extract_attr_values(attr)
         elif attr.name == "saturate":
             kwargs["saturate"] = extract_attr_values(attr)
         elif attr.name == "scale":

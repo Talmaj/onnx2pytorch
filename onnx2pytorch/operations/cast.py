@@ -26,10 +26,14 @@ def cast_from_string(input, dtype):
 
 
 class Cast(nn.Module):
-    def __init__(self, dtype):
+    def __init__(self, dtype, saturate=1):
         super().__init__()
         if isinstance(dtype, str) and dtype.lower() != "string":
             dtype = getattr(torch, dtype.lower())
+        if not saturate and "float8" in str(dtype):
+            raise NotImplementedError(
+                "Cast to {} with saturate=0 not implemented.".format(dtype)
+            )
         self.dtype = dtype
 
     def forward(self, input):

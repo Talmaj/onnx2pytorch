@@ -1,23 +1,14 @@
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 
 class LRN(nn.Module):
     """
-    Local Response Normalization operation.
+    Local Response Normalization across channels.
 
-    Applies local response normalization across channels.
-
-    Parameters
-    ----------
-    alpha : float
-        Scaling parameter (default: 0.0001)
-    beta : float
-        Exponent (default: 0.75)
-    bias : float
-        Bias parameter (default: 1.0)
-    size : int
-        Number of channels to sum over
+    Not delegated to nn.LocalResponseNorm because that one centres an even
+    sized window on the other side of the channel than onnx does.
     """
 
     def __init__(self, alpha=0.0001, beta=0.75, bias=1.0, size=None):
@@ -30,21 +21,14 @@ class LRN(nn.Module):
         self.bias = bias
         self.size = size
 
-        # PyTorch's LocalResponseNorm uses the same formula as ONNX LRN
-        self.lrn = nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=bias)
-
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        """
-        Apply local response normalization.
+        before = (self.size - 1) // 2
+        squares = X.square().movedim(1, -1)
+        squares = F.pad(squares, (before, self.size - 1 - before))
+        summed = squares.unfold(-1, self.size, 1).sum(-1).movedim(-1, 1)
+        return X / (self.bias + self.alpha / self.size * summed).pow(self.beta)
 
-        Parameters
-        ----------
-        X : torch.Tensor
-            Input tensor of shape (N, C, *)
-
-        Returns
-        -------
-        torch.Tensor
-            Normalized tensor of same shape as input
-        """
-        return self.lrn(X)
+    def extra_repr(self) -> str:
+        return "alpha={}, beta={}, bias={}, size={}".format(
+            self.alpha, self.beta, self.bias, self.size
+        )

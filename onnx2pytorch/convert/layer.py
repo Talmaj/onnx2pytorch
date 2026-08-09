@@ -11,6 +11,7 @@ from onnx2pytorch.operations import (
     LSTMWrapper,
     MaxPool,
     RNNWrapper,
+    Transpose,
 )
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 
@@ -152,11 +153,6 @@ def convert_linear_layer(node, params):
         bias_multiplier=1,
     )
     dc.update(extract_attributes(node))
-    for attr in node.attribute:
-        if attr.name in ["transA"] and extract_attr_values(attr) != 0:
-            raise NotImplementedError(
-                "Not implemented for attr.name={} and value!=0.".format(attr.name)
-            )
 
     kwargs = {}
     weight, bias = extract_params(params)
@@ -175,6 +171,9 @@ def convert_linear_layer(node, params):
     layer.weight.data *= dc.get("weight_multiplier")
     if layer.bias is not None:
         layer.bias.data *= dc.get("bias_multiplier")
+
+    if dc.get("transpose_activation"):
+        layer = nn.Sequential(Transpose(), layer)
 
     return layer
 

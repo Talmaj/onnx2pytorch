@@ -4,27 +4,31 @@ from torch import nn
 
 class GatherND(nn.Module):
     def __init__(self, batch_dims=0):
-        if batch_dims != 0:
-            raise NotImplementedError(
-                f"GatherND for batch_dims={batch_dims} not implemented."
-            )
         self.batch_dims = batch_dims
         super().__init__()
 
     def forward(self, data: torch.Tensor, indices: torch.Tensor):
-        orig_shape = list(indices.shape)
-        num_samples = torch.prod(torch.tensor(orig_shape[:-1]))
-        m = orig_shape[-1]
-        n = len(data.shape)
-
-        if m > n:
+        b = self.batch_dims
+        m = indices.shape[-1]
+        if m > data.ndim - b:
             raise ValueError(
                 f"The last dimension of indices must be <= the rank of data."
-                f"Got indices:{indices.shape}, data:{data.shape}. {m} > {n}"
+                f"Got indices:{indices.shape}, data:{data.shape}."
             )
-        out_shape = orig_shape[:-1] + list(data.shape)[m:]
+        out_shape = list(indices.shape[:-1]) + list(data.shape[b + m :])
 
-        indices = indices.reshape((num_samples, m)).transpose(0, 1)
-        indices = torch.split(indices, 1, 0)
-        output = data[indices]  # (num_samples, ...)
-        return output.reshape(out_shape).contiguous()
+        gathered = data.reshape(-1, *data.shape[b:])
+        num_batches = gathered.shape[0]
+        gathered = gathered.reshape(num_batches, -1, *data.shape[b + m :])
+        indices = indices.reshape(num_batches, -1, m)
+
+        flat = torch.zeros(indices.shape[:-1], dtype=torch.long, device=data.device)
+        for axis in range(m):
+            size = data.shape[b + axis]
+            flat = flat * size + indices[..., axis] % size
+
+        batch = torch.arange(num_batches, device=data.device).unsqueeze(1)
+        return gathered[batch, flat].reshape(out_shape).contiguous()
+
+    def extra_repr(self) -> str:
+        return "batch_dims={}".format(self.batch_dims)
