@@ -1,7 +1,7 @@
 import numpy as np
+import onnxruntime as ort
 import torch
 from onnx import helper, TensorProto
-from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -37,8 +37,8 @@ def check_deform_conv(x, w, offset, b=None, mask=None, **attrs):
     )
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 19)])
 
-    # onnxruntime has no DeformConv kernel, compare against the onnx reference
-    exp_y = ReferenceEvaluator(model).run(None, feed)[0]
+    ort_session = ort.InferenceSession(model.SerializeToString())
+    exp_y = ort_session.run(None, feed)[0]
 
     o2p_model = ConvertModel(model)
     with torch.no_grad():
