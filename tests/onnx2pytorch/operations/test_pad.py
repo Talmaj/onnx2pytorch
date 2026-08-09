@@ -5,6 +5,10 @@ from onnx.backend.test.case.node.pad import pad_impl
 
 from onnx2pytorch.operations import Pad
 from onnx2pytorch.utils import extract_padding_params
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 @pytest.fixture
@@ -70,3 +74,72 @@ def test_pad_raise_error(inp):
     # padding should be passed either in init or forward
     with pytest.raises(TypeError):
         op(inp)
+
+
+PAD_MODES = ["constant", "reflect", "edge", "wrap"]
+
+
+@pytest.mark.parametrize("mode", PAD_MODES)
+@pytest.mark.parametrize("opset_version", [11, 13, 18, 19])
+def test_pad_mode_with_pads_input(opset_version, mode):
+    """ONNX mode names have to be mapped onto torch's, and edge used to raise."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    pads = np.array([0, 0, 1, 2, 0, 0, 3, 1], dtype=np.int64)
+    model = make_single_node_model(
+        "Pad",
+        {"x": x},
+        opset_version,
+        input_names=["x", "pads"],
+        initializers={"pads": pads},
+        mode=mode,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("mode", PAD_MODES)
+def test_pad_mode_with_pads_attribute(mode):
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Pad", {"x": x}, 2, pads=[0, 0, 1, 2, 0, 0, 3, 1], mode=mode
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+def test_pad_value_attribute():
+    """Pad-2's value attribute collided with the global value mapping."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Pad", {"x": x}, 2, pads=[0, 0, 1, 2, 0, 0, 3, 1], value=2.5
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+def test_pad_paddings_attribute():
+    """Opset 1 spells the pads attribute paddings."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Pad", {"x": x}, 1, paddings=[0, 0, 1, 2, 0, 0, 3, 1], value=2.5
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("opset_version", [2, 11, 18])
+def test_pad_batch_and_channel_pads(opset_version):
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    onnx_pads = [1, 1, 1, 2, 1, 1, 3, 1]
+    if opset_version == 2:
+        model = make_single_node_model("Pad", {"x": x}, 2, pads=onnx_pads)
+    else:
+        model = make_single_node_model(
+            "Pad",
+            {"x": x},
+            opset_version,
+            input_names=["x", "pads"],
+            initializers={"pads": np.array(onnx_pads, dtype=np.int64)},
+        )
+    assert_matches_oracle(model, {"x": x})

@@ -5,6 +5,12 @@ import pytest
 import torch
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+    run_converted,
+    run_oracle,
+)
 
 
 def make_resize_model(node_inputs, initializers, out_shape):
@@ -69,4 +75,101 @@ def test_convert_resize_scales_with_omitted_roi():
 
     np.testing.assert_allclose(
         output.detach().numpy(), exp_output, rtol=1e-5, atol=1e-5
+    )
+
+
+SCALES = np.array([1.0, 1.0, 2.0, 1.5], dtype=np.float32)
+
+
+@pytest.mark.parametrize("mode", ["nearest", "linear", "cubic"])
+@pytest.mark.parametrize("opset_version", [11, 13, 18, 19])
+def test_resize_modes(opset_version, mode):
+    """ONNX mode names have to be mapped onto torch's rank-specific names."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Resize",
+        {"x": x},
+        opset_version,
+        input_names=["x", "", "scales"],
+        initializers={"scales": SCALES},
+        mode=mode,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("spatial_dims", [1, 2, 3])
+def test_resize_linear_by_rank(spatial_dims):
+    np.random.seed(0)
+    x = np.random.randn(*([1, 2] + [4] * spatial_dims)).astype(np.float32)
+    scales = np.array([1.0, 1.0] + [2.0] * spatial_dims, dtype=np.float32)
+    model = make_single_node_model(
+        "Resize",
+        {"x": x},
+        13,
+        input_names=["x", "", "scales"],
+        initializers={"scales": scales},
+        mode="linear",
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("mode", ["nearest", "linear"])
+def test_resize_opset_10_takes_scales_as_second_input(mode):
+    """Resize-10 has the signature (X, scales), not (X, roi, scales, sizes)."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Resize",
+        {"x": x},
+        10,
+        input_names=["x", "scales"],
+        initializers={"scales": SCALES},
+        mode=mode,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("mode", ["nearest", "linear"])
+def test_upsample_scales_input(mode):
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Upsample",
+        {"x": x},
+        9,
+        input_names=["x", "scales"],
+        initializers={"scales": SCALES},
+        mode=mode,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("mode", ["nearest", "linear"])
+def test_upsample_scales_attribute(mode):
+    """Upsample-7 passes the scales as an attribute."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Upsample", {"x": x}, 7, mode=mode, scales=[1.0, 1.0, 2.0, 1.5]
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("mode", ["nearest", "linear"])
+def test_upsample_height_and_width_scale(mode):
+    """Upsample-1 names the two spatial scales individually."""
+    np.random.seed(0)
+    x = np.random.randn(1, 2, 4, 5).astype(np.float32)
+    model = make_single_node_model(
+        "Upsample", {"x": x}, 1, mode=mode, height_scale=2.0, width_scale=1.5
+    )
+    expected = make_single_node_model(
+        "Upsample", {"x": x}, 7, mode=mode, scales=[1.0, 1.0, 2.0, 1.5]
+    )
+    np.testing.assert_allclose(
+        run_converted(model, {"x": x})[0],
+        run_oracle(expected, {"x": x})[0],
+        rtol=1e-5,
+        atol=1e-6,
     )

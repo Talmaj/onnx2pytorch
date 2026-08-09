@@ -198,6 +198,8 @@ def extract_attributes(node):
             kwargs["groups"] = extract_attr_values(attr)
         elif attr.name == "hidden_size":
             kwargs["hidden_size"] = extract_attr_values(attr)
+        elif attr.name == "height_scale":
+            kwargs["height_scale"] = extract_attr_values(attr)
         elif attr.name == "high":
             kwargs["high"] = extract_attr_values(attr)
         elif attr.name == "ignore_index":
@@ -251,6 +253,8 @@ def extract_attributes(node):
             kwargs["pool_int64s"] = extract_attr_values(attr)
         elif attr.name == "pool_strings":
             kwargs["pool_strings"] = extract_attr_values(attr)
+        elif attr.name == "width_scale":
+            kwargs["width_scale"] = extract_attr_values(attr)
         elif attr.name == "weights":
             kwargs["weights"] = extract_attr_values(attr)
         elif attr.name == "max":
@@ -295,6 +299,9 @@ def extract_attributes(node):
             kwargs["padding_mode"] = extract_attr_values(attr)
         elif attr.name == "pattern":
             kwargs["pattern"] = extract_attr_values(attr)
+        elif attr.name == "paddings" and node.op_type == "Pad":
+            # Opset 1 spelling of the pads attribute
+            kwargs["padding"] = extract_padding_params(extract_attr_values(attr))
         elif attr.name == "pads":
             params = extract_attr_values(attr)
             if node.op_type == "Pad":
@@ -332,6 +339,8 @@ def extract_attributes(node):
             kwargs["saturate"] = extract_attr_values(attr)
         elif attr.name == "scale":
             kwargs["scale"] = extract_attr_values(attr)
+        elif attr.name == "scales":
+            kwargs["scales"] = extract_attr_values(attr)
         elif attr.name in (
             "scan_input_axes",
             "scan_input_directions",
@@ -387,6 +396,8 @@ def extract_attributes(node):
             kwargs["update_rule"] = extract_attr_values(attr)
         elif attr.name == "upper":
             kwargs["upper"] = extract_attr_values(attr)
+        elif attr.name == "value" and node.op_type == "Pad":
+            kwargs["value"] = extract_attr_values(attr)
         elif attr.name == "value":
             kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "value_float":

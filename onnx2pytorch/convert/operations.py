@@ -415,7 +415,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
             op = Reshape(enable_pruning, shape)
         elif node.op_type == "Resize":
-            op = Resize(**extract_attributes(node))
+            op = Resize(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "ReverseSequence":
             op = ReverseSequence(**extract_attributes(node))
         elif node.op_type == "RMSNormalization":
@@ -547,7 +547,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Unsqueeze":
             op = Unsqueeze(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Upsample":
-            op = Upsample(**extract_attributes(node))
+            op = Upsample(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Xor":
             op = OperatorWrapper(torch.logical_xor)
         elif node.op_type == "Where":
