@@ -97,41 +97,19 @@ def test_qlinear_conv_per_channel_weight_scale():
     )
 
 
-def qlinear_conv_reference(arrays):
-    x, x_scale, x_zero_point, w, w_scale, w_zero_point, y_scale, y_zero_point, _ = (
-        arrays
-    )
-    x = x.astype(np.int32) - np.int32(x_zero_point)
-    w = w.astype(np.int32) - w_zero_point.astype(np.int32).reshape(-1, 1, 1, 1)
-    n, _, height, width = x.shape
-    out_channels, _, kernel_h, kernel_w = w.shape
-    acc = np.zeros(
-        (n, out_channels, height - kernel_h + 1, width - kernel_w + 1), dtype=np.int32
-    )
-    for i in range(acc.shape[2]):
-        for j in range(acc.shape[3]):
-            patch = x[:, None, :, i : i + kernel_h, j : j + kernel_w]
-            acc[:, :, i, j] = (patch * w[None]).sum(axis=(2, 3, 4))
-
-    scale = x_scale.astype(np.float64) * w_scale.astype(np.float64).reshape(-1, 1, 1)
-    y = np.round(acc * scale / y_scale.astype(np.float64)) + np.float64(y_zero_point)
-    return np.clip(y, 0, 255).astype(np.uint8)
-
-
 def test_qlinear_conv_per_channel_weight_zero_point():
     w_scale = np.array([0.01, 0.02, 0.03, 0.04], dtype=np.float32)
     w_zero_point = np.array([120, 125, 130, 135], dtype=np.uint8)
-    arrays = make_inputs(
-        (1, 2, 5, 5), (4, 2, 3, 3), 8, w_scale=w_scale, w_zero_point=w_zero_point
+    check_qlinear_conv(
+        make_inputs(
+            (1, 2, 5, 5),
+            (4, 2, 3, 3),
+            8,
+            w_scale=w_scale,
+            w_zero_point=w_zero_point,
+        ),
+        kernel_shape=[3, 3],
     )
-
-    # onnxruntime requires all per-channel zero points to be equal and the onnx
-    # reference does not broadcast per-channel scales
-    exp_y = qlinear_conv_reference(arrays)
-    model, feed = build_model(arrays, kernel_shape=[3, 3])
-    with torch.no_grad():
-        y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
-    np.testing.assert_array_equal(y.numpy(), exp_y)
 
 
 def test_qlinear_conv_pads_strides_dilations():
