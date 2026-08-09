@@ -164,7 +164,9 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 > Note: `RegexFullMatch`, `StringConcat`, `StringNormalizer` and `StringSplit` consume and/or
 > produce `tensor(string)`. PyTorch has no string tensor, so these operators accept and return
 > numpy string arrays, which flow through `ConvertModel.forward` like any other activation.
-> `TfIdfVectorizer` is supported for its `pool_int64s` form only, and raises
+> `Cast` and `CastLike` convert between those numpy string arrays and integer tensors;
+> casting floats to string is not implemented, as numpy does not format them the way onnx
+> specifies. `TfIdfVectorizer` is supported for its `pool_int64s` form only, and raises
 > `NotImplementedError` for `pool_strings`.
 
 - [x] [`CastLike`](https://onnx.ai/onnx/operators/onnx__CastLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/castlike.py)
