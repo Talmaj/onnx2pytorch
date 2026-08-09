@@ -351,6 +351,34 @@ XFAILS = {
     ("ConvTranspose", None, "same_upper"): (
         "auto_pad pads the input, ConvTranspose instead has to crop the output"
     ),
+    ("GRU", None, "reverse"): "the converter only builds forward or bidirectional",
+    ("GRU", None, "clip"): "cell clipping has no torch equivalent",
+    ("GRU", None, "initial_h"): "initial_h is rejected by convert_gru_layer",
+    ("GRU", None, "sequence_lens"): (
+        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
+    ),
+    ("GRU", None, "layout"): "layout=1 is rejected by convert_gru_layer",
+    ("LSTM", None, "reverse"): "the converter only builds forward or bidirectional",
+    ("LSTM", None, "clip"): "cell clipping has no torch equivalent",
+    ("LSTM", None, "initial_h"): "initial_h is rejected by convert_lstm_layer",
+    ("LSTM", None, "sequence_lens"): (
+        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
+    ),
+    ("LSTM", None, "layout"): "layout=1 is rejected by convert_lstm_layer",
+    ("LSTM", None, "peepholes"): "torch's LSTM has no peephole connections",
+    (
+        "LSTM",
+        None,
+        "input_forget",
+    ): "torch's LSTM cannot couple the input and forget gates",
+    ("RNN", None, "reverse"): "the converter only builds forward or bidirectional",
+    ("RNN", None, "clip"): "cell clipping has no torch equivalent",
+    ("RNN", None, "initial_h"): "initial_h is rejected by convert_rnn_layer",
+    ("RNN", None, "sequence_lens"): (
+        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
+    ),
+    ("RNN", None, "layout"): "layout=1 is rejected by convert_rnn_layer",
+    ("RNN", None, "sigmoid"): "torch's RNN only offers tanh and relu",
     ("LRN", None, "even_size"): (
         "no oracle: onnxruntime rejects even sizes and onnx's reference LRN sums "
         "over the batch axis instead of the channel axis"
@@ -1332,5 +1360,155 @@ CASES.update(
             case("batched", {"a": rand(2, 3, 4), "b": rand(2, 4, 5)}),
             case("broadcast_batch", {"a": rand(2, 3, 4), "b": rand(4, 5)}, since=9),
         ],
+    }
+)
+
+
+SEQ, BATCH, INPUT, HIDDEN = 3, 2, 4, 5
+RNN_X = rand(SEQ, BATCH, INPUT, scale=0.5)
+
+
+def _rnn_weights(gates, directions=1):
+    return {
+        "w": rand(directions, gates * HIDDEN, INPUT, scale=0.3),
+        "r": rand(directions, gates * HIDDEN, HIDDEN, scale=0.3),
+        "b": rand(directions, 2 * gates * HIDDEN, scale=0.3),
+    }
+
+
+def _rnn_cases(gates, num_outputs, extra=()):
+    weights = _rnn_weights(gates)
+    bidir = _rnn_weights(gates, 2)
+    cases = [
+        case(
+            "forward",
+            {"x": RNN_X},
+            initializers=weights,
+            hidden_size=HIDDEN,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "no_bias",
+            {"x": RNN_X},
+            initializers={"w": weights["w"], "r": weights["r"]},
+            hidden_size=HIDDEN,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "bidirectional",
+            {"x": RNN_X},
+            initializers=bidir,
+            hidden_size=HIDDEN,
+            direction="bidirectional",
+            num_outputs=num_outputs,
+        ),
+        case(
+            "reverse",
+            {"x": RNN_X},
+            initializers=weights,
+            hidden_size=HIDDEN,
+            direction="reverse",
+            num_outputs=num_outputs,
+        ),
+        case(
+            "clip",
+            {"x": RNN_X},
+            initializers=weights,
+            hidden_size=HIDDEN,
+            clip=0.5,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "initial_h",
+            {"x": RNN_X},
+            initializers=dict(weights, h0=rand(1, BATCH, HIDDEN, scale=0.3)),
+            input_names=["x", "w", "r", "b", "", "h0"],
+            hidden_size=HIDDEN,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "sequence_lens",
+            {"x": RNN_X},
+            initializers=dict(weights, seq_lens=arr([SEQ, SEQ - 1], np.int32)),
+            hidden_size=HIDDEN,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "layout",
+            {"x": rand(BATCH, SEQ, INPUT, scale=0.5)},
+            initializers=weights,
+            hidden_size=HIDDEN,
+            layout=1,
+            num_outputs=num_outputs,
+            since=14,
+        ),
+    ]
+    cases.extend(extra)
+    return cases
+
+
+CASES.update(
+    {
+        "RNN": _rnn_cases(
+            1,
+            2,
+            extra=[
+                case(
+                    "relu",
+                    {"x": RNN_X},
+                    initializers=_rnn_weights(1),
+                    hidden_size=HIDDEN,
+                    activations=["Relu"],
+                    num_outputs=2,
+                ),
+                case(
+                    "sigmoid",
+                    {"x": RNN_X},
+                    initializers=_rnn_weights(1),
+                    hidden_size=HIDDEN,
+                    activations=["Sigmoid"],
+                    num_outputs=2,
+                ),
+            ],
+        ),
+        "GRU": _rnn_cases(
+            3,
+            2,
+            extra=[
+                case(
+                    "linear_before_reset",
+                    {"x": RNN_X},
+                    initializers=_rnn_weights(3),
+                    hidden_size=HIDDEN,
+                    linear_before_reset=1,
+                    num_outputs=2,
+                    since=3,
+                ),
+            ],
+        ),
+        "LSTM": _rnn_cases(
+            4,
+            3,
+            extra=[
+                case(
+                    "peepholes",
+                    {"x": RNN_X},
+                    initializers=dict(
+                        _rnn_weights(4), p=rand(1, 3 * HIDDEN, scale=0.3)
+                    ),
+                    input_names=["x", "w", "r", "b", "", "", "", "p"],
+                    hidden_size=HIDDEN,
+                    num_outputs=3,
+                ),
+                case(
+                    "input_forget",
+                    {"x": RNN_X},
+                    initializers=_rnn_weights(4),
+                    hidden_size=HIDDEN,
+                    input_forget=1,
+                    num_outputs=3,
+                ),
+            ],
+        ),
     }
 )
