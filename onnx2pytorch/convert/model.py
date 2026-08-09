@@ -138,10 +138,12 @@ class ConvertModel(nn.Module):
         # Store initializers as buffers
         for tensor in self.onnx_model.graph.initializer:
             buffer_name = get_buffer_name(tensor.name)
-            self.register_buffer(
-                buffer_name,
-                torch.tensor(numpy_helper.to_array(tensor)),
-            )
+            array = numpy_helper.to_array(tensor)
+            if array.dtype.kind in ("O", "S", "U"):
+                # String tensors have no torch counterpart, keep them as numpy arrays
+                setattr(self, buffer_name, array)
+            else:
+                self.register_buffer(buffer_name, torch.tensor(array))
 
         # Compute activation dependencies, mapping each node to its dependents
         self.needed_by = compute_activation_dependencies(

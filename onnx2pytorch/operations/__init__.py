@@ -119,6 +119,7 @@ from .split import Split
 from .splittosequence import SplitToSequence
 from .squeeze import Squeeze
 from .stft import STFT
+from .stringconcat import StringConcat
 from .subgraph import SubgraphOperator
 from .sum import Sum
 from .swiglu import SwiGLU
@@ -255,6 +256,7 @@ __all__ = [
     "SplitToSequence",
     "Squeeze",
     "STFT",
+    "StringConcat",
     "SubgraphOperator",
     "Sum",
     "SwiGLU",
