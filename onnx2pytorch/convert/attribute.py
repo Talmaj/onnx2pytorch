@@ -134,6 +134,8 @@ def extract_attributes(node):
             kwargs["blocksize"] = extract_attr_values(attr)
         elif attr.name == "body":
             kwargs["body"] = extract_attr_values(attr)
+        elif attr.name == "case_change_action":
+            kwargs["case_change_action"] = extract_attr_values(attr)
         elif attr.name == "ceil_mode":
             kwargs["ceil_mode"] = bool(extract_attr_values(attr))
         elif attr.name == "center_point_box":
@@ -191,6 +193,8 @@ def extract_attributes(node):
             kwargs["interleaved"] = extract_attr_values(attr)
         elif attr.name == "inverse":
             kwargs["inverse"] = extract_attr_values(attr)
+        elif attr.name == "is_case_sensitive":
+            kwargs["is_case_sensitive"] = extract_attr_values(attr)
         elif attr.name == "is_causal":
             kwargs["is_causal"] = extract_attr_values(attr)
         elif attr.name == "k":
@@ -209,6 +213,8 @@ def extract_attributes(node):
             kwargs["layout"] = extract_attr_values(attr)
         elif attr.name == "linear_before_reset":
             kwargs["linear_before_reset"] = extract_attr_values(attr)
+        elif attr.name == "locale":
+            kwargs["locale"] = extract_attr_values(attr)
         elif attr.name == "low":
             kwargs["low"] = extract_attr_values(attr)
         elif attr.name == "max_gram_length":
@@ -335,6 +341,8 @@ def extract_attributes(node):
             kwargs["split_size_or_sections"] = extract_attr_values(attr)
         elif attr.name == "stash_type":
             kwargs["stash_type"] = extract_attr_values(attr)
+        elif attr.name == "stopwords":
+            kwargs["stopwords"] = extract_attr_values(attr)
         elif attr.name == "strides":
             kwargs["stride"] = extract_attr_values(attr)
         elif attr.name == "starts":
