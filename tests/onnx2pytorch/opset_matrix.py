@@ -339,7 +339,23 @@ CASES.update(
 
 # (op_type, opset, case_name) -> reason. opset=None applies to every opset.
 # Marked strict, so fixing one of these without deleting the entry fails the suite.
-XFAILS = {}
+XFAILS = {
+    ("AveragePool", None, "same_upper"): (
+        "auto_pad prepends the padding as input values, so count_include_pad=0 "
+        "cannot exclude it again"
+    ),
+    ("AveragePool", None, "dilations"): "torch's AvgPool has no dilation argument",
+    ("ConvTranspose", None, "output_shape"): (
+        "output_shape needs the pads to be derived and cropped off the output"
+    ),
+    ("ConvTranspose", None, "same_upper"): (
+        "auto_pad pads the input, ConvTranspose instead has to crop the output"
+    ),
+    ("LRN", None, "even_size"): (
+        "no oracle: onnxruntime rejects even sizes and onnx's reference LRN sums "
+        "over the batch axis instead of the channel axis"
+    ),
+}
 
 
 IDX = arr([[0, 2], [1, 0]], dtype=np.int64)
@@ -819,3 +835,502 @@ for _op in _REDUCTIONS:
             since=_input_axes_since,
         ),
     ]
+
+
+CONV_X = rand(1, 2, 6, 6)
+CONV_W = rand(3, 2, 3, 3)
+CONV_B = rand(3)
+
+CASES.update(
+    {
+        "Conv": [
+            case(
+                "default",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+            ),
+            case("no_kernel_shape", {"x": CONV_X}, initializers={"w": CONV_W}),
+            case(
+                "bias",
+                {"x": CONV_X},
+                initializers={"w": CONV_W, "b": CONV_B},
+                kernel_shape=[3, 3],
+            ),
+            case(
+                "pads",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                pads=[1, 1, 1, 1],
+            ),
+            case(
+                "asymmetric_pads",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                pads=[0, 1, 2, 1],
+            ),
+            case(
+                "strides",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+            ),
+            case(
+                "dilations",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                dilations=[2, 2],
+            ),
+            case(
+                "grouped",
+                {"x": rand(1, 4, 6, 6)},
+                initializers={"w": rand(4, 2, 3, 3)},
+                kernel_shape=[3, 3],
+                group=2,
+            ),
+            case(
+                "depthwise",
+                {"x": rand(1, 4, 6, 6)},
+                initializers={"w": rand(4, 1, 3, 3)},
+                kernel_shape=[3, 3],
+                group=4,
+            ),
+            case(
+                "same_upper",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "same_lower",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_LOWER",
+            ),
+            case(
+                "same_upper_stride2",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "same_lower_stride2",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                auto_pad="SAME_LOWER",
+            ),
+            case(
+                "same_upper_even_kernel",
+                {"x": CONV_X},
+                initializers={"w": rand(3, 2, 2, 2)},
+                kernel_shape=[2, 2],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "same_lower_even_kernel",
+                {"x": CONV_X},
+                initializers={"w": rand(3, 2, 2, 2)},
+                kernel_shape=[2, 2],
+                auto_pad="SAME_LOWER",
+            ),
+            case(
+                "valid",
+                {"x": CONV_X},
+                initializers={"w": CONV_W},
+                kernel_shape=[3, 3],
+                auto_pad="VALID",
+            ),
+            case(
+                "conv1d",
+                {"x": rand(1, 2, 8)},
+                initializers={"w": rand(3, 2, 3)},
+                kernel_shape=[3],
+                pads=[1, 1],
+            ),
+            case(
+                "conv1d_same_upper",
+                {"x": rand(1, 2, 8)},
+                initializers={"w": rand(3, 2, 3)},
+                kernel_shape=[3],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "conv3d",
+                {"x": rand(1, 2, 4, 4, 4)},
+                initializers={"w": rand(3, 2, 2, 2, 2)},
+                kernel_shape=[2, 2, 2],
+            ),
+            case(
+                "conv3d_pads",
+                {"x": rand(1, 2, 4, 4, 4)},
+                initializers={"w": rand(3, 2, 3, 3, 3)},
+                kernel_shape=[3, 3, 3],
+                pads=[1, 1, 1, 1, 1, 1],
+            ),
+            case(
+                "float64",
+                {"x": CONV_X.astype("float64")},
+                initializers={"w": CONV_W.astype("float64")},
+                kernel_shape=[3, 3],
+            ),
+        ],
+        "ConvTranspose": [
+            case(
+                "default",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+            ),
+            case(
+                "bias",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3), "b": rand(3)},
+                kernel_shape=[3, 3],
+            ),
+            case(
+                "pads",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                pads=[1, 1, 1, 1],
+            ),
+            case(
+                "strides",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+            ),
+            case(
+                "dilations",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                dilations=[2, 2],
+            ),
+            case(
+                "grouped",
+                {"x": rand(1, 4, 5, 5)},
+                initializers={"w": rand(4, 2, 3, 3)},
+                kernel_shape=[3, 3],
+                group=2,
+            ),
+            case(
+                "output_padding",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                output_padding=[1, 1],
+            ),
+            case(
+                "output_shape",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                output_shape=[10, 10],
+            ),
+            case(
+                "same_upper",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "valid",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                auto_pad="VALID",
+            ),
+            case(
+                "convtranspose1d",
+                {"x": rand(1, 2, 6)},
+                initializers={"w": rand(2, 3, 3)},
+                kernel_shape=[3],
+            ),
+        ],
+        "AveragePool": [
+            case("default", {"x": CONV_X}, kernel_shape=[3, 3]),
+            case("strides", {"x": CONV_X}, kernel_shape=[3, 3], strides=[2, 2]),
+            case("pads", {"x": CONV_X}, kernel_shape=[3, 3], pads=[1, 1, 1, 1]),
+            case(
+                "count_include_pad",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                pads=[1, 1, 1, 1],
+                count_include_pad=1,
+                since=7,
+            ),
+            case(
+                "ceil_mode",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                ceil_mode=1,
+                since=10,
+            ),
+            # Before opset 7 the padded cells count towards the average anyway
+            case(
+                "same_upper_legacy",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_UPPER",
+                until=6,
+            ),
+            case(
+                "same_upper",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_UPPER",
+                since=7,
+            ),
+            case(
+                "same_upper_count_include_pad",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                auto_pad="SAME_UPPER",
+                count_include_pad=1,
+                since=7,
+            ),
+            case("valid", {"x": CONV_X}, kernel_shape=[3, 3], auto_pad="VALID"),
+            case("avgpool1d", {"x": rand(1, 2, 8)}, kernel_shape=[3], strides=[2]),
+            case("avgpool3d", {"x": rand(1, 2, 4, 4, 4)}, kernel_shape=[2, 2, 2]),
+            case(
+                "dilations",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                since=19,
+            ),
+        ],
+        "MaxPool": [
+            case("default", {"x": CONV_X}, kernel_shape=[3, 3]),
+            case("strides", {"x": CONV_X}, kernel_shape=[3, 3], strides=[2, 2]),
+            case("pads", {"x": CONV_X}, kernel_shape=[3, 3], pads=[1, 1, 1, 1]),
+            case(
+                "indices",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                strides=[2, 2],
+                num_outputs=2,
+                since=8,
+            ),
+            case(
+                "storage_order",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                strides=[2, 2],
+                storage_order=1,
+                num_outputs=2,
+                since=8,
+            ),
+            case(
+                "ceil_mode",
+                {"x": CONV_X},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                ceil_mode=1,
+                since=10,
+            ),
+            case(
+                "dilations",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                since=10,
+            ),
+            case(
+                "same_upper", {"x": CONV_X}, kernel_shape=[3, 3], auto_pad="SAME_UPPER"
+            ),
+            case(
+                "same_lower", {"x": CONV_X}, kernel_shape=[3, 3], auto_pad="SAME_LOWER"
+            ),
+            case("valid", {"x": CONV_X}, kernel_shape=[3, 3], auto_pad="VALID"),
+            case("maxpool1d", {"x": rand(1, 2, 8)}, kernel_shape=[3], strides=[2]),
+            case("maxpool3d", {"x": rand(1, 2, 4, 4, 4)}, kernel_shape=[2, 2, 2]),
+            case("float64", {"x": CONV_X.astype("float64")}, kernel_shape=[3, 3]),
+        ],
+        "GlobalAveragePool": [case("default", {"x": CONV_X})],
+        "GlobalMaxPool": [case("default", {"x": CONV_X})],
+        "GlobalLpPool": [
+            case("default", {"x": np.abs(CONV_X) + 0.5}),
+            case("p1", {"x": np.abs(CONV_X) + 0.5}, p=1, since=2),
+        ],
+        "LpPool": [
+            case("default", {"x": np.abs(CONV_X) + 0.5}, kernel_shape=[3, 3], since=2),
+            case("p1", {"x": np.abs(CONV_X) + 0.5}, kernel_shape=[3, 3], p=1, since=2),
+            case(
+                "strides",
+                {"x": np.abs(CONV_X) + 0.5},
+                kernel_shape=[2, 2],
+                strides=[2, 2],
+                since=2,
+            ),
+        ],
+        "BatchNormalization": [
+            case(
+                "default",
+                {"x": rand(2, 3, 4, 4)},
+                initializers={
+                    "scale": np.abs(rand(3)) + 0.5,
+                    "b": rand(3),
+                    "mean": rand(3),
+                    "var": np.abs(rand(3)) + 0.5,
+                },
+                since=7,
+            ),
+            case(
+                "epsilon",
+                {"x": rand(2, 3, 4, 4)},
+                initializers={
+                    "scale": np.abs(rand(3)) + 0.5,
+                    "b": rand(3),
+                    "mean": rand(3),
+                    "var": np.abs(rand(3)) + 0.5,
+                },
+                epsilon=1e-2,
+                since=7,
+            ),
+            case(
+                "rank3",
+                {"x": rand(2, 3, 5)},
+                initializers={
+                    "scale": np.abs(rand(3)) + 0.5,
+                    "b": rand(3),
+                    "mean": rand(3),
+                    "var": np.abs(rand(3)) + 0.5,
+                },
+                since=7,
+            ),
+        ],
+        "InstanceNormalization": [
+            case(
+                "default",
+                {"x": rand(2, 3, 4, 4)},
+                initializers={"scale": np.abs(rand(3)) + 0.5, "b": rand(3)},
+                since=6,
+            ),
+            case(
+                "epsilon",
+                {"x": rand(2, 3, 4, 4)},
+                initializers={"scale": np.abs(rand(3)) + 0.5, "b": rand(3)},
+                epsilon=1e-2,
+                since=6,
+            ),
+        ],
+        "LayerNormalization": [
+            case(
+                "default",
+                {"x": rand(2, 3, 4)},
+                initializers={"scale": np.abs(rand(4)) + 0.5},
+            ),
+            case(
+                "bias",
+                {"x": rand(2, 3, 4)},
+                initializers={"scale": np.abs(rand(4)) + 0.5, "b": rand(4)},
+            ),
+            case(
+                "axis1",
+                {"x": rand(2, 3, 4)},
+                initializers={"scale": np.abs(rand(3, 4)) + 0.5},
+                axis=1,
+            ),
+        ],
+        "GroupNormalization": [
+            case(
+                "default",
+                {"x": rand(2, 4, 3, 3)},
+                initializers={"scale": np.abs(rand(2)) + 0.5, "b": rand(2)},
+                num_groups=2,
+                until=20,
+            ),
+            case(
+                "per_channel",
+                {"x": rand(2, 4, 3, 3)},
+                initializers={"scale": np.abs(rand(4)) + 0.5, "b": rand(4)},
+                num_groups=2,
+                since=21,
+            ),
+        ],
+        "LRN": [
+            case("default", {"x": rand(2, 5, 3, 3)}, size=3),
+            case("even_size", {"x": rand(2, 5, 3, 3)}, size=4),
+            case(
+                "alpha_beta_bias",
+                {"x": rand(2, 5, 3, 3)},
+                size=3,
+                alpha=1e-3,
+                beta=0.6,
+                bias=1.5,
+            ),
+        ],
+        "MeanVarianceNormalization": [
+            case("default", {"x": rand(2, 3, 4, 4)}),
+            case("axes", {"x": rand(2, 3, 4, 4)}, axes=[0, 1]),
+        ],
+        "LpNormalization": [
+            case("default", {"x": rand(2, 3, 4)}),
+            case("p1_axis0", {"x": rand(2, 3, 4)}, p=1, axis=0),
+        ],
+        "Gemm": [
+            case("default", {"a": rand(2, 3)}, initializers={"b": rand(3, 4)}, since=7),
+            case(
+                "bias",
+                {"a": rand(2, 3)},
+                initializers={"b": rand(3, 4), "c": rand(4)},
+                since=7,
+            ),
+            case(
+                "alpha_beta",
+                {"a": rand(2, 3)},
+                initializers={"b": rand(3, 4), "c": rand(4)},
+                alpha=0.5,
+                beta=2.0,
+                since=7,
+            ),
+            case(
+                "transB",
+                {"a": rand(2, 3)},
+                initializers={"b": rand(4, 3)},
+                transB=1,
+                since=7,
+            ),
+            case(
+                "transA",
+                {"a": rand(3, 2)},
+                initializers={"b": rand(3, 4)},
+                transA=1,
+                since=7,
+            ),
+            case(
+                "legacy_broadcast",
+                {"a": rand(2, 3)},
+                initializers={"b": rand(3, 4), "c": rand(4)},
+                broadcast=1,
+                until=6,
+            ),
+        ],
+        "MatMul": [
+            case(
+                "initializer_weight", {"a": rand(2, 3)}, initializers={"b": rand(3, 4)}
+            ),
+            case("dynamic_2d", {"a": rand(2, 3), "b": rand(3, 4)}),
+            case("batched", {"a": rand(2, 3, 4), "b": rand(2, 4, 5)}),
+            case("broadcast_batch", {"a": rand(2, 3, 4), "b": rand(4, 5)}, since=9),
+        ],
+    }
+)
