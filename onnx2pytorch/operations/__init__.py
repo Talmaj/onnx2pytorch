@@ -73,6 +73,7 @@ from .quantizelinear import QuantizeLinear
 from .range import Range
 from .randomnormal import RandomNormal
 from .randomnormallike import RandomNormalLike
+from .randomuniform import RandomUniform
 from .randomuniformlike import RandomUniformLike
 from .reducel1 import ReduceL1
 from .reducelogsum import ReduceLogSum
@@ -196,6 +197,7 @@ __all__ = [
     "Range",
     "RandomNormal",
     "RandomNormalLike",
+    "RandomUniform",
     "RandomUniformLike",
     "ReduceL1",
     "ReduceLogSum",
