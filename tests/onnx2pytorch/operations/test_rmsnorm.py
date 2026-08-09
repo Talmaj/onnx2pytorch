@@ -1,16 +1,10 @@
 import numpy as np
+import onnxruntime as ort
 import pytest
 import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
-
-
-def rms_normalization_reference(x, scale, axis, epsilon):
-    axis = axis if axis >= 0 else x.ndim + axis
-    dims = tuple(range(axis, x.ndim))
-    mean_squared = np.mean(np.square(x), axis=dims, keepdims=True)
-    return (x / np.sqrt(mean_squared + epsilon)) * scale
 
 
 def check_rms_normalization(x, scale, axis, epsilon):
@@ -34,7 +28,8 @@ def check_rms_normalization(x, scale, axis, epsilon):
     )
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 23)])
 
-    exp_y = rms_normalization_reference(x, scale, axis, epsilon)
+    ort_session = ort.InferenceSession(model.SerializeToString())
+    exp_y = ort_session.run(None, {"x": x, "scale": scale})[0]
 
     o2p_model = ConvertModel(model)
     with torch.no_grad():
