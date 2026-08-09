@@ -340,3 +340,482 @@ CASES.update(
 # (op_type, opset, case_name) -> reason. opset=None applies to every opset.
 # Marked strict, so fixing one of these without deleting the entry fails the suite.
 XFAILS = {}
+
+
+IDX = arr([[0, 2], [1, 0]], dtype=np.int64)
+
+CASES.update(
+    {
+        "Flatten": [
+            case("default", {"x": rand(2, 3, 4, 5)}),
+            case("axis0", {"x": rand(2, 3, 4, 5)}, axis=0),
+            case("axis3", {"x": rand(2, 3, 4, 5)}, axis=3),
+            case("negative_axis", {"x": rand(2, 3, 4, 5)}, axis=-2, since=11),
+        ],
+        "Reshape": [
+            case(
+                "initializer_shape",
+                {"x": X3},
+                initializers={"s": arr([4, 6], np.int64)},
+                since=5,
+            ),
+            case(
+                "minus_one",
+                {"x": X3},
+                initializers={"s": arr([2, -1], np.int64)},
+                since=5,
+            ),
+            case(
+                "zero_dim",
+                {"x": X3},
+                initializers={"s": arr([0, 12], np.int64)},
+                since=5,
+            ),
+            case("dynamic_shape", {"x": X3, "s": arr([6, 4], np.int64)}, since=5),
+            case("attribute_shape", {"x": X3}, shape=[4, 6], until=4),
+        ],
+        "Transpose": [
+            case("default", {"x": rand(2, 3, 4)}),
+            case("perm", {"x": rand(2, 3, 4)}, perm=[2, 0, 1]),
+        ],
+        "Concat": [
+            case("axis0", {"a": X3, "b": rand(2, 3, 4)}, axis=0),
+            case("axis2", {"a": X3, "b": rand(2, 3, 4)}, axis=2),
+            case("negative_axis", {"a": X3, "b": rand(2, 3, 4)}, axis=-1, since=4),
+        ],
+        "Split": [
+            case(
+                "attribute_split",
+                {"x": rand(2, 6)},
+                axis=1,
+                split=[2, 4],
+                num_outputs=2,
+                until=12,
+            ),
+            case("even_split", {"x": rand(2, 6)}, axis=1, num_outputs=2, until=12),
+            case(
+                "input_split",
+                {"x": rand(2, 6)},
+                initializers={"s": arr([2, 4], np.int64)},
+                axis=1,
+                num_outputs=2,
+                since=13,
+            ),
+            case(
+                "num_outputs_attr",
+                {"x": rand(2, 6)},
+                input_names=["x"],
+                axis=1,
+                num_outputs=3,
+                since=18,
+            ),
+        ],
+        "Slice": [
+            case(
+                "attributes",
+                {"x": rand(4, 5)},
+                starts=[1, 0],
+                ends=[3, 4],
+                axes=[0, 1],
+                until=9,
+            ),
+            case(
+                "inputs",
+                {"x": rand(4, 5)},
+                initializers={
+                    "starts": arr([1, 0], np.int64),
+                    "ends": arr([3, 4], np.int64),
+                    "axes": arr([0, 1], np.int64),
+                },
+                since=10,
+            ),
+            case(
+                "steps",
+                {"x": rand(4, 5)},
+                initializers={
+                    "starts": arr([3, 4], np.int64),
+                    "ends": arr([0, 0], np.int64),
+                    "axes": arr([0, 1], np.int64),
+                    "steps": arr([-1, -2], np.int64),
+                },
+                since=10,
+            ),
+        ],
+        "Squeeze": [
+            case("attribute_axes", {"x": rand(1, 3, 1, 4)}, axes=[0, 2], until=12),
+            case("all_dims", {"x": rand(1, 3, 1, 4)}, until=12),
+            case(
+                "input_axes",
+                {"x": rand(1, 3, 1, 4)},
+                initializers={"a": arr([0, 2], np.int64)},
+                since=13,
+            ),
+            case(
+                "negative_axis",
+                {"x": rand(1, 3, 1, 4)},
+                initializers={"a": arr([-2], np.int64)},
+                since=13,
+            ),
+        ],
+        "Unsqueeze": [
+            case("attribute_axes", {"x": rand(3, 4)}, axes=[0, 2], until=12),
+            case(
+                "input_axes",
+                {"x": rand(3, 4)},
+                initializers={"a": arr([0, 2], np.int64)},
+                since=13,
+            ),
+        ],
+        "Shape": [
+            case("default", {"x": rand(2, 3, 4)}),
+            case("start", {"x": rand(2, 3, 4)}, start=1, since=15),
+            case("start_end", {"x": rand(2, 3, 4)}, start=0, end=2, since=15),
+            case("negative_start", {"x": rand(2, 3, 4)}, start=-2, since=15),
+        ],
+        "Size": [case("default", {"x": rand(2, 3, 4)})],
+        "Identity": [case("default", {"x": X3})],
+        "Expand": [
+            case(
+                "broadcast",
+                {"x": rand(3, 1)},
+                initializers={"s": arr([2, 3, 4], np.int64)},
+            ),
+        ],
+        "Tile": [
+            case(
+                "repeats",
+                {"x": rand(2, 3)},
+                initializers={"r": arr([2, 3], np.int64)},
+                since=6,
+            ),
+        ],
+        "Gather": [
+            case("default", {"x": rand(5, 4), "i": IDX}),
+            case("axis1", {"x": rand(5, 4), "i": IDX}, axis=1),
+            case("negative_indices", {"x": rand(5, 4), "i": arr([[-1, -2]], np.int64)}),
+        ],
+        "GatherElements": [
+            case(
+                "axis0",
+                {"x": rand(3, 3), "i": arr([[0, 1, 2], [2, 1, 0]], np.int64)},
+                axis=0,
+            ),
+            case(
+                "axis1",
+                {"x": rand(3, 3), "i": arr([[0, 1, 2], [2, 1, 0]], np.int64)},
+                axis=1,
+            ),
+        ],
+        "GatherND": [
+            case("default", {"x": rand(2, 3, 4), "i": arr([[0, 1], [1, 2]], np.int64)}),
+            case(
+                "batch_dims",
+                {"x": rand(2, 3, 4), "i": arr([[[1]], [[0]]], np.int64)},
+                batch_dims=1,
+                since=12,
+            ),
+        ],
+        "Scatter": [
+            case(
+                "axis1",
+                {"x": rand(3, 4), "i": arr([[0, 2]], np.int64), "u": rand(1, 2)},
+                axis=1,
+            ),
+        ],
+        "ScatterElements": [
+            case(
+                "axis1",
+                {"x": rand(3, 4), "i": arr([[0, 2]], np.int64), "u": rand(1, 2)},
+                axis=1,
+            ),
+            case(
+                "reduction_add",
+                {"x": rand(3, 4), "i": arr([[0, 2]], np.int64), "u": rand(1, 2)},
+                axis=1,
+                reduction="add",
+                since=16,
+            ),
+            case(
+                "reduction_max",
+                {"x": rand(3, 4), "i": arr([[0, 2]], np.int64), "u": rand(1, 2)},
+                axis=1,
+                reduction="max",
+                since=18,
+            ),
+        ],
+        "ScatterND": [
+            case(
+                "default",
+                {"x": rand(4, 3), "i": arr([[0], [2]], np.int64), "u": rand(2, 3)},
+            ),
+            case(
+                "reduction_add",
+                {"x": rand(4, 3), "i": arr([[0], [2]], np.int64), "u": rand(2, 3)},
+                reduction="add",
+                since=16,
+            ),
+            case(
+                "reduction_min",
+                {"x": rand(4, 3), "i": arr([[0], [2]], np.int64), "u": rand(2, 3)},
+                reduction="min",
+                since=18,
+            ),
+        ],
+        "Cast": [
+            case(
+                "float_to_int32",
+                {"x": rand(2, 3, scale=8)},
+                to=onnx.TensorProto.INT32,
+                since=6,
+            ),
+            case(
+                "int_to_float",
+                {"x": randint(2, 3, high=9)},
+                to=onnx.TensorProto.FLOAT,
+                since=6,
+            ),
+            case(
+                "float_to_double",
+                {"x": rand(2, 3)},
+                to=onnx.TensorProto.DOUBLE,
+                since=6,
+            ),
+            case(
+                "float_to_float16",
+                {"x": rand(2, 3)},
+                to=onnx.TensorProto.FLOAT16,
+                since=6,
+            ),
+            case(
+                "float_to_bool",
+                {"x": arr([0.0, 1.0, -2.0])},
+                to=onnx.TensorProto.BOOL,
+                since=6,
+            ),
+        ],
+        "CastLike": [
+            case(
+                "to_int32",
+                {"x": rand(2, 3, scale=8), "t": randint(2, 3, dtype=np.int32)},
+            ),
+        ],
+        "Clip": [
+            case("attributes", {"x": rand(3, 4, scale=3)}, min=-1.0, max=1.0, until=10),
+            case("min_only_attribute", {"x": rand(3, 4, scale=3)}, min=0.0, until=10),
+            case(
+                "inputs",
+                {"x": rand(3, 4, scale=3)},
+                initializers={"lo": arr(-1.0), "hi": arr(1.0)},
+                since=11,
+            ),
+            case(
+                "min_only_input",
+                {"x": rand(3, 4, scale=3)},
+                initializers={"lo": arr(0.0)},
+                since=11,
+            ),
+        ],
+        "ArgMax": [
+            case("default", {"x": rand(3, 4)}),
+            case("axis1", {"x": rand(3, 4)}, axis=1),
+            case("keepdims0", {"x": rand(3, 4)}, axis=1, keepdims=0),
+            case(
+                "select_last_index",
+                {"x": arr([[1.0, 3.0, 3.0]])},
+                axis=1,
+                select_last_index=1,
+                since=12,
+            ),
+        ],
+        "ArgMin": [
+            case("default", {"x": rand(3, 4)}),
+            case("axis1", {"x": rand(3, 4)}, axis=1),
+            case("keepdims0", {"x": rand(3, 4)}, axis=1, keepdims=0),
+        ],
+        "TopK": [
+            case("attribute_k", {"x": rand(3, 5)}, k=2, axis=1, num_outputs=2, until=9),
+            case(
+                "input_k",
+                {"x": rand(3, 5)},
+                initializers={"k": arr([2], np.int64)},
+                axis=1,
+                num_outputs=2,
+                since=10,
+            ),
+            case(
+                "smallest",
+                {"x": rand(3, 5)},
+                initializers={"k": arr([2], np.int64)},
+                axis=1,
+                largest=0,
+                num_outputs=2,
+                since=11,
+            ),
+            case(
+                "axis0",
+                {"x": rand(3, 5)},
+                initializers={"k": arr([2], np.int64)},
+                axis=0,
+                num_outputs=2,
+                since=10,
+            ),
+        ],
+        "DepthToSpace": [
+            case("dcr", {"x": rand(1, 8, 2, 3)}, blocksize=2),
+            case("crd", {"x": rand(1, 8, 2, 3)}, blocksize=2, mode="CRD", since=11),
+        ],
+        "SpaceToDepth": [case("default", {"x": rand(1, 2, 4, 6)}, blocksize=2)],
+        "OneHot": [
+            case(
+                "default",
+                {"i": arr([1, 3], np.int64)},
+                initializers={"d": arr([5], np.int64), "v": arr([0.0, 1.0])},
+            ),
+            case(
+                "axis0",
+                {"i": arr([1, 3], np.int64)},
+                initializers={"d": arr([5], np.int64), "v": arr([0.0, 1.0])},
+                axis=0,
+            ),
+        ],
+        "NonZero": [case("default", {"x": arr([[0.0, 1.0], [2.0, 0.0]])})],
+        "CumSum": [
+            case("default", {"x": rand(2, 4)}, initializers={"a": arr(1, np.int64)}),
+            case(
+                "reverse",
+                {"x": rand(2, 4)},
+                initializers={"a": arr(1, np.int64)},
+                reverse=1,
+            ),
+            case(
+                "exclusive",
+                {"x": rand(2, 4)},
+                initializers={"a": arr(1, np.int64)},
+                exclusive=1,
+            ),
+        ],
+        "EyeLike": [
+            case("default", {"x": rand(3, 4)}),
+            case("k", {"x": rand(3, 4)}, k=1),
+        ],
+        "Trilu": [
+            case("upper", {"x": rand(4, 4)}),
+            case("lower", {"x": rand(4, 4)}, upper=0),
+            case("k", {"x": rand(4, 4)}, initializers={"k": arr(1, np.int64)}),
+        ],
+        "Compress": [
+            case(
+                "axis0", {"x": rand(3, 4), "c": arr([True, False, True], bool)}, axis=0
+            ),
+            case(
+                "flat",
+                {
+                    "x": rand(3, 4),
+                    "c": arr(
+                        [
+                            True,
+                            False,
+                            True,
+                            False,
+                            True,
+                            False,
+                            True,
+                            False,
+                            True,
+                            False,
+                            True,
+                            False,
+                        ],
+                        bool,
+                    ),
+                },
+            ),
+        ],
+        "Einsum": [
+            case("matmul", {"a": rand(2, 3), "b": rand(3, 4)}, equation="ij,jk->ik"),
+            case("transpose", {"a": rand(2, 3)}, equation="ij->ji"),
+        ],
+        "Range": [
+            case(
+                "int",
+                {
+                    "start": arr(0, np.int64),
+                    "limit": arr(10, np.int64),
+                    "delta": arr(3, np.int64),
+                },
+            ),
+        ],
+        "ConstantOfShape": [
+            case("default", {"s": arr([2, 3], np.int64)}),
+        ],
+        "ReverseSequence": [
+            case(
+                "default",
+                {"x": rand(4, 3), "lens": arr([4, 2, 3], np.int64)},
+                time_axis=0,
+                batch_axis=1,
+            ),
+        ],
+    }
+)
+
+# Softmax family: the pre-13 versions coerce the input to 2D around the axis.
+for _op in ("Softmax", "LogSoftmax", "Hardmax"):
+    CASES[_op] = [
+        case("default", {"x": rand(2, 3, 4)}),
+        case("axis0", {"x": rand(2, 3, 4)}, axis=0),
+        case("axis2", {"x": rand(2, 3, 4)}, axis=2),
+        case("negative_axis", {"x": rand(2, 3, 4)}, axis=-1, since=11),
+    ]
+
+_REDUCTIONS = (
+    "ReduceMean",
+    "ReduceMax",
+    "ReduceMin",
+    "ReduceProd",
+    "ReduceSum",
+    "ReduceL1",
+    "ReduceL2",
+    "ReduceLogSum",
+    "ReduceLogSumExp",
+    "ReduceSumSquare",
+)
+
+for _op in _REDUCTIONS:
+    _x = POS if _op in ("ReduceLogSum", "ReduceProd") else rand(2, 3, 4)
+    # Axes moved from an attribute to an input at opset 13 for ReduceSum, 18 elsewhere.
+    _input_axes_since = 13 if _op == "ReduceSum" else 18
+    CASES[_op] = [
+        case("all_axes", {"x": _x}, until=_input_axes_since - 1),
+        case("axis1", {"x": _x}, axes=[1], until=_input_axes_since - 1),
+        case("two_axes", {"x": _x}, axes=[0, 2], until=_input_axes_since - 1),
+        case("keepdims0", {"x": _x}, axes=[1], keepdims=0, until=_input_axes_since - 1),
+        case("negative_axis", {"x": _x}, axes=[-1], until=_input_axes_since - 1),
+        case("all_axes_input", {"x": _x}, input_names=["x"], since=_input_axes_since),
+        case(
+            "axis1_input",
+            {"x": _x},
+            initializers={"a": arr([1], np.int64)},
+            since=_input_axes_since,
+        ),
+        case(
+            "two_axes_input",
+            {"x": _x},
+            initializers={"a": arr([0, 2], np.int64)},
+            since=_input_axes_since,
+        ),
+        case(
+            "keepdims0_input",
+            {"x": _x},
+            initializers={"a": arr([1], np.int64)},
+            keepdims=0,
+            since=_input_axes_since,
+        ),
+        case(
+            "noop_with_empty_axes",
+            {"x": _x},
+            input_names=["x"],
+            noop_with_empty_axes=1,
+            since=_input_axes_since,
+        ),
+    ]
