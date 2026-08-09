@@ -1,4 +1,5 @@
 import numpy as np
+import onnxruntime as ort
 import pytest
 import torch
 from onnx import helper, TensorProto
@@ -6,121 +7,7 @@ from onnx import helper, TensorProto
 from onnx2pytorch.convert import ConvertModel
 
 
-def softmax_reference(x, axis=-1):
-    x_max = np.max(x, axis=axis, keepdims=True)
-    safe_max = np.where(np.isneginf(x_max), 0, x_max)
-    tmp = np.exp(x - safe_max)
-    s = np.sum(tmp, axis=axis, keepdims=True)
-    return tmp / np.where(s == 0, 1, s)
-
-
-def causal_bias_reference(base, offset, q_length, kv_length):
-    i = np.arange(q_length).reshape(q_length, 1)
-    j = np.arange(kv_length).reshape(1, kv_length)
-    per_batch = np.ndim(offset) > 0
-    if per_batch:
-        allowed = j <= (i + np.reshape(offset, (-1, 1, 1)))
-    else:
-        allowed = j <= (i + int(offset))
-    causal = np.where(allowed, base.dtype.type(0), base.dtype.type(-np.inf))
-    if per_batch:
-        base = base.reshape((1,) * (4 - base.ndim) + base.shape)
-        return base + causal.reshape(-1, 1, q_length, kv_length)
-    return base + causal
-
-
-def attention_reference(
-    Q,
-    K,
-    V,
-    attn_mask=None,
-    past_key=None,
-    past_value=None,
-    nonpad_kv_seqlen=None,
-    scale=None,
-    is_causal=0,
-    q_num_heads=None,
-    kv_num_heads=None,
-    softcap=None,
-    qk_matmul_output_mode=0,
-):
-    """Numpy reference following the ONNX Attention specification."""
-    input_rank = Q.ndim
-    batch_size = Q.shape[0]
-    if input_rank == 3:
-
-        def to_4d(x, num_heads):
-            head_size = x.shape[2] // num_heads
-            x = np.reshape(x, [batch_size, x.shape[1], num_heads, head_size])
-            return np.transpose(x, (0, 2, 1, 3))
-
-        Q = to_4d(Q, q_num_heads)
-        K = to_4d(K, kv_num_heads)
-        V = to_4d(V, kv_num_heads)
-
-    if scale is None:
-        scale = 1 / np.sqrt(Q.shape[3])
-    root_scale = np.sqrt(scale)
-
-    present_key = K if past_key is None else np.concatenate((past_key, K), axis=2)
-    present_value = V if past_value is None else np.concatenate((past_value, V), axis=2)
-    K, V = present_key, present_value
-
-    q_length, kv_length = Q.shape[2], K.shape[2]
-    attn_bias = np.zeros((q_length, kv_length), dtype=Q.dtype)
-
-    if attn_mask is not None:
-        pad_width = kv_length - attn_mask.shape[-1]
-        if pad_width > 0:
-            pad_shape = [(0, 0)] * (attn_mask.ndim - 1) + [(0, pad_width)]
-            pad_value = False if attn_mask.dtype == np.bool_ else -np.inf
-            attn_mask = np.pad(attn_mask, pad_shape, constant_values=pad_value)
-        if attn_mask.dtype == np.bool_:
-            attn_mask = np.where(attn_mask, Q.dtype.type(0), Q.dtype.type(-np.inf))
-
-    if is_causal:
-        base = attn_bias if attn_mask is None else attn_mask.copy()
-        if past_key is None and nonpad_kv_seqlen is not None:
-            offset = nonpad_kv_seqlen.reshape(-1) - q_length
-        else:
-            offset = 0 if past_key is None else past_key.shape[2]
-        attn_bias = causal_bias_reference(base, offset, q_length, kv_length)
-    elif attn_mask is not None:
-        attn_bias = attn_bias + attn_mask
-
-    if nonpad_kv_seqlen is not None:
-        attn_bias = attn_bias.reshape((1,) * (4 - attn_bias.ndim) + attn_bias.shape)
-        padding_mask = np.arange(kv_length) < nonpad_kv_seqlen[:, np.newaxis]
-        padding_mask = padding_mask.reshape(batch_size, 1, 1, kv_length)
-        attn_bias = attn_bias + np.where(padding_mask, 0, -np.inf)
-
-    heads_q = Q.shape[1] if q_num_heads is None else q_num_heads
-    heads_kv = K.shape[1] if kv_num_heads is None else kv_num_heads
-    if heads_q != heads_kv and heads_q % heads_kv == 0:
-        repeats = heads_q // heads_kv
-        K = np.repeat(K, repeats, axis=1)
-        V = np.repeat(V, repeats, axis=1)
-
-    qk = np.matmul(Q * root_scale, np.transpose(K, (0, 1, 3, 2)) * root_scale)
-    if softcap:
-        qk = np.tanh(qk / softcap) * softcap
-    qk_with_bias = qk + attn_bias
-    qk_matmul_output = qk_with_bias if qk_matmul_output_mode == 2 else qk
-
-    probs = softmax_reference(qk_with_bias)
-    row_all_masked = np.isneginf(np.max(attn_bias, axis=-1, keepdims=True))
-    probs = np.where(row_all_masked, 0, probs)
-    if qk_matmul_output_mode == 3:
-        qk_matmul_output = probs
-
-    y = np.matmul(probs, V).astype(Q.dtype)
-    if input_rank == 3:
-        y = np.transpose(y, (0, 2, 1, 3))
-        y = np.reshape(y, (batch_size, q_length, -1))
-    return y, present_key, present_value, qk_matmul_output.astype(Q.dtype)
-
-
-def check_attention(inputs, num_outputs=1, **attrs):
+def build_attention_model(inputs, num_outputs=1, **attrs):
     input_names = []
     graph_inputs = []
     feeds = {}
@@ -154,16 +41,23 @@ def check_attention(inputs, num_outputs=1, **attrs):
         ],
     )
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 24)])
+    return model, feeds
 
-    expected = attention_reference(**inputs, **attrs)[:num_outputs]
 
+def run_o2p(model, feeds, num_outputs):
     o2p_model = ConvertModel(model)
     with torch.no_grad():
         res = o2p_model(**{k: torch.from_numpy(v) for k, v in feeds.items()})
-    if num_outputs == 1:
-        res = [res]
+    return [res] if num_outputs == 1 else list(res)
 
-    for actual, exp in zip(res, expected):
+
+def check_attention(inputs, num_outputs=1, **attrs):
+    model, feeds = build_attention_model(inputs, num_outputs, **attrs)
+
+    ort_session = ort.InferenceSession(model.SerializeToString())
+    expected = ort_session.run(None, feeds)
+
+    for actual, exp in zip(run_o2p(model, feeds, num_outputs), expected):
         np.testing.assert_allclose(actual.numpy(), exp, rtol=1e-4, atol=1e-5)
 
 
@@ -262,13 +156,29 @@ def test_attention_past_key_value_causal():
     check_attention(inputs, num_outputs=3, is_causal=1)
 
 
-def test_attention_short_mask_is_padded():
-    inputs = make_qkv_4d(q_len=2, kv_len=2, seed=12)
+@pytest.mark.parametrize("dtype", [np.bool_, np.float32])
+def test_attention_short_mask_is_padded(dtype):
+    # onnxruntime rejects an attn_mask shorter than the kv sequence, which the
+    # spec allows; the oracle is the equivalent explicitly padded mask.
+    inputs = make_qkv_4d(q_len=3, kv_len=6, seed=12)
     np.random.seed(12)
-    inputs["attn_mask"] = np.random.rand(2, 2) > 0.3
-    inputs["past_key"] = np.random.randn(2, 3, 3, 8).astype(np.float32)
-    inputs["past_value"] = np.random.randn(2, 3, 3, 8).astype(np.float32)
-    check_attention(inputs, num_outputs=3)
+    mask = np.random.rand(3, 4) > 0.3
+    pad_value = False if dtype == np.bool_ else -np.inf
+    if dtype != np.bool_:
+        mask = np.where(mask, 0, -np.inf).astype(np.float32)
+    inputs["attn_mask"] = mask
+    inputs["past_key"] = None
+    inputs["past_value"] = None
+    inputs["nonpad_kv_seqlen"] = np.array([4, 3], dtype=np.int64)
+
+    padded = dict(inputs)
+    padded["attn_mask"] = np.pad(mask, ((0, 0), (0, 2)), constant_values=pad_value)
+    model, feeds = build_attention_model(padded)
+    expected = ort.InferenceSession(model.SerializeToString()).run(None, feeds)
+
+    short_model, short_feeds = build_attention_model(inputs)
+    for actual, exp in zip(run_o2p(short_model, short_feeds, 1), expected):
+        np.testing.assert_allclose(actual.numpy(), exp, rtol=1e-4, atol=1e-5)
 
 
 def test_attention_softcap():
