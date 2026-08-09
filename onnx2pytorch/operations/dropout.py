@@ -3,10 +3,17 @@ from torch import nn
 
 
 class Dropout(nn.Module):
-    """ONNX Dropout in inference mode: an identity plus an all-true mask."""
+    """
+    ONNX Dropout in inference mode: an identity plus a mask.
 
-    def __init__(self, ratio=None, seed=None):
+    Up to opset 11 the mask marks the dropped elements, so it is all false,
+    and before opset 10 it has the same type as the data. From opset 12 on it
+    marks the kept elements, so it is all true.
+    """
+
+    def __init__(self, opset_version=13, ratio=None, seed=None):
         super().__init__()
+        self.opset_version = opset_version
         self.ratio = ratio
         self.seed = seed
 
@@ -20,4 +27,10 @@ class Dropout(nn.Module):
             raise NotImplementedError(
                 "Dropout with training_mode=True not implemented."
             )
-        return data, torch.ones_like(data, dtype=torch.bool)
+        if self.opset_version >= 12:
+            mask = torch.ones_like(data, dtype=torch.bool)
+        elif self.opset_version >= 10:
+            mask = torch.zeros_like(data, dtype=torch.bool)
+        else:
+            mask = torch.zeros_like(data)
+        return data, mask

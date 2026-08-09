@@ -210,6 +210,9 @@ def extract_attributes(node):
             kwargs["inverse"] = extract_attr_values(attr)
         elif attr.name == "is_case_sensitive":
             kwargs["is_case_sensitive"] = extract_attr_values(attr)
+        elif attr.name == "is_test":
+            # The converter always runs in inference mode
+            pass
         elif attr.name == "is_causal":
             kwargs["is_causal"] = extract_attr_values(attr)
         elif attr.name == "k":

@@ -5,6 +5,10 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 def check_dropout(x, outputs, ratio=None, training_mode=None):
@@ -72,3 +76,20 @@ def test_dropout_training_mode_false():
         ratio=0.5,
         training_mode=False,
     )
+
+
+@pytest.mark.parametrize(
+    "opset_version, exp_dtype, exp_value",
+    [(7, np.float32, 0), (10, np.bool_, False), (11, np.bool_, False)]
+    + [(v, np.bool_, True) for v in (12, 13, 22)],
+)
+def test_dropout_mask_across_opsets(opset_version, exp_dtype, exp_value):
+    """Up to opset 11 the mask marks dropped elements, so it is all false."""
+    np.random.seed(0)
+    x = np.random.randn(2, 3).astype(np.float32)
+    model = make_single_node_model(
+        "Dropout", {"x": x}, opset_version, outputs=("y", "mask")
+    )
+    _, mask = assert_matches_oracle(model, {"x": x})
+    assert mask.dtype == exp_dtype
+    assert (mask == exp_value).all()

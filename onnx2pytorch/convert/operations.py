@@ -192,7 +192,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Div":
             op = convert_binary_operation(node, torch.div, Div())
         elif node.op_type == "Dropout":
-            op = Dropout(**extract_attributes(node))
+            op = Dropout(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "DynamicQuantizeLinear":
             op = DynamicQuantizeLinear()
         elif node.op_type == "Einsum":
