@@ -5,6 +5,10 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 def check_hardmax(x, **attrs):
@@ -45,3 +49,14 @@ def test_hardmax_axis(axis):
     np.random.seed(0)
     x = np.random.randn(3, 4, 5).astype(np.float32)
     check_hardmax(x, axis=axis)
+
+
+@pytest.mark.parametrize("axis", [None, 0, 1, 2, -1, -2])
+@pytest.mark.parametrize("opset_version", [1, 11, 12, 13, 21])
+def test_hardmax_across_opsets(axis, opset_version):
+    """Before opset 13 the input is coerced to 2D around axis, default axis 1."""
+    np.random.seed(0)
+    x = np.random.randn(2, 3, 4).astype(np.float32)
+    attributes = {} if axis is None else {"axis": axis}
+    model = make_single_node_model("Hardmax", {"x": x}, opset_version, **attributes)
+    assert_matches_oracle(model, {"x": x})

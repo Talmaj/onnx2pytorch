@@ -115,6 +115,7 @@ from .shape import Shape
 from .shrink import Shrink
 from .size import Size
 from .slice import Slice
+from .softmax import LogSoftmax, Softmax
 from .softmaxcrossentropyloss import SoftmaxCrossEntropyLoss
 from .spacetodepth import SpaceToDepth
 from .split import Split
@@ -256,6 +257,8 @@ __all__ = [
     "Shrink",
     "Size",
     "Slice",
+    "LogSoftmax",
+    "Softmax",
     "SoftmaxCrossEntropyLoss",
     "SpaceToDepth",
     "Split",

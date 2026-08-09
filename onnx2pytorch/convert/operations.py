@@ -236,7 +236,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "HannWindow":
             op = HannWindow(**extract_attributes(node))
         elif node.op_type == "Hardmax":
-            op = Hardmax(**extract_attributes(node))
+            op = Hardmax(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Identity":
             op = nn.Identity()
         elif node.op_type == "If":
@@ -476,13 +476,9 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Slice":
             op = Slice(**extract_attributes(node))
         elif node.op_type == "Softmax":
-            kwargs = dict(dim=-1)
-            kwargs.update(extract_attributes(node))
-            op = nn.Softmax(**kwargs)
+            op = Softmax(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "LogSoftmax":
-            kwargs = dict(dim=-1)
-            kwargs.update(extract_attributes(node))
-            op = nn.LogSoftmax(**kwargs)
+            op = LogSoftmax(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Softplus":
             # ONNX Softplus has no attributes: y = ln(exp(x) + 1)
             # PyTorch Softplus with beta=1 matches ONNX spec

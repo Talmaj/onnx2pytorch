@@ -5,6 +5,10 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 @pytest.mark.parametrize(
@@ -133,3 +137,14 @@ def test_logsoftmax_properties():
     # Sum of exp(log_softmax) should be 1
     sum_exp = torch.exp(logsoftmax_output).sum(dim=-1)
     torch.testing.assert_close(sum_exp, torch.ones_like(sum_exp), rtol=1e-5, atol=1e-5)
+
+
+@pytest.mark.parametrize("axis", [None, 0, 1, 2, -1, -2])
+@pytest.mark.parametrize("opset_version", [1, 11, 12, 13, 21])
+def test_logsoftmax_across_opsets(axis, opset_version):
+    """Before opset 13 the input is coerced to 2D around axis, default axis 1."""
+    np.random.seed(0)
+    x = np.random.randn(2, 3, 4).astype(np.float32)
+    attributes = {} if axis is None else {"axis": axis}
+    model = make_single_node_model("LogSoftmax", {"x": x}, opset_version, **attributes)
+    assert_matches_oracle(model, {"x": x})
