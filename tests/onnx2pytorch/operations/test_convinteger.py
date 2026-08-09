@@ -67,21 +67,6 @@ def test_conv_integer_zero_points():
     check_conv_integer(x, w, x_zero_point, w_zero_point, kernel_shape=[3, 3])
 
 
-def conv_integer_reference(x, w, x_zero_point, w_zero_point):
-    x = x.astype(np.int32) - np.int32(x_zero_point)
-    w = w.astype(np.int32) - w_zero_point.astype(np.int32).reshape(-1, 1, 1, 1)
-    n, _, height, width = x.shape
-    out_channels, _, kernel_h, kernel_w = w.shape
-    out = np.zeros(
-        (n, out_channels, height - kernel_h + 1, width - kernel_w + 1), dtype=np.int32
-    )
-    for i in range(out.shape[2]):
-        for j in range(out.shape[3]):
-            patch = x[:, None, :, i : i + kernel_h, j : j + kernel_w]
-            out[:, :, i, j] = (patch * w[None]).sum(axis=(2, 3, 4))
-    return out
-
-
 def test_conv_integer_per_channel_weight_zero_point():
     np.random.seed(0)
     x = np.random.randint(0, 255, size=(1, 2, 5, 5), dtype=np.uint8)
@@ -89,8 +74,24 @@ def test_conv_integer_per_channel_weight_zero_point():
     x_zero_point = np.array(120, dtype=np.uint8)
     w_zero_point = np.array([100, 110, 130], dtype=np.uint8)
 
-    # onnxruntime only supports per-tensor zero points
-    exp_y = conv_integer_reference(x, w, x_zero_point, w_zero_point)
+    # onnxruntime only supports per-tensor zero points, so the oracle is one
+    # onnxruntime run per output channel with that channel's scalar zero point
+    channels = []
+    for out_channel, zero_point in enumerate(w_zero_point):
+        channel_model, channel_feed = build_model(
+            x,
+            w[out_channel : out_channel + 1],
+            x_zero_point,
+            np.array(zero_point, dtype=np.uint8),
+            kernel_shape=[3, 3],
+        )
+        channels.append(
+            ort.InferenceSession(channel_model.SerializeToString()).run(
+                None, channel_feed
+            )[0]
+        )
+    exp_y = np.concatenate(channels, axis=1)
+
     model, feed = build_model(x, w, x_zero_point, w_zero_point, kernel_shape=[3, 3])
     with torch.no_grad():
         y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
