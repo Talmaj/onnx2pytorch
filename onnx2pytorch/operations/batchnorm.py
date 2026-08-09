@@ -1,5 +1,3 @@
-import warnings
-
 from torch import nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
@@ -18,7 +16,7 @@ except ImportError:
 class LazyBatchNormUnsafe(_LazyBatchNorm):
     def __init__(self, *args, spatial=True, **kwargs):
         if not spatial:
-            warnings.warn("Non-spatial BatchNorm not implemented.", RuntimeWarning)
+            raise NotImplementedError("BatchNormalization with spatial=0.")
         super().__init__(*args, **kwargs)
 
     def _check_input_dim(self, input):
@@ -28,7 +26,7 @@ class LazyBatchNormUnsafe(_LazyBatchNorm):
 class BatchNormUnsafe(_BatchNorm):
     def __init__(self, *args, spatial=True, **kwargs):
         if not spatial:
-            warnings.warn("Non-spatial BatchNorm not implemented.", RuntimeWarning)
+            raise NotImplementedError("BatchNormalization with spatial=0.")
         super().__init__(*args, **kwargs)
 
     def _check_input_dim(self, input):
