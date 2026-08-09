@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from onnx import helper, TensorProto
+from onnx import defs, helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
 from onnx2pytorch.operations.swiglu import SwiGLU
@@ -18,8 +18,16 @@ def convert_swiglu_model(a, b, **attrs):
         ],
         [helper.make_tensor_value_info("y", TensorProto.FLOAT, list(a.shape))],
     )
-    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 28)])
+    model = helper.make_model(
+        graph, opset_imports=[helper.make_opsetid("", defs.onnx_opset_version())]
+    )
     return ConvertModel(model)
+
+
+def test_swiglu_still_has_no_oracle():
+    """Once onnx defines SwiGLU these tests should compare against a runtime."""
+    names = {schema.name for schema in defs.get_all_schemas_with_history()}
+    assert "SwiGLU" not in names
 
 
 @pytest.mark.parametrize("alpha", [None, 1.0, 0.5, 2.0])
