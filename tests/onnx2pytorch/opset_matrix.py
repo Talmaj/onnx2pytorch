@@ -340,6 +340,11 @@ CASES.update(
 # (op_type, opset, case_name) -> reason. opset=None applies to every opset.
 # Marked strict, so fixing one of these without deleting the entry fails the suite.
 XFAILS = {
+    ("AveragePool", None, "dilations_same_upper"): (
+        "no trustworthy oracle: with dilations onnxruntime derives the auto_pad "
+        "pads from the undilated kernel, which contradicts its own shape "
+        "inference, and onnx's reference puts all of the padding at the end"
+    ),
     ("GRU", 1, "reverse"): (
         "no trustworthy oracle: onnxruntime has no GRU-1 kernel and onnx's "
         "reference GRU disagrees with onnxruntime for direction=reverse"
@@ -1207,6 +1212,22 @@ CASES.update(
                 dilations=[2, 2],
                 pads=[1, 1, 1, 1],
                 count_include_pad=1,
+                since=19,
+            ),
+            case(
+                "dilations_pads_exclude",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                pads=[1, 1, 1, 1],
+                since=19,
+            ),
+            case(
+                "dilations_same_upper",
+                {"x": CONV_X},
+                kernel_shape=[2, 2],
+                dilations=[2, 2],
+                auto_pad="SAME_UPPER",
                 since=19,
             ),
             case(
