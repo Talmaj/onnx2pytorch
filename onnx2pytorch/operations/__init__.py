@@ -10,6 +10,7 @@ from .bitcast import BitCast
 from .blackmanwindow import BlackmanWindow
 from .bitshift import BitShift
 from .cast import Cast
+from .castlike import CastLike
 from .causalconvwithstate import CausalConvWithState
 from .centercroppad import CenterCropPad
 from .clip import Clip
@@ -142,6 +143,7 @@ __all__ = [
     "BitShift",
     "BlackmanWindow",
     "Cast",
+    "CastLike",
     "CausalConvWithState",
     "CenterCropPad",
     "Clip",

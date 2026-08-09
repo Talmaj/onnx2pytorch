@@ -161,7 +161,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 ## String Operations & Casting
 
-- [ ] [`CastLike`](https://onnx.ai/onnx/operators/onnx__CastLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/castlike.py)
+- [x] [`CastLike`](https://onnx.ai/onnx/operators/onnx__CastLike.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/castlike.py)
 - [ ] [`RegexFullMatch`](https://onnx.ai/onnx/operators/onnx__RegexFullMatch.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/regex_full_match.py)
 - [ ] [`StringConcat`](https://onnx.ai/onnx/operators/onnx__StringConcat.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/string_concat.py)
 - [ ] [`StringNormalizer`](https://onnx.ai/onnx/operators/onnx__StringNormalizer.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/stringnormalizer.py)

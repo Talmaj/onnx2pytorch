@@ -130,6 +130,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = BlackmanWindow(**extract_attributes(node))
         elif node.op_type == "Cast":
             op = Cast(**extract_attributes(node))
+        elif node.op_type == "CastLike":
+            op = CastLike()
         elif node.op_type == "CausalConvWithState":
             op = CausalConvWithState(**extract_attributes(node))
         elif node.op_type == "Ceil":
