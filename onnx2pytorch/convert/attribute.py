@@ -290,9 +290,7 @@ def extract_attributes(node):
         elif attr.name == "output_dtype":
             kwargs["output_dtype"] = extract_attr_values(attr)
         elif attr.name == "output_shape" and node.op_type == "ConvTranspose":
-            raise NotImplementedError(
-                "ConvTranspose with dynamic padding not implemented."
-            )
+            kwargs["output_shape"] = extract_attr_values(attr)
         elif attr.name == "p":
             kwargs["p"] = extract_attr_values(attr)
         elif attr.name == "padding_mode":
@@ -309,6 +307,9 @@ def extract_attributes(node):
             params = extract_attr_values(attr)
             if node.op_type == "Pad":
                 kwargs["padding"] = extract_padding_params(params)
+            elif node.op_type == "ConvTranspose":
+                # ConvTranspose crops its output instead of padding its input
+                kwargs["pads"] = params
             else:
                 # Works for Conv, MaxPooling and other layers from convert_layer func
                 kwargs["padding"] = extract_padding_params_for_conv_layer(params)

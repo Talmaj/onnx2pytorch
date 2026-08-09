@@ -20,6 +20,7 @@ from .concatfromsequence import ConcatFromSequence
 from .constant import Constant
 from .constantofshape import ConstantOfShape
 from .convinteger import ConvInteger
+from .convtranspose import ConvTranspose
 from .cumprod import CumProd
 from .cumsum import CumSum
 from .deformconv import DeformConv
@@ -167,6 +168,7 @@ __all__ = [
     "Constant",
     "ConstantOfShape",
     "ConvInteger",
+    "ConvTranspose",
     "CumProd",
     "CumSum",
     "DeformConv",

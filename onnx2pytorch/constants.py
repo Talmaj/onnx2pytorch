@@ -5,6 +5,7 @@ from onnx2pytorch.operations import (
     Attention,
     BatchNormWrapper,
     CausalConvWithState,
+    ConvTranspose,
     Dropout,
     DynamicQuantizeLinear,
     GRUWrapper,
@@ -48,6 +49,7 @@ MULTIOUTPUT_LAYERS = (
 STANDARD_LAYERS = (
     _ConvNd,
     BatchNormWrapper,
+    ConvTranspose,
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,

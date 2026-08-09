@@ -345,12 +345,6 @@ XFAILS = {
         "cannot exclude it again"
     ),
     ("AveragePool", None, "dilations"): "torch's AvgPool has no dilation argument",
-    ("ConvTranspose", None, "output_shape"): (
-        "output_shape needs the pads to be derived and cropped off the output"
-    ),
-    ("ConvTranspose", None, "same_upper"): (
-        "auto_pad pads the input, ConvTranspose instead has to crop the output"
-    ),
     ("GRU", 1, "reverse"): (
         "no trustworthy oracle: onnxruntime has no GRU-1 kernel and onnx's "
         "reference GRU disagrees with onnxruntime for direction=reverse"
@@ -1066,11 +1060,52 @@ CASES.update(
                 output_shape=[10, 10],
             ),
             case(
+                "output_shape_odd",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                output_shape=[9, 9],
+            ),
+            case(
+                "output_shape_same_upper",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                output_shape=[9, 9],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "asymmetric_pads",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                pads=[0, 1, 2, 1],
+            ),
+            case(
                 "same_upper",
                 {"x": rand(1, 2, 5, 5)},
                 initializers={"w": rand(2, 3, 3, 3)},
                 kernel_shape=[3, 3],
                 strides=[2, 2],
+                auto_pad="SAME_UPPER",
+            ),
+            case(
+                "same_lower",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                auto_pad="SAME_LOWER",
+            ),
+            case(
+                "same_upper_dilations",
+                {"x": rand(1, 2, 5, 5)},
+                initializers={"w": rand(2, 3, 3, 3)},
+                kernel_shape=[3, 3],
+                strides=[2, 2],
+                dilations=[2, 2],
                 auto_pad="SAME_UPPER",
             ),
             case(

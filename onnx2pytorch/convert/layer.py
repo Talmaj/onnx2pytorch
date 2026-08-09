@@ -6,6 +6,7 @@ from onnx import numpy_helper
 from onnx2pytorch.operations import (
     AutoPad,
     BatchNormWrapper,
+    ConvTranspose,
     GRUWrapper,
     InstanceNormWrapper,
     LSTMWrapper,
@@ -65,7 +66,12 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
     # Handle auto_pad attribute
     pad_layer = None
     auto_pad = kwargs.pop("auto_pad", "NOTSET")
-    if auto_pad == "VALID":
+    if layer_type == "ConvTranspose":
+        # ConvTranspose never pads its input, the pads are cropped off the output
+        transpose_pads = kwargs.pop("pads", None)
+        output_shape = kwargs.pop("output_shape", None)
+        kwargs["padding"] = 0
+    elif auto_pad == "VALID":
         # No padding
         kwargs["padding"] = 0
     elif auto_pad in ("SAME_UPPER", "SAME_LOWER"):
@@ -115,6 +121,9 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
         if layer_type == "MaxPool":
             kwargs["return_indices"] = True
         layer = layer(**kwargs)
+
+    if layer_type == "ConvTranspose":
+        layer = ConvTranspose(layer, transpose_pads, output_shape, auto_pad)
 
     if pad_layer is not None:
         layer = nn.Sequential(pad_layer, layer)
