@@ -121,6 +121,7 @@ from .subgraph import SubgraphOperator
 from .sum import Sum
 from .swiglu import SwiGLU
 from .swish import Swish
+from .tfidfvectorizer import TfIdfVectorizer
 from .thresholdedrelu import ThresholdedRelu
 from .tile import Tile
 from .topk import TopK
@@ -253,6 +254,7 @@ __all__ = [
     "Sum",
     "SwiGLU",
     "Swish",
+    "TfIdfVectorizer",
     "ThresholdedRelu",
     "Tile",
     "TopK",

@@ -515,6 +515,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = OperatorWrapper(torch.tan)
         elif node.op_type == "Tanh":
             op = OperatorWrapper(torch.tanh)
+        elif node.op_type == "TfIdfVectorizer":
+            op = TfIdfVectorizer(**extract_attributes(node))
         elif node.op_type == "ThresholdedRelu":
             op = ThresholdedRelu(**extract_attributes(node))
         elif node.op_type == "Tile":

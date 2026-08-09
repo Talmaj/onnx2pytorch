@@ -209,6 +209,22 @@ def extract_attributes(node):
             kwargs["linear_before_reset"] = extract_attr_values(attr)
         elif attr.name == "low":
             kwargs["low"] = extract_attr_values(attr)
+        elif attr.name == "max_gram_length":
+            kwargs["max_gram_length"] = extract_attr_values(attr)
+        elif attr.name == "max_skip_count":
+            kwargs["max_skip_count"] = extract_attr_values(attr)
+        elif attr.name == "min_gram_length":
+            kwargs["min_gram_length"] = extract_attr_values(attr)
+        elif attr.name == "ngram_counts":
+            kwargs["ngram_counts"] = extract_attr_values(attr)
+        elif attr.name == "ngram_indexes":
+            kwargs["ngram_indexes"] = extract_attr_values(attr)
+        elif attr.name == "pool_int64s":
+            kwargs["pool_int64s"] = extract_attr_values(attr)
+        elif attr.name == "pool_strings":
+            kwargs["pool_strings"] = extract_attr_values(attr)
+        elif attr.name == "weights":
+            kwargs["weights"] = extract_attr_values(attr)
         elif attr.name == "max":
             kwargs["max"] = extract_attr_values(attr)
         elif attr.name == "mean":

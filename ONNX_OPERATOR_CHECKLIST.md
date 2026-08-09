@@ -166,7 +166,7 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 - [ ] [`StringConcat`](https://onnx.ai/onnx/operators/onnx__StringConcat.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/string_concat.py)
 - [ ] [`StringNormalizer`](https://onnx.ai/onnx/operators/onnx__StringNormalizer.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/stringnormalizer.py)
 - [ ] [`StringSplit`](https://onnx.ai/onnx/operators/onnx__StringSplit.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/string_split.py)
-- [ ] [`TfIdfVectorizer`](https://onnx.ai/onnx/operators/onnx__TfIdfVectorizer.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/tfidfvectorizer.py)
+- [x] [`TfIdfVectorizer`](https://onnx.ai/onnx/operators/onnx__TfIdfVectorizer.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/tfidfvectorizer.py)
 
 ## Loss Functions
 
