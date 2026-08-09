@@ -50,6 +50,7 @@ from .if_op import If
 from .imagedecoder import ImageDecoder
 from .instancenorm import InstanceNormWrapper
 from .isinf import IsInf
+from .legacybroadcast import LegacyBroadcast
 from .layernorm import LayerNorm
 from .linearattention import LinearAttention
 from .loop import Loop
@@ -196,6 +197,7 @@ __all__ = [
     "InstanceNormWrapper",
     "IsInf",
     "LayerNorm",
+    "LegacyBroadcast",
     "LinearAttention",
     "Loop",
     "LpNormalization",

@@ -56,6 +56,14 @@ def get_init_parameter(modules, item, default):
     return default
 
 
+def convert_binary_operation(node, torch_op, op):
+    """Pre-7 arithmetic operators carry explicit broadcast and axis attributes."""
+    kwargs = extract_attributes(node)
+    if kwargs.get("broadcast"):
+        return LegacyBroadcast(torch_op, kwargs.get("dim"))
+    return op
+
+
 def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
@@ -89,7 +97,10 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Acosh":
             op = OperatorWrapper(torch.acosh)
         elif node.op_type == "Add":
-            op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
+            # feature_dim is 0 for CV models and 1 for NLP
+            op = convert_binary_operation(
+                node, torch.add, Add(feature_dim=batch_dim + 1)
+            )
         elif node.op_type == "AffineGrid":
             op = AffineGrid(**extract_attributes(node))
         elif node.op_type == "And":
@@ -179,7 +190,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "DFT":
             op = DFT(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Div":
-            op = Div()
+            op = convert_binary_operation(node, torch.div, Div())
         elif node.op_type == "Dropout":
             op = Dropout(**extract_attributes(node))
         elif node.op_type == "DynamicQuantizeLinear":
@@ -324,7 +335,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Mod":
             op = Mod(**extract_attributes(node))
         elif node.op_type == "Mul":
-            op = OperatorWrapper(torch.mul)
+            op = convert_binary_operation(node, torch.mul, OperatorWrapper(torch.mul))
         elif node.op_type == "Multinomial":
             op = Multinomial(**extract_attributes(node))
         elif node.op_type == "Neg":
@@ -506,7 +517,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "StringSplit":
             op = StringSplit(**extract_attributes(node))
         elif node.op_type == "Sub":
-            op = OperatorWrapper(torch.sub)
+            op = convert_binary_operation(node, torch.sub, OperatorWrapper(torch.sub))
         elif node.op_type == "Sum":
             op = Sum()
         elif node.op_type == "SwiGLU":
