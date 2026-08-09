@@ -85,7 +85,8 @@ def test_split_to_sequence_split_lengths_on_axis_one():
 
 
 def test_split_to_sequence_keepdims_ignored_with_split():
-    """keepdims is ignored when split is given; onnxruntime squeezes anyway."""
+    # onnxruntime 1.28 still squeezes here although the spec says keepdims is
+    # ignored when split is given, so the onnx reference is the oracle
     check_split_to_sequence(
         make_input(shape=(4, 3), seed=6),
         split=np.array(1, dtype=np.int64),
