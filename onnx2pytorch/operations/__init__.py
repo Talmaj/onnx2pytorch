@@ -113,6 +113,7 @@ from .shape import Shape
 from .shrink import Shrink
 from .size import Size
 from .slice import Slice
+from .softmaxcrossentropyloss import SoftmaxCrossEntropyLoss
 from .spacetodepth import SpaceToDepth
 from .split import Split
 from .splittosequence import SplitToSequence
@@ -247,6 +248,7 @@ __all__ = [
     "Shrink",
     "Size",
     "Slice",
+    "SoftmaxCrossEntropyLoss",
     "SpaceToDepth",
     "Split",
     "SplitToSequence",
