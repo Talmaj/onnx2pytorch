@@ -313,6 +313,9 @@ def convert_lstm_layer(node, weights):
     hidden_size = kwargs["hidden_size"]
     num_directions = kwargs["bidirectional"] + 1
     num_layers = 1
+    if B is None:
+        # The ONNX bias is optional, torch's LSTM always has one
+        B = torch.zeros(num_directions, 8 * hidden_size, dtype=W.dtype)
     if kwargs["bidirectional"]:
         # Set input-hidden weights
         W_iofc = W.transpose(0, 1).view(4 * hidden_size, num_directions, input_size)
@@ -474,6 +477,9 @@ def convert_gru_layer(node, weights):
     hidden_size = kwargs["hidden_size"]
     num_directions = kwargs["bidirectional"] + 1
     num_layers = 1
+    if B is None:
+        # The ONNX bias is optional, torch's GRU always has one
+        B = torch.zeros(num_directions, 6 * hidden_size, dtype=W.dtype)
 
     # ONNX GRU gate order: [z, r, h] (update, reset, hidden)
     # PyTorch GRU gate order: [r, z, n] (reset, input/update, new)
