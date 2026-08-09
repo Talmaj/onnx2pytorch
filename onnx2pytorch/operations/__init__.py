@@ -24,6 +24,7 @@ from .cumsum import CumSum
 from .deformconv import DeformConv
 from .depthtospace import DepthToSpace
 from .dequantizelinear import DequantizeLinear
+from .dft import DFT
 from .div import Div
 from .dropout import Dropout
 from .dynamicquantizelinear import DynamicQuantizeLinear
@@ -153,6 +154,7 @@ __all__ = [
     "DeformConv",
     "DepthToSpace",
     "DequantizeLinear",
+    "DFT",
     "Div",
     "Dropout",
     "DynamicQuantizeLinear",

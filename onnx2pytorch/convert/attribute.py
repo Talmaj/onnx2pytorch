@@ -187,6 +187,8 @@ def extract_attributes(node):
             kwargs["input_forget"] = extract_attr_values(attr)
         elif attr.name == "interleaved":
             kwargs["interleaved"] = extract_attr_values(attr)
+        elif attr.name == "inverse":
+            kwargs["inverse"] = extract_attr_values(attr)
         elif attr.name == "is_causal":
             kwargs["is_causal"] = extract_attr_values(attr)
         elif attr.name == "k":
@@ -233,6 +235,8 @@ def extract_attributes(node):
             kwargs["output_height"] = extract_attr_values(attr)
         elif attr.name == "output_width":
             kwargs["output_width"] = extract_attr_values(attr)
+        elif attr.name == "onesided":
+            kwargs["onesided"] = extract_attr_values(attr)
         elif attr.name == "output_datatype":
             kwargs["output_datatype"] = extract_attr_values(attr)
         elif attr.name == "output_dtype":

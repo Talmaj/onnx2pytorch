@@ -174,6 +174,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = DepthToSpace(**extract_attributes(node))
         elif node.op_type == "DequantizeLinear":
             op = DequantizeLinear(**extract_attributes(node))
+        elif node.op_type == "DFT":
+            op = DFT(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Div":
             op = Div()
         elif node.op_type == "Dropout":
