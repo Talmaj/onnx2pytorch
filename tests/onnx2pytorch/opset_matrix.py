@@ -1512,3 +1512,332 @@ CASES.update(
         ),
     }
 )
+
+
+PAD_X = rand(2, 3)
+Q_X = rand(2, 4, scale=2)
+Q_SCALE = arr(0.05)
+Q_ZERO = np.array(128, dtype=np.uint8)
+
+CASES.update(
+    {
+        "Pad": [
+            case("legacy_paddings", {"x": PAD_X}, paddings=[1, 2, 1, 2], until=1),
+            case("attribute_pads", {"x": PAD_X}, pads=[1, 2, 1, 2], since=2, until=10),
+            case(
+                "attribute_value",
+                {"x": PAD_X},
+                pads=[1, 2, 1, 2],
+                value=3.5,
+                since=2,
+                until=10,
+            ),
+            case(
+                "attribute_reflect",
+                {"x": PAD_X},
+                pads=[1, 1, 1, 1],
+                mode="reflect",
+                since=2,
+                until=10,
+            ),
+            case(
+                "attribute_edge",
+                {"x": PAD_X},
+                pads=[1, 1, 1, 1],
+                mode="edge",
+                since=2,
+                until=10,
+            ),
+            case(
+                "input_pads",
+                {"x": PAD_X},
+                initializers={"p": arr([1, 2, 1, 2], np.int64)},
+                since=11,
+            ),
+            case(
+                "input_value",
+                {"x": PAD_X},
+                initializers={"p": arr([1, 2, 1, 2], np.int64), "v": arr(3.5)},
+                since=11,
+            ),
+            case(
+                "input_reflect",
+                {"x": PAD_X},
+                initializers={"p": arr([1, 1, 1, 1], np.int64)},
+                mode="reflect",
+                since=11,
+            ),
+            case(
+                "input_edge",
+                {"x": PAD_X},
+                initializers={"p": arr([1, 1, 1, 1], np.int64)},
+                mode="edge",
+                since=11,
+            ),
+            case(
+                "negative_pads",
+                {"x": PAD_X},
+                initializers={"p": arr([-1, 0, 0, -1], np.int64)},
+                since=11,
+            ),
+            case(
+                "axes",
+                {"x": PAD_X},
+                initializers={
+                    "p": arr([1, 2], np.int64),
+                    "v": arr(0.0),
+                    "a": arr([1], np.int64),
+                },
+                since=18,
+            ),
+            case(
+                "wrap",
+                {"x": PAD_X},
+                initializers={"p": arr([1, 1, 1, 1], np.int64)},
+                mode="wrap",
+                since=19,
+            ),
+        ],
+        "Resize": [
+            case(
+                "nearest_scales",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"s": arr([1.0, 1.0, 2.0, 2.0])},
+                until=10,
+            ),
+            case(
+                "nearest_scales_roi",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"s": arr([1.0, 1.0, 2.0, 2.0])},
+                input_names=["x", "", "s"],
+                since=11,
+            ),
+            case(
+                "linear_align_corners",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"s": arr([1.0, 1.0, 2.0, 2.0])},
+                input_names=["x", "", "s"],
+                mode="linear",
+                coordinate_transformation_mode="align_corners",
+                since=11,
+            ),
+            case(
+                "sizes",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"z": arr([1, 1, 4, 4], np.int64)},
+                input_names=["x", "", "", "z"],
+                mode="linear",
+                coordinate_transformation_mode="align_corners",
+                since=11,
+            ),
+        ],
+        "Upsample": [
+            case(
+                "legacy_scale_attributes",
+                {"x": rand(1, 1, 2, 2)},
+                height_scale=2.0,
+                width_scale=2.0,
+                mode="nearest",
+                until=6,
+            ),
+            case(
+                "attribute_scales",
+                {"x": rand(1, 1, 2, 2)},
+                scales=[1.0, 1.0, 2.0, 2.0],
+                since=7,
+                until=8,
+            ),
+            case(
+                "input_scales",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"s": arr([1.0, 1.0, 2.0, 2.0])},
+                since=9,
+            ),
+            case(
+                "input_scales_linear",
+                {"x": rand(1, 1, 2, 2)},
+                initializers={"s": arr([1.0, 1.0, 2.0, 2.0])},
+                mode="linear",
+                since=9,
+            ),
+        ],
+        "Dropout": [
+            case("inference", {"x": X3}, since=7),
+            case("ratio_attribute", {"x": X3}, ratio=0.5, since=7, until=11),
+            case("mask", {"x": X3}, num_outputs=2, since=7),
+            case("ratio_input", {"x": X3}, initializers={"r": arr(0.5)}, since=12),
+            case(
+                "mask_input_ratio",
+                {"x": X3},
+                initializers={"r": arr(0.5)},
+                num_outputs=2,
+                since=12,
+            ),
+        ],
+        "QuantizeLinear": [
+            case("scalar_scale", {"x": Q_X}, initializers={"s": Q_SCALE, "z": Q_ZERO}),
+            case("no_zero_point", {"x": Q_X}, initializers={"s": Q_SCALE}),
+            case(
+                "per_axis",
+                {"x": Q_X},
+                initializers={
+                    "s": np.full(4, 0.05, np.float32),
+                    "z": np.full(4, 128, np.uint8),
+                },
+                axis=1,
+                since=13,
+            ),
+        ],
+        "DequantizeLinear": [
+            case(
+                "scalar_scale",
+                {"x": randint(2, 4, high=255, dtype=np.uint8)},
+                initializers={"s": Q_SCALE, "z": Q_ZERO},
+            ),
+            case(
+                "per_axis",
+                {"x": randint(2, 4, high=255, dtype=np.uint8)},
+                initializers={
+                    "s": np.full(4, 0.05, np.float32),
+                    "z": np.full(4, 128, np.uint8),
+                },
+                axis=1,
+                since=13,
+            ),
+        ],
+        "DynamicQuantizeLinear": [case("default", {"x": Q_X}, num_outputs=3)],
+        "MatMulInteger": [
+            case(
+                "zero_points",
+                {
+                    "a": randint(2, 3, high=255, dtype=np.uint8),
+                    "b": randint(3, 4, high=255, dtype=np.uint8),
+                },
+                initializers={
+                    "az": np.array(120, np.uint8),
+                    "bz": np.array(130, np.uint8),
+                },
+            ),
+            case(
+                "no_zero_points",
+                {
+                    "a": randint(2, 3, high=255, dtype=np.uint8),
+                    "b": randint(3, 4, high=255, dtype=np.uint8),
+                },
+            ),
+        ],
+        "ConvInteger": [
+            case(
+                "default",
+                {"x": randint(1, 1, 5, 5, high=255, dtype=np.uint8)},
+                initializers={"w": randint(2, 1, 3, 3, high=255, dtype=np.uint8)},
+            ),
+            case(
+                "zero_points",
+                {"x": randint(1, 1, 5, 5, high=255, dtype=np.uint8)},
+                initializers={
+                    "w": randint(2, 1, 3, 3, high=255, dtype=np.uint8),
+                    "xz": np.array(120, np.uint8),
+                    "wz": np.array(130, np.uint8),
+                },
+            ),
+        ],
+        "QLinearMatMul": [
+            case(
+                "default",
+                {"a": randint(2, 3, high=255, dtype=np.uint8)},
+                initializers={
+                    "as": Q_SCALE,
+                    "az": Q_ZERO,
+                    "b": randint(3, 4, high=255, dtype=np.uint8),
+                    "bs": Q_SCALE,
+                    "bz": Q_ZERO,
+                    "ys": arr(0.1),
+                    "yz": Q_ZERO,
+                },
+            )
+        ],
+        "QLinearConv": [
+            case(
+                "default",
+                {"x": randint(1, 1, 5, 5, high=255, dtype=np.uint8)},
+                initializers={
+                    "xs": Q_SCALE,
+                    "xz": Q_ZERO,
+                    "w": randint(2, 1, 3, 3, high=255, dtype=np.uint8),
+                    "ws": Q_SCALE,
+                    "wz": Q_ZERO,
+                    "ys": arr(0.5),
+                    "yz": Q_ZERO,
+                },
+            )
+        ],
+        "SoftmaxCrossEntropyLoss": [
+            case("mean", {"x": rand(3, 5), "t": randint(3, high=5)}),
+            case("none", {"x": rand(3, 5), "t": randint(3, high=5)}, reduction="none"),
+            case("sum", {"x": rand(3, 5), "t": randint(3, high=5)}, reduction="sum"),
+        ],
+        "NegativeLogLikelihoodLoss": [
+            case("mean", {"x": rand(3, 5), "t": randint(3, high=5)}),
+            case("none", {"x": rand(3, 5), "t": randint(3, high=5)}, reduction="none"),
+        ],
+        "Det": [case("default", {"x": rand(2, 3, 3)})],
+        "Unique": [
+            case("sorted", {"x": arr([2.0, 1.0, 1.0, 3.0])}, num_outputs=4),
+            case(
+                "axis",
+                {"x": arr([[1.0, 2.0], [1.0, 2.0], [3.0, 4.0]])},
+                axis=0,
+                num_outputs=4,
+            ),
+        ],
+        "GridSample": [
+            case(
+                "bilinear",
+                {
+                    "x": rand(1, 1, 4, 4),
+                    "g": (rand(1, 3, 3, 2) * 0.5).astype("float32"),
+                },
+            ),
+            case(
+                "nearest",
+                {
+                    "x": rand(1, 1, 4, 4),
+                    "g": (rand(1, 3, 3, 2) * 0.5).astype("float32"),
+                },
+                mode="nearest",
+                since=20,
+            ),
+        ],
+        "CenterCropPad": [
+            case("crop", {"x": rand(4, 6)}, initializers={"s": arr([2, 3], np.int64)}),
+            case("pad", {"x": rand(4, 6)}, initializers={"s": arr([6, 8], np.int64)}),
+        ],
+        "Col2Im": [
+            case(
+                "default",
+                {"x": rand(1, 4, 4)},
+                initializers={"s": arr([4, 4], np.int64), "b": arr([2, 2], np.int64)},
+            )
+        ],
+        "MaxRoiPool": [
+            case(
+                "default",
+                {"x": rand(1, 2, 6, 6), "rois": arr([[0, 0, 0, 4, 4]])},
+                pooled_shape=[2, 2],
+            )
+        ],
+        "RoiAlign": [
+            case(
+                "default",
+                {
+                    "x": rand(1, 2, 6, 6),
+                    "rois": arr([[0.0, 0.0, 4.0, 4.0]]),
+                    "bi": arr([0], np.int64),
+                },
+                output_height=2,
+                output_width=2,
+            )
+        ],
+    }
+)
