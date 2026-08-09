@@ -73,6 +73,8 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
             stride=kwargs.get("stride", 1),
             dilation=kwargs.get("dilation", 1),
             mode=auto_pad,
+            # MaxPool ignores the padded cells, the others treat them as zeros
+            value=float("-inf") if layer_type == "MaxPool" else 0.0,
         )
         kwargs["padding"] = 0  # Conv layer itself should not pad
 

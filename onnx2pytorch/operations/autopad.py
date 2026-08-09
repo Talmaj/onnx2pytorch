@@ -8,8 +8,9 @@ class AutoPad(nn.Module):
     Implements ONNX auto_pad modes: SAME_UPPER, SAME_LOWER, VALID.
     """
 
-    def __init__(self, kernel_size, stride, dilation, mode="SAME_UPPER"):
+    def __init__(self, kernel_size, stride, dilation, mode="SAME_UPPER", value=0.0):
         super().__init__()
+        self.value = value
         self.kernel_size = (
             kernel_size
             if isinstance(kernel_size, (tuple, list))
@@ -76,6 +77,8 @@ class AutoPad(nn.Module):
 
         # Apply padding
         if any(p > 0 for p in pads_reversed):
-            x = torch.nn.functional.pad(x, pads_reversed, mode="constant", value=0)
+            x = torch.nn.functional.pad(
+                x, pads_reversed, mode="constant", value=self.value
+            )
 
         return x
