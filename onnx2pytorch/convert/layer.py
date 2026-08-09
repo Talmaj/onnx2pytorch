@@ -35,7 +35,7 @@ def load_params(layer, weight, bias):
         layer.bias.data = torch.tensor(numpy_helper.to_array(bias))
 
 
-def convert_layer(node, layer_type, params=None):
+def convert_layer(node, layer_type, params=None, opset_version=None):
     """Use to convert Conv, MaxPool, AvgPool layers."""
     assert layer_type in [
         "Conv",
@@ -44,6 +44,9 @@ def convert_layer(node, layer_type, params=None):
         "AvgPool",
     ], "Incorrect layer type: {}".format(layer_type)
     kwargs = extract_attributes(node)
+    if layer_type in ("MaxPool", "AvgPool"):
+        # ONNX strides default to 1, torch's pooling layers default to kernel_size
+        kwargs.setdefault("stride", 1)
     kernel_size_length = len(kwargs["kernel_size"])
     try:
         layer = getattr(nn, "{}{}d".format(layer_type, kernel_size_length))
@@ -69,6 +72,20 @@ def convert_layer(node, layer_type, params=None):
         )
         kwargs["padding"] = 0  # Conv layer itself should not pad
 
+    # if padding is a layer, remove from kwargs and prepend later
+    if isinstance(kwargs.get("padding"), nn.Module):
+        pad_layer = kwargs.pop("padding")
+
+    if layer_type == "AvgPool":
+        # ONNX excludes the pads from the average since opset 7, torch includes them
+        default = opset_version is not None and opset_version < 7
+        kwargs["count_include_pad"] = bool(kwargs.pop("count_include_pad", default))
+        if pad_layer is not None and not kwargs["count_include_pad"]:
+            raise NotImplementedError(
+                "AveragePool with count_include_pad=0 and non-symmetric padding "
+                "not implemented."
+            )
+
     if params:
         weight, bias = extract_params(params)
         kwargs["bias"] = bias is not None
@@ -81,10 +98,6 @@ def convert_layer(node, layer_type, params=None):
                 kwargs["in_channels"],
             )
 
-        # if padding is a layer, remove from kwargs and prepend later
-        if "padding" in kwargs and isinstance(kwargs["padding"], nn.Module):
-            pad_layer = kwargs.pop("padding")
-
         # initialize layer and load weights
         layer = layer(**kwargs)
         load_params(layer, weight, bias)
@@ -92,10 +105,6 @@ def convert_layer(node, layer_type, params=None):
         # initialize operations without parameters (MaxPool, AvgPool, etc.)
         if layer_type == "MaxPool":
             kwargs["return_indices"] = True
-
-        # if padding is a layer, remove from kwargs and prepend later
-        if "padding" in kwargs and isinstance(kwargs["padding"], nn.Module):
-            pad_layer = kwargs.pop("padding")
         layer = layer(**kwargs)
 
     if pad_layer is not None:

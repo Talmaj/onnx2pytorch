@@ -164,6 +164,8 @@ def extract_attributes(node):
                     "Pytorch's interpolate uses no coordinate_transformation_mode={}. "
                     "Result might differ.".format(arg)
                 )
+        elif attr.name == "count_include_pad":
+            kwargs["count_include_pad"] = bool(extract_attr_values(attr))
         elif attr.name == "delimiter":
             kwargs["delimiter"] = extract_attr_values(attr)
         elif attr.name == "detect_negative":

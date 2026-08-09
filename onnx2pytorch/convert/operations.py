@@ -109,7 +109,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Attention":
             op = Attention(num_outputs=len(node.output), **extract_attributes(node))
         elif node.op_type == "AveragePool":
-            op = convert_layer(node, "AvgPool")
+            op = convert_layer(node, "AvgPool", opset_version=opset_version)
         elif node.op_type == "BatchNormalization":
             op = convert_batch_norm_layer(node, params=params)
         elif node.op_type == "Bernoulli":
