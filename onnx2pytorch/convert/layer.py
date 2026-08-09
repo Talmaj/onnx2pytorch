@@ -49,6 +49,9 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
     if layer_type in ("MaxPool", "AvgPool"):
         # ONNX strides default to 1, torch's pooling layers default to kernel_size
         kwargs.setdefault("stride", 1)
+    if "kernel_size" not in kwargs and params:
+        # kernel_shape is optional for the convolutions, it follows from the weight
+        kwargs["kernel_size"] = tuple(params[0].dims[2:])
     kernel_size_length = len(kwargs["kernel_size"])
     try:
         layer = getattr(nn, "{}{}d".format(layer_type, kernel_size_length))
