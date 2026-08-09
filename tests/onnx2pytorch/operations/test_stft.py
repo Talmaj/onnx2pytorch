@@ -3,7 +3,6 @@ import onnxruntime as ort
 import pytest
 import torch
 from onnx import helper, TensorProto
-from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -43,14 +42,9 @@ def build_model(signal, frame_step, window=None, frame_length=None, **attrs):
     return model, feed
 
 
-def check_stft(
-    signal, frame_step, window=None, frame_length=None, use_reference=False, **attrs
-):
+def check_stft(signal, frame_step, window=None, frame_length=None, **attrs):
     model, feed = build_model(signal, frame_step, window, frame_length, **attrs)
-    if use_reference:
-        exp_y = ReferenceEvaluator(model).run(None, feed)[0]
-    else:
-        exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
+    exp_y = ort.InferenceSession(model.SerializeToString()).run(None, feed)[0]
     with torch.no_grad():
         y = ConvertModel(model)(*[torch.from_numpy(v) for v in feed.values()])
     np.testing.assert_allclose(y.numpy(), exp_y, rtol=1e-4, atol=1e-4)
@@ -78,12 +72,10 @@ def test_stft_with_window():
 
 def test_stft_complex_signal():
     signal = make_signal(2, 32, 2, 2)
-    # onnxruntime returns garbage for complex signals, compare against onnx instead
     check_stft(
         signal,
         np.array(4, dtype=np.int64),
         frame_length=np.array(8, dtype=np.int64),
-        use_reference=True,
         onesided=0,
     )
 
