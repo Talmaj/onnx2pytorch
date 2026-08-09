@@ -19,10 +19,28 @@ NUMPY_TO_TENSOR_PROTO = {
     np.dtype("float16"): onnx.TensorProto.FLOAT16,
     np.dtype("int64"): onnx.TensorProto.INT64,
     np.dtype("int32"): onnx.TensorProto.INT32,
+    np.dtype("int16"): onnx.TensorProto.INT16,
     np.dtype("int8"): onnx.TensorProto.INT8,
+    np.dtype("uint64"): onnx.TensorProto.UINT64,
+    np.dtype("uint32"): onnx.TensorProto.UINT32,
+    np.dtype("uint16"): onnx.TensorProto.UINT16,
     np.dtype("uint8"): onnx.TensorProto.UINT8,
     np.dtype("bool"): onnx.TensorProto.BOOL,
 }
+
+# Lowest IR version that can express each opset, so that old opsets stay loadable.
+_IR_VERSIONS = sorted({(row[2], row[1]) for row in helper.VERSION_TABLE})
+
+
+class NoOracle(Exception):
+    """Raised when neither onnxruntime nor the reference evaluator can run a model."""
+
+
+def min_ir_version(opset_version):
+    for opset, ir_version in _IR_VERSIONS:
+        if opset >= opset_version:
+            return ir_version
+    return _IR_VERSIONS[-1][1]
 
 
 def make_single_node_model(
@@ -32,6 +50,7 @@ def make_single_node_model(
     outputs=("y",),
     initializers=None,
     input_names=None,
+    ir_version=None,
     **attributes,
 ):
     """
@@ -71,8 +90,9 @@ def make_single_node_model(
             numpy_helper.from_array(value, name) for name, value in initializers.items()
         ],
     )
+    kwargs = {} if ir_version is None else {"ir_version": ir_version}
     return helper.make_model(
-        graph, opset_imports=[helper.make_opsetid("", opset_version)]
+        graph, opset_imports=[helper.make_opsetid("", opset_version)], **kwargs
     )
 
 
@@ -87,7 +107,7 @@ def run_reference(model, inputs):
     return ReferenceEvaluator(model).run(None, {k: v for k, v in inputs.items()})
 
 
-def run_oracle(model, inputs):
+def run_oracle_strict(model, inputs):
     """Run onnxruntime, falling back to the onnx reference implementation."""
     try:
         return run_onnxruntime(model, inputs)
@@ -95,28 +115,47 @@ def run_oracle(model, inputs):
         try:
             return run_reference(model, inputs)
         except Exception as ref_error:
-            pytest.skip(
-                "No oracle for this case: onnxruntime said {}, "
-                "the reference evaluator said {}".format(ort_error, ref_error)
+            raise NoOracle(
+                "onnxruntime said {}, the reference evaluator said {}".format(
+                    ort_error, ref_error
+                )
             )
+
+
+def run_oracle(model, inputs):
+    try:
+        return run_oracle_strict(model, inputs)
+    except NoOracle as error:
+        pytest.skip("No oracle for this case: {}".format(error))
+
+
+def to_torch(value):
+    if value.dtype.kind in ("O", "S", "U"):
+        return value
+    return torch.from_numpy(value)
 
 
 def run_converted(model, inputs):
     converted = ConvertModel(model)
     with torch.no_grad():
-        outputs = converted(*[torch.from_numpy(v) for v in inputs.values()])
+        outputs = converted(*[to_torch(v) for v in inputs.values()])
     if not isinstance(outputs, (list, tuple)):
         outputs = [outputs]
     return [o.numpy() if torch.is_tensor(o) else np.asarray(o) for o in outputs]
 
 
-def assert_matches_oracle(model, inputs, rtol=1e-5, atol=1e-6):
-    expected = run_oracle(model, inputs)
-    actual = run_converted(model, inputs)
+def assert_outputs_match(expected, actual, rtol=1e-5, atol=1e-6):
     assert len(actual) == len(expected)
     for exp, act in zip(expected, actual):
-        if exp.dtype == bool or np.issubdtype(exp.dtype, np.integer):
+        exp = np.asarray(exp)
+        if exp.dtype == bool or exp.dtype.kind in ("O", "S", "U", "i", "u"):
             np.testing.assert_array_equal(act, exp)
         else:
             np.testing.assert_allclose(act, exp, rtol=rtol, atol=atol)
+
+
+def assert_matches_oracle(model, inputs, rtol=1e-5, atol=1e-6):
+    expected = run_oracle(model, inputs)
+    actual = run_converted(model, inputs)
+    assert_outputs_match(expected, actual, rtol=rtol, atol=atol)
     return actual

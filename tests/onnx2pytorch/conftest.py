@@ -36,3 +36,16 @@ def onnx_model_outputs(onnx_model_path, onnx_model, onnx_inputs):
     ort_session = ort.InferenceSession(onnx_model_path)
     onnx_output = ort_session.run(None, onnx_inputs)
     return onnx_output
+
+
+def pytest_terminal_summary(terminalreporter):
+    """Report the opset matrix combinations that no runtime could adjudicate."""
+    from tests.onnx2pytorch.opset_matrix import NO_ORACLE
+
+    if not NO_ORACLE:
+        return
+    terminalreporter.write_sep("=", "opset matrix combinations without an oracle")
+    for op_type, opset, name, reason in NO_ORACLE:
+        terminalreporter.write_line(
+            "{}-{}-{}: {}".format(op_type, opset, name, reason.splitlines()[0][:160])
+        )
