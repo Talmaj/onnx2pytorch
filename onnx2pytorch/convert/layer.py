@@ -183,6 +183,12 @@ def convert_linear_layer(node, params):
     return layer
 
 
+def extract_sequence_lens(par_name, weights):
+    if par_name not in weights:
+        raise NotImplementedError("sequence_lens has to be a constant.")
+    return torch.tensor(numpy_helper.to_array(weights[par_name]))
+
+
 def extract_and_load_params_gru(node, weights):
     """Extract and load parameters for GRU layer."""
     X = None
@@ -206,8 +212,8 @@ def extract_and_load_params_gru(node, weights):
             if par_name != "" and par_name in weights:
                 B = torch.tensor(numpy_helper.to_array(weights[par_name]))
         elif par_ix == 4:
-            if par_name != "" and par_name in weights:
-                sequence_lens = torch.tensor(numpy_helper.to_array(weights[par_name]))
+            if par_name != "":
+                sequence_lens = extract_sequence_lens(par_name, weights)
         elif par_ix == 5:
             if par_name != "" and par_name in weights:
                 initial_h = torch.tensor(numpy_helper.to_array(weights[par_name]))
@@ -238,8 +244,8 @@ def extract_and_load_params_lstm(node, weights):
             if par_name != "" and par_name in weights:
                 B = torch.tensor(numpy_helper.to_array(weights[par_name]))
         elif par_ix == 4:
-            if par_name != "" and par_name in weights:
-                sequence_lens = torch.tensor(numpy_helper.to_array(weights[par_name]))
+            if par_name != "":
+                sequence_lens = extract_sequence_lens(par_name, weights)
         elif par_ix == 5:
             if par_name != "" and par_name in weights:
                 initial_h = torch.tensor(numpy_helper.to_array(weights[par_name]))
@@ -417,7 +423,11 @@ def convert_lstm_layer(node, weights):
         )
         getattr(lstm_layer, "bias_hh_l0").data = Rb_ifco
 
-    layer = LSTMWrapper(lstm_layer, reverse=dc["direction"] == "reverse")
+    layer = LSTMWrapper(
+        lstm_layer,
+        reverse=dc["direction"] == "reverse",
+        sequence_lens=sequence_lens,
+    )
     return layer
 
 
@@ -598,6 +608,7 @@ def convert_gru_layer(node, weights):
         gru_layer,
         linear_before_reset=dc["linear_before_reset"],
         reverse=dc["direction"] == "reverse",
+        sequence_lens=sequence_lens,
     )
     return layer
 
@@ -675,5 +686,9 @@ def convert_rnn_layer(node, weights):
         getattr(rnn_layer, "bias_ih_l0{}".format(dir_str)).data = Wb
         getattr(rnn_layer, "bias_hh_l0{}".format(dir_str)).data = Rb
 
-    layer = RNNWrapper(rnn_layer, reverse=dc["direction"] == "reverse")
+    layer = RNNWrapper(
+        rnn_layer,
+        reverse=dc["direction"] == "reverse",
+        sequence_lens=sequence_lens,
+    )
     return layer

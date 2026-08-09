@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.operations.rnnutils import reverse_sequences, run_padded, step_mask
+
 
 class GRUWrapper(nn.Module):
     """Wraps a 1-layer nn.GRU or custom GRU to match the API of an ONNX GRU.
@@ -11,11 +13,16 @@ class GRUWrapper(nn.Module):
     Supports both linear_before_reset=0 and linear_before_reset=1.
     """
 
-    def __init__(self, gru_module, linear_before_reset=1, reverse=False):
+    def __init__(
+        self, gru_module, linear_before_reset=1, reverse=False, sequence_lens=None
+    ):
         super().__init__()
         self.gru = gru_module
         self.linear_before_reset = linear_before_reset
         self.reverse = reverse
+        self.register_buffer(
+            "sequence_lens", None if sequence_lens is None else sequence_lens.long()
+        )
 
         # For linear_before_reset=0, we need custom forward pass
         if linear_before_reset == 0 and isinstance(gru_module, nn.GRU):
@@ -31,20 +38,24 @@ class GRUWrapper(nn.Module):
             self.gru.bidirectional + 1 if hasattr(self.gru, "bidirectional") else 1
         )
         hidden_size = self.gru.hidden_size
+        lengths = self.sequence_lens
 
         if h_0 is None or h_0.numel() == 0:
             h_0 = None
 
         if self.reverse:
-            input = input.flip(0)
+            input = reverse_sequences(input, lengths)
         if self.linear_before_reset == 1:
             # Use standard PyTorch GRU (linear_before_reset=1 is PyTorch's default)
-            output, h_n = self.gru(input, h_0)
+            if lengths is None:
+                output, h_n = self.gru(input, h_0)
+            else:
+                output, h_n = run_padded(self.gru, input, h_0, lengths)
         else:
             # Custom implementation for linear_before_reset=0
-            output, h_n = self._forward_linear_before_reset_0(input, h_0)
+            output, h_n = self._forward_linear_before_reset_0(input, h_0, lengths)
         if self.reverse:
-            output = output.flip(0)
+            output = reverse_sequences(output, lengths)
 
         # Y has shape (seq_length, num_directions, batch_size, hidden_size)
         Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
@@ -53,7 +64,7 @@ class GRUWrapper(nn.Module):
 
         return Y, Y_h
 
-    def _forward_linear_before_reset_0(self, input, h_0):
+    def _forward_linear_before_reset_0(self, input, h_0, lengths=None):
         """Custom GRU forward with linear_before_reset=0 (ONNX/TensorFlow default).
 
         Key difference from linear_before_reset=1 (PyTorch default):
@@ -137,20 +148,33 @@ class GRUWrapper(nn.Module):
 
             return h_t
 
+        if lengths is None:
+            mask = None
+        else:
+            mask = step_mask(lengths, seq_len, input.dtype).unsqueeze(-1)
+
+        def step(t, h_prev, *weights):
+            h_t = gru_cell_linear_before_reset_0(input[t], h_prev, *weights)
+            if mask is None:
+                return h_t, h_t
+            # Beyond its length a sequence keeps its state and emits zeros
+            h_t = mask[t] * h_t + (1 - mask[t]) * h_prev
+            return h_t, mask[t] * h_t
+
         # Process sequence
         outputs_forward = []
         h_forward = h_0[0]
 
         for t in range(seq_len):
-            h_forward = gru_cell_linear_before_reset_0(
-                input[t],
+            h_forward, output_t = step(
+                t,
                 h_forward,
                 self.gru.weight_ih_l0,
                 self.gru.weight_hh_l0,
                 self.gru.bias_ih_l0 if self.gru.bias else None,
                 self.gru.bias_hh_l0 if self.gru.bias else None,
             )
-            outputs_forward.append(h_forward)
+            outputs_forward.append(output_t)
 
         if self.bidirectional:
             # Process backward direction
@@ -158,15 +182,15 @@ class GRUWrapper(nn.Module):
             h_backward = h_0[1]
 
             for t in range(seq_len - 1, -1, -1):
-                h_backward = gru_cell_linear_before_reset_0(
-                    input[t],
+                h_backward, output_t = step(
+                    t,
                     h_backward,
                     self.gru.weight_ih_l0_reverse,
                     self.gru.weight_hh_l0_reverse,
                     self.gru.bias_ih_l0_reverse if self.gru.bias else None,
                     self.gru.bias_hh_l0_reverse if self.gru.bias else None,
                 )
-                outputs_backward.append(h_backward)
+                outputs_backward.append(output_t)
 
             outputs_backward.reverse()
 

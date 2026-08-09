@@ -361,15 +361,9 @@ XFAILS = {
     ),
     ("GRU", None, "clip"): "cell clipping has no torch equivalent",
     ("GRU", None, "initial_h"): "initial_h is rejected by convert_gru_layer",
-    ("GRU", None, "sequence_lens"): (
-        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
-    ),
     ("GRU", None, "layout"): "layout=1 is rejected by convert_gru_layer",
     ("LSTM", None, "clip"): "cell clipping has no torch equivalent",
     ("LSTM", None, "initial_h"): "initial_h is rejected by convert_lstm_layer",
-    ("LSTM", None, "sequence_lens"): (
-        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
-    ),
     ("LSTM", None, "layout"): "layout=1 is rejected by convert_lstm_layer",
     ("LSTM", None, "peepholes"): "torch's LSTM has no peephole connections",
     (
@@ -379,9 +373,6 @@ XFAILS = {
     ): "torch's LSTM cannot couple the input and forget gates",
     ("RNN", None, "clip"): "cell clipping has no torch equivalent",
     ("RNN", None, "initial_h"): "initial_h is rejected by convert_rnn_layer",
-    ("RNN", None, "sequence_lens"): (
-        "sequence_lens is parsed but never applied, so padded steps are not zeroed"
-    ),
     ("RNN", None, "layout"): "layout=1 is rejected by convert_rnn_layer",
     ("RNN", None, "sigmoid"): "torch's RNN only offers tanh and relu",
     ("LRN", None, "even_size"): (
@@ -1372,6 +1363,10 @@ CASES.update(
 SEQ, BATCH, INPUT, HIDDEN = 3, 2, 4, 5
 RNN_X = rand(SEQ, BATCH, INPUT, scale=0.5)
 
+# A batch holding every interesting length: full, partial and empty.
+VAR_X = rand(SEQ, 4, INPUT, scale=0.5)
+VAR_LENS = arr([SEQ, 1, 0, SEQ - 1], np.int32)
+
 
 def _rnn_weights(gates, directions=1):
     return {
@@ -1439,6 +1434,29 @@ def _rnn_cases(gates, num_outputs, extra=()):
             num_outputs=num_outputs,
         ),
         case(
+            "sequence_lens_mixed",
+            {"x": VAR_X},
+            initializers=dict(weights, seq_lens=VAR_LENS),
+            hidden_size=HIDDEN,
+            num_outputs=num_outputs,
+        ),
+        case(
+            "sequence_lens_reverse",
+            {"x": VAR_X},
+            initializers=dict(weights, seq_lens=VAR_LENS),
+            hidden_size=HIDDEN,
+            direction="reverse",
+            num_outputs=num_outputs,
+        ),
+        case(
+            "sequence_lens_bidirectional",
+            {"x": VAR_X},
+            initializers=dict(bidir, seq_lens=VAR_LENS),
+            hidden_size=HIDDEN,
+            direction="bidirectional",
+            num_outputs=num_outputs,
+        ),
+        case(
             "layout",
             {"x": rand(BATCH, SEQ, INPUT, scale=0.5)},
             initializers=weights,
@@ -1484,6 +1502,15 @@ CASES.update(
                     "linear_before_reset",
                     {"x": RNN_X},
                     initializers=_rnn_weights(3),
+                    hidden_size=HIDDEN,
+                    linear_before_reset=1,
+                    num_outputs=2,
+                    since=3,
+                ),
+                case(
+                    "sequence_lens_linear_before_reset",
+                    {"x": VAR_X},
+                    initializers=dict(_rnn_weights(3), seq_lens=VAR_LENS),
                     hidden_size=HIDDEN,
                     linear_before_reset=1,
                     num_outputs=2,
