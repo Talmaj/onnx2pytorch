@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import as_input_dtype, get_reduce_dims
+
 
 class ReduceL2(nn.Module):
     def __init__(
@@ -13,20 +15,12 @@ class ReduceL2(nn.Module):
         super().__init__()
 
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
-        if self.opset_version < 18:
-            dims = self.dim
-        else:
-            dims = axes
-        if dims is None:
-            if self.noop_with_empty_axes:
-                return torch.abs(data)
-            else:
-                dims = tuple(range(data.ndim))
-
-        if isinstance(dims, int):
-            dim = dims
-        else:
-            dim = tuple(list(dims))
-
-        ret = torch.sqrt(torch.sum(torch.square(data), dim=dim, keepdim=self.keepdim))
-        return ret
+        dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
+        if dim is None:
+            return torch.abs(data)
+        squares = torch.square(data)
+        if not data.dtype.is_floating_point:
+            # An integer square sum has to be rooted in floating point
+            squares = squares.double()
+        ret = torch.sqrt(torch.sum(squares, dim=dim, keepdim=self.keepdim))
+        return as_input_dtype(ret, data)

@@ -16,7 +16,12 @@ class Flatten(nn.Module):
         rows = 1
         for size in input.shape[:axis]:
             rows *= size
-        return input.reshape(rows, -1)
+        columns = 1
+        for size in input.shape[axis:]:
+            columns *= size
+        # Both sides are spelled out, reshape cannot infer one of them when the
+        # other is zero.
+        return input.reshape(rows, columns)
 
     def extra_repr(self) -> str:
         return "start_dim={}".format(self.start_dim)

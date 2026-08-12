@@ -1,7 +1,12 @@
+import numpy as np
 import pytest
 import torch
 
 from onnx2pytorch.operations.add import Add
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 @pytest.fixture(
@@ -114,3 +119,36 @@ def test_set_input_indices_triu(inp):
     op = Add()
     op.set_input_indices(inputs)
     assert op.input_indices is None
+
+
+@pytest.mark.parametrize(
+    "first,second",
+    [
+        ((1, 3), (2, 3)),
+        ((3,), (2, 3)),
+        ((2, 1), (1, 3)),
+        ((4,), (2, 3, 4)),
+        ((1, 3, 1), (2, 1, 4)),
+        ((2, 3), (2, 3)),
+        ((1,), (2, 3)),
+        ((2, 3), (3,)),
+    ],
+)
+def test_add_broadcasts_either_way(first, second):
+    """The sum used to accumulate into the first input, so a first input that
+    had to expand raised instead."""
+    np.random.seed(0)
+    inputs = {
+        "a": np.random.randn(*first).astype(np.float32),
+        "b": np.random.randn(*second).astype(np.float32),
+    }
+    model = make_single_node_model("Add", inputs, 14)
+    assert_matches_oracle(model, inputs)
+
+
+def test_add_does_not_touch_its_inputs():
+    a = torch.ones(2, 3)
+    b = torch.ones(2, 3)
+    Add()(a, b)
+    assert torch.equal(a, torch.ones(2, 3))
+    assert torch.equal(b, torch.ones(2, 3))

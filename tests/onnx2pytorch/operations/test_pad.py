@@ -76,6 +76,13 @@ def test_pad_raise_error(inp):
         op(inp)
 
 
+def test_pad_non_scalar_constant_value_is_rejected(inp):
+    """constant_value is a scalar, a wider tensor means the graph is broken."""
+    op = Pad()
+    with pytest.raises(ValueError, match="must be a scalar"):
+        op(inp, [0, 0, 1, 1, 0, 0, 1, 1], torch.tensor([1.0, 2.0]))
+
+
 PAD_MODES = ["constant", "reflect", "edge", "wrap"]
 
 
@@ -143,3 +150,18 @@ def test_pad_batch_and_channel_pads(opset_version):
             initializers={"pads": np.array(onnx_pads, dtype=np.int64)},
         )
     assert_matches_oracle(model, {"x": x})
+
+
+def test_pad_non_scalar_constant_value_is_rejected():
+    """F.pad takes a python scalar, so a wider constant_value used to be quietly
+    replaced by the default zero."""
+    op = Pad()
+    with pytest.raises(ValueError):
+        op(torch.zeros(2, 3), torch.tensor([1, 1, 1, 1]), torch.ones(2))
+
+
+def test_pad_scalar_constant_value_in_a_tensor():
+    op = Pad()
+    padded = op(torch.zeros(1, 2), torch.tensor([1, 0, 1, 0]), torch.tensor(3.0))
+    expected = torch.tensor([[3.0, 3.0], [0.0, 0.0], [3.0, 3.0]])
+    assert torch.equal(padded, expected)

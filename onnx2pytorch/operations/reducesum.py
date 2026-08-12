@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import as_input_dtype, get_reduce_dims
+
 
 class ReduceSum(nn.Module):
     def __init__(
@@ -13,16 +15,7 @@ class ReduceSum(nn.Module):
         super().__init__()
 
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
-        if self.opset_version < 13:
-            dims = self.dim
-        else:
-            dims = axes
-        if dims is None:
-            if self.noop_with_empty_axes:
-                return data
-            else:
-                dims = tuple(range(data.ndim))
-        if isinstance(dims, int):
-            return torch.sum(data, dim=dims, keepdim=self.keepdim)
-        else:
-            return torch.sum(data, dim=tuple(list(dims)), keepdim=self.keepdim)
+        dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
+        if dim is None:
+            return data
+        return as_input_dtype(torch.sum(data, dim=dim, keepdim=self.keepdim), data)

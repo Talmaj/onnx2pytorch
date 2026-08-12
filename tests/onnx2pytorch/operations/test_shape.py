@@ -28,3 +28,13 @@ def test_shape_full_rank(opset_version):
     x = np.random.randn(2, 3, 4).astype(np.float32)
     model = make_single_node_model("Shape", {"x": x}, opset_version)
     assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("start,end", [(1, 1), (2, 2), (0, 0), (-1, -1)])
+def test_shape_empty_slice_is_still_int64(start, end):
+    """An empty slice used to build a float32 tensor, since it had no values to
+    infer the type from."""
+    np.random.seed(0)
+    x = np.random.randn(2, 3, 4).astype(np.float32)
+    model = make_single_node_model("Shape", {"x": x}, 21, start=start, end=end)
+    assert_matches_oracle(model, {"x": x})

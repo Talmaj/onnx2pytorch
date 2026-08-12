@@ -50,14 +50,19 @@ class Pad(Operator):
                 pads = _expand_pads_to_axes(pads, _to_int_list(axes), input.dim())
             pads = extract_padding_params(pads)
 
-        if value is None:
-            value = self.value
-        # F.pad only accepts a python scalar, while ONNX passes constant_value
-        # as a 0-d tensor.
-        if isinstance(value, torch.Tensor):
-            value = value.item() if value.numel() == 1 else 0
-
         if self.mode == "constant":
+            if value is None:
+                value = self.value
+            # F.pad only accepts a python scalar, while ONNX passes
+            # constant_value as a 0-d tensor.
+            if isinstance(value, torch.Tensor):
+                if value.numel() != 1:
+                    raise ValueError(
+                        "Pad constant_value must be a scalar, got {} elements".format(
+                            value.numel()
+                        )
+                    )
+                value = value.item()
             return F.pad(input, pads, mode=self.mode, value=value)
 
         # The other torch modes want the padded axes preceded by a batch and a

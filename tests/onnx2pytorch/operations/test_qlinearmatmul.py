@@ -4,6 +4,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import assert_no_runtime_oracle
 
 INPUT_NAMES = [
     "a",
@@ -104,6 +105,14 @@ def test_qlinear_matmul_saturates():
 
 
 def test_qlinear_matmul_per_axis_scales():
+    """Per-axis scales, whose oracle has to be composed out of per-element runs.
+
+    Neither runtime accepts the 1-D scales the spec allows here, so the oracle is
+    one onnxruntime run per output element. That is exact rather than an
+    approximation: y[r, c] depends only on a[r], b[:, c] and the r-th / c-th
+    scale and zero point, so a run over those slices computes the same value,
+    with the same rounding and saturation, as the full node has to produce.
+    """
     np.random.seed(5)
     a = np.random.randint(0, 255, size=(4, 3)).astype(np.uint8)
     a_scale = np.array([0.02, 0.03, 0.01, 0.04], dtype=np.float32)
@@ -114,8 +123,12 @@ def test_qlinear_matmul_per_axis_scales():
     y_scale = np.array([0.05, 0.04, 0.03, 0.06], dtype=np.float32)
     y_zero_point = np.array([100, 101, 102, 103], dtype=np.uint8)
 
-    # onnxruntime only supports per-tensor scales, so the oracle is one
-    # onnxruntime run per output element with that element's scalars
+    assert_no_runtime_oracle(
+        *build_model(
+            a, a_scale, a_zero_point, b, b_scale, b_zero_point, y_scale, y_zero_point
+        )
+    )
+
     exp_y = np.empty((a.shape[0], b.shape[1]), dtype=np.uint8)
     for row in range(a.shape[0]):
         for col in range(b.shape[1]):

@@ -17,7 +17,10 @@ class Shape(nn.Module):
         else:
             end = self.end + rank if self.end < 0 else self.end
             end = min(max(end, 0), rank)
-        return torch.tensor(input.shape[start:end], device=input.device)
+        # The dtype has to be spelled out, an empty slice would infer float32.
+        return torch.tensor(
+            input.shape[start:end], dtype=torch.int64, device=input.device
+        )
 
     def extra_repr(self) -> str:
         return "start={}, end={}".format(self.start, self.end)

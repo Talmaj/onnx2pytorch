@@ -220,6 +220,15 @@ for _op in ("Add", "Sub", "Mul", "Div"):
                 "b": (np.abs(rand(2, 3, 4)) + 1).astype("float64"),
             },
         ),
+        # Signed integers, where Div has to truncate towards zero rather than floor.
+        case(
+            "int64_signed",
+            {
+                "a": arr([[-7, -1, 0, 7], [-8, 8, -3, 3]], np.int64),
+                "b": arr([[2, 2, 3, 2], [3, 3, -2, -2]], np.int64),
+            },
+            since=7,
+        ),
     ]
 
 CASES.update(
@@ -246,7 +255,9 @@ CASES.update(
             case("int", {"a": randint(2, 3, high=3), "b": randint(2, 3, high=3)})
         ],
         "Greater": [case("float", {"a": X3, "b": rand(2, 3, 4)}, since=7)],
+        "GreaterOrEqual": [case("float", {"a": X3, "b": rand(2, 3, 4)}, since=12)],
         "Less": [case("float", {"a": X3, "b": rand(2, 3, 4)}, since=7)],
+        "LessOrEqual": [case("float", {"a": X3, "b": rand(2, 3, 4)}, since=12)],
         "And": [
             case(
                 "bool",
@@ -1943,11 +1954,43 @@ CASES.update(
             case("pad", {"x": rand(4, 6)}, initializers={"s": arr([6, 8], np.int64)}),
         ],
         "Col2Im": [
+            # x is (N, C * prod(block_shape), number of blocks)
             case(
                 "default",
-                {"x": rand(1, 4, 4)},
+                {"x": rand(1, 4, 9)},
                 initializers={"s": arr([4, 4], np.int64), "b": arr([2, 2], np.int64)},
-            )
+            ),
+            case(
+                "channels",
+                {"x": rand(2, 12, 9)},
+                initializers={"s": arr([4, 4], np.int64), "b": arr([2, 2], np.int64)},
+            ),
+            case(
+                "strides_dilations",
+                {"x": rand(1, 4, 4)},
+                initializers={"s": arr([6, 6], np.int64), "b": arr([2, 2], np.int64)},
+                strides=[2, 2],
+                dilations=[2, 2],
+            ),
+            case(
+                "pads",
+                {"x": rand(1, 4, 25)},
+                initializers={"s": arr([4, 4], np.int64), "b": arr([2, 2], np.int64)},
+                pads=[1, 1, 1, 1],
+            ),
+            case(
+                "one_dimensional",
+                {"x": rand(1, 2, 5)},
+                initializers={"s": arr([6], np.int64), "b": arr([2], np.int64)},
+            ),
+            case(
+                "three_dimensional",
+                {"x": rand(1, 8, 24)},
+                initializers={
+                    "s": arr([3, 4, 5], np.int64),
+                    "b": arr([2, 2, 2], np.int64),
+                },
+            ),
         ],
         "MaxRoiPool": [
             case(

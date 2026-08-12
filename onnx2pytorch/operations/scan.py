@@ -22,13 +22,14 @@ class Scan(SubgraphOperator):
         scan_input_directions=None,
         scan_output_axes=None,
         scan_output_directions=None,
+        enable_pruning=False,
     ):
         if opset_version < 9:
             # Scan-8 prepends sequence_lens and gives every tensor a batch dimension
             raise NotImplementedError(
                 "Scan at opset {} not implemented.".format(opset_version)
             )
-        super().__init__(opset_version, batch_dim, body)
+        super().__init__(opset_version, batch_dim, body, enable_pruning)
         self.num_scan_inputs = num_scan_inputs
         self.scan_input_axes = scan_input_axes
         self.scan_input_directions = scan_input_directions
@@ -92,7 +93,7 @@ class Scan(SubgraphOperator):
                 index = num_iterations - 1 - iteration if direction else iteration
                 activations[name] = value.select(axis, index)
 
-            activations = self.execute_body(buffer_modules, activations, inputs[0])
+            activations = self.execute_body(buffer_modules, activations)
 
             states = [activations[name] for name in state_names_out]
             for i, name in enumerate(scan_names_out):

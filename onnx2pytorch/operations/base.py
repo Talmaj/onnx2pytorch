@@ -28,7 +28,7 @@ class OperatorWrapper(Operator, ABC):
     def __init__(self, op):
         """
         This class enables any function to become a subclass of nn.Module
-        The class name is equal to the op.__name__
+        The module reports itself under the op's name.
 
         Parameters
         ----------
@@ -36,5 +36,9 @@ class OperatorWrapper(Operator, ABC):
             Any torch function. It is used in-place of forward method.
         """
         self.forward = op
-        self.__class__.__name__ = op.__name__
+        self.op_name = op.__name__
         super().__init__()
+
+    def _get_name(self):
+        # Per instance, renaming the class would rename every other wrapper too
+        return self.op_name

@@ -62,6 +62,7 @@ from .lrn import LRN
 from .lstm import LSTMWrapper
 from .matmul import MatMul
 from .matmulinteger import MatMulInteger
+from .maximum import Max, Min
 from .maxpool import MaxPool
 from .maxroipool import MaxRoiPool
 from .maxunpool import MaxUnpool
@@ -211,12 +212,14 @@ __all__ = [
     "LSTMWrapper",
     "MatMul",
     "MatMulInteger",
+    "Max",
     "MaxPool",
     "MaxRoiPool",
     "MaxUnpool",
     "Mean",
     "MeanVarianceNormalization",
     "MelWeightMatrix",
+    "Min",
     "Mod",
     "Multinomial",
     "NegativeLogLikelihoodLoss",

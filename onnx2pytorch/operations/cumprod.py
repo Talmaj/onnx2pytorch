@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import as_input_dtype
+
 
 class CumProd(nn.Module):
     def __init__(self, exclusive=0, reverse=0):
@@ -15,7 +17,7 @@ class CumProd(nn.Module):
         if self.exclusive:
             ones = torch.ones_like(x.narrow(dim, 0, 1))
             x = torch.cat((ones, x.narrow(dim, 0, x.size(dim) - 1)), dim=dim)
-        y = torch.cumprod(x, dim=dim)
+        y = as_input_dtype(torch.cumprod(x, dim=dim), x)
         if self.reverse:
             y = torch.flip(y, [dim])
         return y

@@ -1,3 +1,4 @@
+import warnings
 from collections import defaultdict
 from functools import partial
 
@@ -36,7 +37,10 @@ def get_buffer_name(param_name):
     return "_initializer_{}".format(param_name.replace(".", "_"))
 
 
-def get_init_parameter(modules, item, default):
+MISSING_INITIALIZER = object()
+
+
+def get_init_parameter(modules, item, default=MISSING_INITIALIZER):
     """
     Look in modules for the item, and if not found return default.
 
@@ -47,13 +51,29 @@ def get_init_parameter(modules, item, default):
     item: str
         Name of initializer in ONNX model.
     default: torch.Tensor
-        Tensor to return if item not found.
+        Tensor to return if item not found. Without one a missing initializer
+        raises, rather than feeding the operator something unrelated.
     """
     item_name = get_buffer_name(item)
     for mod in modules:
         if hasattr(mod, item_name):
             return getattr(mod, item_name)
+    if default is MISSING_INITIALIZER:
+        raise KeyError(
+            "'{}' is neither an activation nor an initializer of the graph".format(item)
+        )
     return default
+
+
+def _is_only_consumer(onnx_graph, value_name, node_index):
+    """Whether the node at node_index is the only reader of value_name."""
+    if any(out.name == value_name for out in onnx_graph.output):
+        return False
+    return not any(
+        value_name in other.input
+        for j, other in enumerate(onnx_graph.node)
+        if j != node_index
+    )
 
 
 def convert_binary_operation(node, torch_op, op):
@@ -198,7 +218,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "Einsum":
             op = Einsum(**extract_attributes(node))
         elif node.op_type == "Elu":
-            op = nn.ELU(**extract_attributes(node), inplace=True)
+            op = nn.ELU(**extract_attributes(node))
         elif node.op_type == "Equal":
             op = OperatorWrapper(torch.eq)
         elif node.op_type == "Erf":
@@ -254,6 +274,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = If(
                 opset_version=opset_version,
                 batch_dim=batch_dim,
+                enable_pruning=enable_pruning,
                 **extract_attributes(node),
             )
         elif node.op_type == "ImageDecoder":
@@ -265,9 +286,9 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "IsNaN":
             op = OperatorWrapper(torch.isnan)
         elif node.op_type == "LayerNormalization":
-            op = LayerNorm(list(params[0].dims), **extract_attributes(node))
+            op = LayerNorm(**extract_attributes(node))
         elif node.op_type == "LeakyRelu":
-            op = nn.LeakyReLU(**extract_attributes(node), inplace=True)
+            op = nn.LeakyReLU(**extract_attributes(node))
         elif node.op_type == "Less":
             op = OperatorWrapper(torch.less)
         elif node.op_type == "LessOrEqual":
@@ -282,6 +303,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Loop(
                 opset_version=opset_version,
                 batch_dim=batch_dim,
+                enable_pruning=enable_pruning,
                 **extract_attributes(node),
             )
         elif node.op_type == "LpNormalization":
@@ -304,7 +326,15 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                         for par_name in next_node.input
                         if par_name in weights
                     ]
-                    if next_params and next_node.op_type == "Add":
+                    if (
+                        next_params
+                        and next_node.op_type == "Add"
+                        # The Add has to consume this MatMul, and nothing else
+                        # may need the unbiased product, or folding the bias in
+                        # would drop a value the graph still reads.
+                        and node.output[0] in next_node.input
+                        and _is_only_consumer(onnx_graph, node.output[0], i + 1)
+                    ):
                         bias = torch.tensor(numpy_helper.to_array(next_params[0]))
                         op.bias = nn.Parameter(bias)
                         node.output.pop()
@@ -315,7 +345,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "MatMulInteger":
             op = MatMulInteger()
         elif node.op_type == "Max":
-            op = OperatorWrapper(torch.max)
+            op = Max()
         elif node.op_type == "MaxPool":
             op = convert_layer(node, "MaxPool")
         elif node.op_type == "MaxRoiPool":
@@ -329,7 +359,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "MelWeightMatrix":
             op = MelWeightMatrix(**extract_attributes(node))
         elif node.op_type == "Min":
-            op = OperatorWrapper(torch.min)
+            op = Min()
         elif node.op_type == "Mish":
             op = nn.Mish()
         elif node.op_type == "Mod":
@@ -407,8 +437,10 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "RegexFullMatch":
             op = RegexFullMatch(**extract_attributes(node))
         elif node.op_type == "Relu":
-            op = nn.ReLU(inplace=True)
+            # Not in place: the input may feed other nodes as well.
+            op = nn.ReLU()
         elif node.op_type == "Reshape":
+            kwargs = extract_attributes(node)
             shape = (
                 list(filter(lambda x: x.name == node.input[1], onnx_graph.initializer))
                 if len(node.input) > 1
@@ -418,8 +450,8 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 shape = np.copy(numpy_helper.to_array(shape[0]))
             else:
                 # Before opset 5 the target shape is an attribute
-                shape = extract_attributes(node).get("shape")
-            op = Reshape(enable_pruning, shape)
+                shape = kwargs.get("shape")
+            op = Reshape(enable_pruning, shape, allowzero=kwargs.get("allowzero", 0))
         elif node.op_type == "Resize":
             op = Resize(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "ReverseSequence":
@@ -438,6 +470,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Scan(
                 opset_version=opset_version,
                 batch_dim=batch_dim,
+                enable_pruning=enable_pruning,
                 **extract_attributes(node),
             )
         elif node.op_type == "Scatter":
@@ -464,6 +497,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = SequenceMap(
                 opset_version=opset_version,
                 batch_dim=batch_dim,
+                enable_pruning=enable_pruning,
                 **extract_attributes(node),
             )
         elif node.op_type == "Shape":
@@ -506,7 +540,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             # if the split_size_or_sections is not in node attributes,
             # the number_of_splits becomes the number of node outputs
             if "split_size_or_sections" not in kwargs:
-                kwargs["number_of_splits"] = len(node.output)
+                kwargs.setdefault("number_of_splits", len(node.output))
             op = Split(enable_pruning, **kwargs)
         elif node.op_type == "SplitToSequence":
             op = SplitToSequence(**extract_attributes(node))
@@ -565,8 +599,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                     "Conversion not implemented for op_type={}.".format(node.op_type)
                 )
             else:
-                print(
-                    "Automatic inference of operator: {}".format(node.op_type.lower())
+                warnings.warn(
+                    "No explicit conversion for op_type={}, guessing torch.{}. "
+                    "Attributes are ignored and the result might differ.".format(
+                        node.op_type, node.op_type.lower()
+                    ),
+                    RuntimeWarning,
                 )
 
         op_name = "{}_{}".format(node.op_type, node.output[0])

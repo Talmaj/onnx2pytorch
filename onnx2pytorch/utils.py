@@ -134,18 +134,31 @@ def extract_padding_params(params):
     return pads
 
 
-def extract_padding_params_for_conv_layer(params):
+def lowest_value(dtype):
+    """The most negative value a dtype holds, the neutral pad for max pooling."""
+    if dtype.is_floating_point:
+        return float("-inf")
+    return torch.iinfo(dtype).min
+
+
+def extract_padding_params_for_conv_layer(params, value=0):
     """
     Padding params in onnx are different than in pytorch. That is why we need to
     check if they are symmetric and cut half or return a padding layer.
+
+    Asymmetric pads have to be materialised, so they need a fill value. Pooling
+    over the maximum has to ignore the pads instead of counting them as zeros.
     """
     if is_symmetric(params):
         return params[: len(params) // 2]
-    else:
-        pad_dim = len(params) // 2
-        pad_layer = getattr(torch.nn, "ConstantPad{}d".format(pad_dim))
-        # Conv pads cover spatial dimensions only, so nothing may be discarded.
-        return pad_layer(convert_onnx_pads_to_torch(params), value=0)
+    # Conv pads cover spatial dimensions only, so nothing may be discarded.
+    torch_pads = convert_onnx_pads_to_torch(params)
+    if value == float("-inf"):
+        from onnx2pytorch.operations.lowestpad import LowestPad
+
+        return LowestPad(torch_pads)
+    pad_layer = getattr(torch.nn, "ConstantPad{}d".format(len(params) // 2))
+    return pad_layer(torch_pads, value=value)
 
 
 def get_reduce_dims(data, dim, axes=None, noop_with_empty_axes=False):
@@ -163,6 +176,21 @@ def get_reduce_dims(data, dim, axes=None, noop_with_empty_axes=False):
     if isinstance(dims, int):
         return dims
     return tuple(int(d) for d in torch.atleast_1d(torch.as_tensor(dims)))
+
+
+def as_input_dtype(result, data):
+    """
+    Cast a reduction back to the type of its input.
+
+    ONNX reductions return the input type, while torch accumulates integers into
+    int64 and takes roots and means in floating point. An integer result is
+    truncated toward zero, which is what both onnx runtimes do.
+    """
+    if result.dtype == data.dtype:
+        return result
+    if result.dtype.is_floating_point and not data.dtype.is_floating_point:
+        result = torch.trunc(result)
+    return result.to(data.dtype)
 
 
 def get_selection(indices, dim):

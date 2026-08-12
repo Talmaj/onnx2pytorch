@@ -139,7 +139,13 @@ class Attention(nn.Module):
         row_all_masked = torch.isneginf(attn_bias.amax(dim=-1, keepdim=True))
 
         qk_matmul_output = None
-        if self.num_outputs < 4 and self.softcap <= 0:
+        # scaled_dot_product_attention softmaxes in the input dtype, so an
+        # explicit softmax_precision needs the manual path
+        if (
+            self.num_outputs < 4
+            and self.softcap <= 0
+            and self.softmax_precision is None
+        ):
             y = F.scaled_dot_product_attention(
                 Q, K, V, attn_mask=attn_bias, scale=scale
             )
@@ -147,10 +153,17 @@ class Attention(nn.Module):
         else:
             root_scale = math.sqrt(scale)
             qk = torch.matmul(Q * root_scale, K.transpose(-1, -2) * root_scale)
+            # Softcap goes before the bias, so that a -inf stays -inf.
+            capped = qk
             if self.softcap > 0:
-                qk = torch.tanh(qk / self.softcap) * self.softcap
-            qk_with_bias = qk + attn_bias
-            qk_matmul_output = qk_with_bias if self.qk_matmul_output_mode == 2 else qk
+                capped = torch.tanh(qk / self.softcap) * self.softcap
+            qk_with_bias = capped + attn_bias
+            if self.qk_matmul_output_mode == 2:
+                qk_matmul_output = qk_with_bias
+            elif self.qk_matmul_output_mode == 1:
+                qk_matmul_output = capped
+            else:
+                qk_matmul_output = qk
             if self.softmax_precision is not None:
                 dtype = ONNX_DTYPE_TO_TORCH.get(self.softmax_precision)
                 if dtype is None:
@@ -164,7 +177,7 @@ class Attention(nn.Module):
             if self.qk_matmul_output_mode == 3:
                 qk_matmul_output = probs
             qk_matmul_output = qk_matmul_output.to(Q.dtype)
-            y = torch.matmul(probs, V).to(Q.dtype)
+            y = torch.matmul(probs.to(V.dtype), V).to(Q.dtype)
 
         if input_rank == 3:
             y = y.permute(0, 2, 1, 3).reshape(batch_size, q_length, -1)

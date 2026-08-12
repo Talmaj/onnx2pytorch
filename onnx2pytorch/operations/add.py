@@ -27,15 +27,11 @@ class Add(Operator):
                 out[selection] += inp
             return out
 
-        # Reorder input so that the matrix is first
-        if is_constant(input[0]):
-            input = sorted(input, key=lambda x: -len(x.shape))
-        # Reorder input so that the broadcasted matrix is last
-        elif all(x == 1 for x in input[0].shape):
-            input = sorted(input, key=lambda x: -sum(x.shape))
-        out = input[0].clone()
+        # Not accumulated in place: onnx broadcasts both ways, so the first input
+        # is not necessarily the widest one, and it may feed other nodes too.
+        out = input[0]
         for inp in input[1:]:
-            out += inp
+            out = out + inp
         return out
 
     def set_input_indices(self, input):

@@ -1,5 +1,6 @@
 import warnings
 
+import numpy as np
 import onnx
 from onnx import numpy_helper
 
@@ -78,6 +79,8 @@ def extract_attributes(node):
             kwargs["activation_beta"] = extract_attr_values(attr)
         elif attr.name == "activations":
             kwargs["activations"] = extract_attr_values(attr)
+        elif attr.name == "allowzero":
+            kwargs["allowzero"] = extract_attr_values(attr)
         elif attr.name == "alpha":
             if node.op_type == "LeakyRelu":
                 kwargs["negative_slope"] = extract_attr_values(attr)
@@ -275,6 +278,8 @@ def extract_attributes(node):
             kwargs["num_groups"] = extract_attr_values(attr)
         elif attr.name == "num_heads":
             kwargs["num_heads"] = extract_attr_values(attr)
+        elif attr.name == "num_outputs" and node.op_type == "Split":
+            kwargs["number_of_splits"] = extract_attr_values(attr)
         elif attr.name == "num_scan_inputs":
             kwargs["num_scan_inputs"] = extract_attr_values(attr)
         elif attr.name == "offset_group":
@@ -312,7 +317,11 @@ def extract_attributes(node):
                 kwargs["pads"] = params
             else:
                 # Works for Conv, MaxPooling and other layers from convert_layer func
-                kwargs["padding"] = extract_padding_params_for_conv_layer(params)
+                kwargs["padding"] = extract_padding_params_for_conv_layer(
+                    params,
+                    # MaxPool ignores the pads, the others treat them as zeros
+                    value=float("-inf") if node.op_type == "MaxPool" else 0,
+                )
         elif attr.name == "pixel_format":
             kwargs["pixel_format"] = extract_attr_values(attr)
         elif attr.name == "pooled_shape":
@@ -406,14 +415,11 @@ def extract_attributes(node):
             kwargs["value"] = extract_attr_values(attr)
         elif attr.name == "value":
             kwargs["constant"] = extract_attr_values(attr)
-        elif attr.name == "value_float":
-            kwargs["constant"] = extract_attr_values(attr)
-        elif attr.name == "value_floats":
-            kwargs["constant"] = extract_attr_values(attr)
-        elif attr.name == "value_int":
-            kwargs["constant"] = extract_attr_values(attr)
-        elif attr.name == "value_ints":
-            kwargs["constant"] = extract_attr_values(attr)
+        elif attr.name in ("value_float", "value_floats"):
+            # The spelled out attributes carry a type, python floats do not
+            kwargs["constant"] = np.array(extract_attr_values(attr), dtype=np.float32)
+        elif attr.name in ("value_int", "value_ints"):
+            kwargs["constant"] = np.array(extract_attr_values(attr), dtype=np.int64)
         elif attr.name == "value_string":
             kwargs["constant"] = extract_attr_values(attr)
         elif attr.name == "value_strings":

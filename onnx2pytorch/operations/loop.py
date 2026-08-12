@@ -8,6 +8,7 @@ from onnx import numpy_helper
 from torch import nn
 from torch.nn.modules.linear import Identity
 
+from onnx2pytorch.dtypes import ONNX_DTYPE_TO_TORCH
 from onnx2pytorch.utils import (
     get_inputs_names,
     get_outputs_names,
@@ -22,6 +23,7 @@ class Loop(nn.Module):
         opset_version,
         batch_dim,
         body: onnx.GraphProto,
+        enable_pruning=False,
     ):
         super().__init__()
         self.ops = import_module("onnx2pytorch.convert.operations")
@@ -36,7 +38,7 @@ class Loop(nn.Module):
         # Creates mapping from node (identified by first output) to submodule
         self.mapping = {}
         for op_id, op_name, op in self.ops.convert_operations(
-            body, opset_version, batch_dim
+            body, opset_version, batch_dim, enable_pruning
         ):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name
@@ -79,6 +81,13 @@ class Loop(nn.Module):
         M = inputs[0]
         cond = inputs[1]
         v_initial = inputs[2:]
+
+        # M and cond are both optional: no M means no trip count limit, and no
+        # cond means the loop runs until the body says otherwise.
+        if M is None:
+            M = float("inf")
+        if cond is None:
+            cond = torch.tensor(True)
 
         iteration_num_name = self.input_names[0]
         cond_in_name = self.input_names[1]
@@ -131,10 +140,8 @@ class Loop(nn.Module):
                             else (
                                 activations[in_op_id]
                                 if in_op_id in activations
-                                # if in_op_id not in activations neither in
-                                # parameters then it must be the initial input
                                 else self.ops.get_init_parameter(
-                                    buffer_modules, in_op_id, inputs[0]
+                                    buffer_modules, in_op_id
                                 )
                             )
                         )
@@ -147,10 +154,10 @@ class Loop(nn.Module):
                 in_activations = resolve_omitted_inputs(in_activations)
 
                 # store activations for next layer
-                if isinstance(op, Loop):
+                if isinstance(op, (Loop, self.c.SubgraphOperator)):
                     outputs = op(buffer_modules, activations, *in_activations)
                     for out_act_name, output in zip(node.output, outputs):
-                        activations[out_op_id] = output
+                        activations[out_act_name] = output
                         if out_act_name in scan_outputs_names:
                             scan_outputs[out_act_name].append(output)
                 elif isinstance(op, partial) and op.func == torch.cat:
@@ -191,7 +198,34 @@ class Loop(nn.Module):
             activations.update(zip(loop_carried_in_names, loop_carried_outputs))
 
         # Set outputs to N loop carried final values, followed by K scan outputs
-        outputs = [activations[lcn] for lcn in loop_carried_out_names]
+        if i == 0:
+            # The body never ran, so the carried values are still the initial
+            # ones and every scan output is empty.
+            outputs = list(v_initial)
+        else:
+            outputs = [activations[lcn] for lcn in loop_carried_out_names]
         for son in scan_outputs_names:
-            outputs.append(torch.cat([so.unsqueeze(dim=0) for so in scan_outputs[son]]))
+            collected = scan_outputs[son]
+            if collected:
+                outputs.append(torch.cat([so.unsqueeze(dim=0) for so in collected]))
+            else:
+                outputs.append(self.empty_scan_output(son))
         return outputs
+
+    def empty_scan_output(self, name):
+        """
+        An empty scan output, for a loop whose body never ran.
+
+        Its per iteration shape only follows from the body's declared output, as
+        nothing was computed to read it off.
+        """
+        for output in self.body.output:
+            if output.name == name:
+                tensor_type = output.type.tensor_type
+                shape = [
+                    dim.dim_value if dim.HasField("dim_value") else 0
+                    for dim in tensor_type.shape.dim
+                ]
+                dtype = ONNX_DTYPE_TO_TORCH.get(tensor_type.elem_type)
+                return torch.empty([0] + shape, dtype=dtype)
+        return torch.empty(0)

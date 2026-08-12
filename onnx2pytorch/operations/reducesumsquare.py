@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import as_input_dtype, get_reduce_dims
+
 
 class ReduceSumSquare(nn.Module):
     """
@@ -19,25 +21,8 @@ class ReduceSumSquare(nn.Module):
         super().__init__()
 
     def forward(self, data: torch.Tensor, axes: torch.Tensor = None):
-        # In opset < 18, axes is an attribute (self.dim)
-        # In opset >= 18, axes is an optional input
-        if self.opset_version < 18:
-            dims = self.dim
-        else:
-            dims = axes
-
-        if dims is None:
-            if self.noop_with_empty_axes:
-                return torch.square(data)
-            else:
-                # Reduce over all dimensions
-                dims = tuple(range(data.ndim))
-
-        if isinstance(dims, int):
-            dim = dims
-        else:
-            dim = tuple(list(dims))
-
-        # Compute sum of squares: sum(x^2)
+        dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
+        if dim is None:
+            return torch.square(data)
         ret = torch.sum(torch.square(data), dim=dim, keepdim=self.keepdim)
-        return ret
+        return as_input_dtype(ret, data)

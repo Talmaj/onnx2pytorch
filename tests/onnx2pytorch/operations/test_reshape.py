@@ -1,7 +1,12 @@
+import numpy as np
 import torch
 import pytest
 
 from onnx2pytorch.operations import Reshape
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 @pytest.fixture
@@ -45,3 +50,32 @@ def test_reshape_2(inp, pruned_inp, enable_pruning):
     expected_shape = torch.Size((35, 2, 80))
     out = op(pruned_inp)
     assert out.shape == expected_shape
+
+
+@pytest.mark.parametrize(
+    "shape,target",
+    [((0, 3, 4), [3, 0, 4]), ((0, 3), [3, 0]), ((2, 0), [0, 2])],
+)
+def test_reshape_allowzero(shape, target):
+    """A zero copies the input dimension by default, allowzero asks for it as
+    the literal size instead."""
+    x = np.zeros(shape, dtype=np.float32)
+    model = make_single_node_model(
+        "Reshape",
+        {"x": x},
+        21,
+        initializers={"shape": np.array(target, dtype=np.int64)},
+        allowzero=1,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+def test_reshape_zero_copies_the_input_dimension():
+    x = np.arange(12, dtype=np.float32).reshape(3, 4)
+    model = make_single_node_model(
+        "Reshape",
+        {"x": x},
+        21,
+        initializers={"shape": np.array([0, 4], dtype=np.int64)},
+    )
+    assert_matches_oracle(model, {"x": x})

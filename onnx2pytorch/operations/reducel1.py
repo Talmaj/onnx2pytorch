@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from onnx2pytorch.utils import get_reduce_dims
+from onnx2pytorch.utils import as_input_dtype, get_reduce_dims
 
 
 class ReduceL1(nn.Module):
@@ -15,4 +15,5 @@ class ReduceL1(nn.Module):
         dim = get_reduce_dims(data, self.dim, axes, self.noop_with_empty_axes)
         if dim is None:
             return torch.abs(data)
-        return torch.sum(torch.abs(data), dim=dim, keepdim=self.keepdim)
+        ret = torch.sum(torch.abs(data), dim=dim, keepdim=self.keepdim)
+        return as_input_dtype(ret, data)

@@ -224,7 +224,7 @@ def test_randomuniformlike_unsupported_dtype():
     # ONNX TensorProto.UINT16 = 4 (not supported in PyTorch)
     op = RandomUniformLike(dtype=4)
 
-    with pytest.raises(ValueError, match="ONNX dtype .* is not supported"):
+    with pytest.raises(NotImplementedError, match="ONNX dtype .* is not supported"):
         y = op(x)
 
 
@@ -268,3 +268,20 @@ def test_randomuniformlike_dtype_int64():
     assert y.shape == x.shape
     # Check dtype is int64
     assert y.dtype == torch.int64
+
+
+def test_randomuniformlike_seed_holds_across_calls():
+    """The seed used to be applied once in __init__ via the global rng, so a
+    second forward on the same module gave a different draw."""
+    x = torch.randn(2, 3, 4)
+    op = RandomUniformLike(seed=42)
+    assert torch.equal(op(x), op(x))
+
+
+def test_randomuniformlike_leaves_the_global_rng_alone():
+    x = torch.randn(2, 3, 4)
+    torch.manual_seed(0)
+    before = torch.randn(3)
+    torch.manual_seed(0)
+    RandomUniformLike(seed=42)(x)
+    assert torch.equal(torch.randn(3), before)

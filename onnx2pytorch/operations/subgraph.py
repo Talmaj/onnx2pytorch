@@ -23,13 +23,20 @@ class SubgraphOperator(nn.Module):
     forward pass and drive their subgraphs through execute_graph.
     """
 
-    def __init__(self, opset_version, batch_dim, body: onnx.GraphProto = None):
+    def __init__(
+        self,
+        opset_version,
+        batch_dim,
+        body: onnx.GraphProto = None,
+        enable_pruning=False,
+    ):
         super().__init__()
         self.ops = import_module("onnx2pytorch.convert.operations")
         self.c = import_module("onnx2pytorch.constants")
 
         self.opset_version = opset_version
         self.batch_dim = batch_dim
+        self.enable_pruning = enable_pruning
 
         if body is not None:
             self.body = body
@@ -46,7 +53,7 @@ class SubgraphOperator(nn.Module):
         """Convert a subgraph's nodes to submodules and its initializers to buffers."""
         mapping = {}
         for op_id, op_name, op in self.ops.convert_operations(
-            graph, self.opset_version, self.batch_dim
+            graph, self.opset_version, self.batch_dim, self.enable_pruning
         ):
             submodule_name = prefix + op_name
             setattr(self, submodule_name, op)
@@ -59,14 +66,10 @@ class SubgraphOperator(nn.Module):
             )
         return mapping
 
-    def execute_body(self, buffer_modules, activations, fallback):
-        return self.execute_graph(
-            self.body, self.mapping, buffer_modules, activations, fallback
-        )
+    def execute_body(self, buffer_modules, activations):
+        return self.execute_graph(self.body, self.mapping, buffer_modules, activations)
 
-    def execute_graph(
-        self, graph, mapping, buffer_modules, activations, fallback, prefix=""
-    ):
+    def execute_graph(self, graph, mapping, buffer_modules, activations, prefix=""):
         """
         Run all nodes of a subgraph once, adding their outputs to activations.
 
@@ -80,8 +83,6 @@ class SubgraphOperator(nn.Module):
             Modules whose buffers may hold initializers.
         activations: dict
             Activations visible to the subgraph, including its inputs.
-        fallback: torch.Tensor
-            Value used for inputs that resolve to neither activation nor buffer.
         prefix: str
             Prefix under which this subgraph's initializers were registered.
         """
@@ -97,7 +98,7 @@ class SubgraphOperator(nn.Module):
                 )
                 if param is not None:
                     return param
-            return self.ops.get_init_parameter(buffer_modules, in_op_id, fallback)
+            return self.ops.get_init_parameter(buffer_modules, in_op_id)
 
         for node in graph.node:
             out_op_id = node.output[0]

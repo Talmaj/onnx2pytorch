@@ -1,7 +1,12 @@
+import numpy as np
 import torch
 import pytest
 
 from onnx2pytorch.operations import Split
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 @pytest.fixture
@@ -59,3 +64,21 @@ def test_split_no_enable_pruning(weight, split_size_or_sections):
     op = Split(enable_pruning=False, keep_size=False)
     s = op(weight, split_size_or_sections)
     assert all(len(x) == 5 for x in s)
+
+
+@pytest.mark.parametrize(
+    "size,num_outputs", [(6, 3), (5, 3), (7, 2), (4, 4), (5, 2), (1, 1)]
+)
+def test_split_num_outputs(size, num_outputs):
+    """num_outputs was not extracted at all, and an indivisible dimension gives
+    a smaller last chunk rather than an error."""
+    x = np.arange(size, dtype=np.float32)
+    model = make_single_node_model(
+        "Split",
+        {"x": x},
+        18,
+        outputs=tuple("out{}".format(i) for i in range(num_outputs)),
+        axis=0,
+        num_outputs=num_outputs,
+    )
+    assert_matches_oracle(model, {"x": x})

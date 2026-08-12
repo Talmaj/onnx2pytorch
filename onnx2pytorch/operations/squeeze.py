@@ -18,9 +18,11 @@ class Squeeze(Operator):
 
         if dims is None:
             return torch.squeeze(input)
-        elif isinstance(dims, int):
-            return torch.squeeze(input, dim=dims)
-        else:
-            for dim in sorted(dims, reverse=True):
-                input = torch.squeeze(input, dim=dim)
-            return input
+        if isinstance(dims, int):
+            dims = [dims]
+        # The axes count against the input rank, so resolve them before removing
+        # anything and then work from the back, which keeps the lower axes valid.
+        rank = input.dim()
+        for dim in sorted((int(d) % rank for d in dims), reverse=True):
+            input = torch.squeeze(input, dim=dim)
+        return input

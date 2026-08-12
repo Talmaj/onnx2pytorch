@@ -35,7 +35,7 @@ class SequenceMap(SubgraphOperator):
             for name, value in zip(self.input_names[1:], additional_inputs):
                 activations[name] = value[i] if isinstance(value, list) else value
 
-            activations = self.execute_body(buffer_modules, activations, element)
+            activations = self.execute_body(buffer_modules, activations)
 
             for output, name in zip(outputs, self.output_names):
                 output.append(activations[name])

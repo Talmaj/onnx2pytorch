@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from onnx2pytorch.utils import get_reduce_dims
+from onnx2pytorch.utils import as_input_dtype, get_reduce_dims
 
 
 class ReduceProd(nn.Module):
@@ -18,6 +18,8 @@ class ReduceProd(nn.Module):
         dims = (dim,) if isinstance(dim, int) else dim
         dims = tuple(d % data.ndim for d in dims)
         # torch.prod reduces a single dimension at a time
+        out = data
         for d in dims:
-            data = torch.prod(data, dim=d, keepdim=True)
-        return data if self.keepdim else data.squeeze(dims)
+            out = torch.prod(out, dim=d, keepdim=True)
+        out = as_input_dtype(out, data)
+        return out if self.keepdim else out.squeeze(dims)

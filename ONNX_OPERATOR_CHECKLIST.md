@@ -6,7 +6,23 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 
 **All 115 operators listed here are now implemented** out of 203 total `ai.onnx` operators considered (88 more were already supported before this list was written — see bottom of file). This excludes the `ai.onnx.ml` (classical ML), `ai.onnx.preview`, and `ai.onnx.preview.training` domains, which are out of scope for a neural-network-focused converter; ping if you want those added too.
 
-> Note: a small number of these (e.g. `Abs`, `Cos`, `Sin`, `Neg`, `Sign`, `Round`) may already produce correct results today through the generic fallback in `convert_operations()` (`getattr(torch, op_type.lower())`), since a matching `torch.*` function of the same name happens to exist. They're still listed here because there's no explicit, tested implementation guaranteeing attribute handling (e.g. `Round`'s `ndigits`-less rounding rules) is correct.
+> Note: every operator listed here now has an explicit branch in `convert_operations()`. The generic
+> `getattr(torch, op_type.lower())` fallback is still there for forward compatibility, but
+> `tests/onnx2pytorch/convert/test_unsupported.py` asserts that no operator in the installed `ai.onnx`
+> schema set resolves through it, and reaching it now raises a `RuntimeWarning`.
+
+### Partially supported
+
+The operators below are ticked because the paths a converter realistically meets are implemented and
+tested, but they are not complete. Everything unsupported raises rather than returning a wrong tensor.
+
+| Operator | Not supported |
+|----------|---------------|
+| `Dropout` | Inference only. `training_mode=True` raises `NotImplementedError`; `ratio` and `seed` are accepted and ignored, which is correct for inference but means the training path is absent. |
+| `RNN` / `GRU` / `LSTM` | `clip`, `initial_h` (and LSTM `initial_c`), `layout=1`, non-default `activations` (including RNN `sigmoid`), LSTM peepholes (`P`) and `input_forget`. Torch's fused kernels offer no equivalent, so `convert_*_layer` rejects them. |
+| `SwiGLU` | Implemented per the opset-28 spec (`Swish_alpha(A) * B`), but the pinned `onnx` (1.22, max opset 27) has no `SwiGLU` schema, so there is no runtime to differentially test against. `test_swiglu_still_has_no_oracle` fails once `onnx` is upgraded, as a reminder to wire up the real oracle. |
+| `TfIdfVectorizer` | `pool_strings` raises `NotImplementedError`; only `pool_int64s` is supported. |
+| `Cast` / `CastLike` | Float-to-string casts raise, as numpy does not format floats the way onnx specifies. |
 
 ## Trigonometric Functions
 
@@ -184,7 +200,6 @@ Test-case links point at the pinned commit [`0dd7987`](https://github.com/onnx/o
 ## Bit Shifting
 
 - [x] [`BitShift`](https://onnx.ai/onnx/operators/onnx__BitShift.html) — [test cases](https://github.com/onnx/onnx/tree/0dd7987d73780e1801691e7465b63288a8bcab2b/onnx/backend/test/case/node/bitshift.py)
-  - ⚠️ Custom `BitShift` class already exists in `onnx2pytorch/operations/bitshift.py` but is **not wired** into `convert_operations()` — currently non-functional. Should just need registration.
 
 ---
 

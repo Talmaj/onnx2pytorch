@@ -160,3 +160,69 @@ def test_maxpool_indices_by_rank(kernel_shape):
         strides=[2] * len(kernel_shape),
     )
     assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize(
+    "pads,storage_order",
+    [([1, 1, 0, 0], 0), ([1, 1, 0, 0], 1), ([0, 1, 1, 0], 0), ([1, 1, 1, 1], 0)],
+)
+def test_maxpool_asymmetric_pads_are_not_zeros(pads, storage_order):
+    """A materialised pad used to be filled with zeros, which then won every
+    window of a negative input, and the indices counted from the padded plane."""
+    x = -np.arange(1, 10, dtype=np.float32).reshape(1, 1, 3, 3)
+    model = make_single_node_model(
+        "MaxPool",
+        {"x": x},
+        12,
+        outputs=("y", "indices"),
+        kernel_shape=[2, 2],
+        pads=pads,
+        storage_order=storage_order,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("auto_pad", ["SAME_UPPER", "SAME_LOWER"])
+@pytest.mark.parametrize("kernel_shape,strides", [([2, 2], [1, 1]), ([3, 3], [2, 2])])
+def test_maxpool_auto_pad_indices(auto_pad, kernel_shape, strides):
+    x = -np.arange(1, 10, dtype=np.float32).reshape(1, 1, 3, 3)
+    model = make_single_node_model(
+        "MaxPool",
+        {"x": x},
+        12,
+        outputs=("y", "indices"),
+        kernel_shape=kernel_shape,
+        strides=strides,
+        auto_pad=auto_pad,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("spatial", [1, 3])
+def test_maxpool_padded_indices_over_other_ranks(spatial):
+    np.random.seed(0)
+    shape = (2, 3) + (4,) * spatial
+    x = np.random.randn(*shape).astype(np.float32)
+    model = make_single_node_model(
+        "MaxPool",
+        {"x": x},
+        12,
+        outputs=("y", "indices"),
+        kernel_shape=[2] * spatial,
+        pads=[1] * spatial + [0] * spatial,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("dtype", [np.int8, np.uint8])
+@pytest.mark.parametrize(
+    "attributes",
+    [{"auto_pad": "SAME_UPPER"}, {"pads": [1, 1, 0, 0]}],
+)
+def test_maxpool_integer_input_with_pads(dtype, attributes):
+    """The pads were filled with -inf, which no integer tensor can hold."""
+    x = np.array([[[[1, 2], [3, 4]]]], dtype=dtype)
+    model = make_single_node_model(
+        "MaxPool", {"x": x}, 12, kernel_shape=[2, 2], **attributes
+    )
+    assert_matches_oracle(model, {"x": x})

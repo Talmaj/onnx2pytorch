@@ -312,7 +312,15 @@ def test_lrn_defaults_against_onnxruntime():
 
 @pytest.mark.parametrize("size", [2, 4, 6])
 def test_lrn_even_size(size):
-    """nn.LocalResponseNorm centres an even window on the other side."""
+    """Even windows, where no runtime can adjudicate the asymmetric centring.
+
+    An even size leaves floor((size-1)/2) channels before and ceil((size-1)/2)
+    after the current one, which is where nn.LocalResponseNorm disagrees with
+    onnx. onnxruntime rejects even sizes outright, and onnx's reference LRN loops
+    over ``range(x.shape[0])`` instead of the channel axis, so it only happens to
+    be right when the batch and channel counts agree. The oracle is therefore
+    lrn_reference above, a direct elementwise transcription of the spec formula.
+    """
     np.random.seed(0)
     x = np.random.randn(2, 6, 3, 3).astype(np.float32)
     y = LRN(size=size, alpha=0.0002, beta=0.6, bias=2.0)(torch.tensor(x))

@@ -157,3 +157,30 @@ def test_topk_k_as_attribute(axis):
         "TopK", {"x": x}, 1, outputs=("values", "indices"), axis=axis, k=2
     )
     assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize("largest", [0, 1])
+@pytest.mark.parametrize("axis", [-1, 0])
+def test_topk_breaks_ties_on_the_lower_index(largest, axis):
+    """torch.topk gives no tie-break guarantee, onnx picks the lower index."""
+    x = np.array([[1.0, 1.0, 1.0, 0.0], [2.0, 2.0, 0.0, 2.0]], dtype=np.float32)
+    k = np.array([2], dtype=np.int64)
+    model = make_single_node_model(
+        "TopK",
+        {"x": x},
+        11,
+        outputs=("values", "indices"),
+        initializers={"k": k},
+        axis=axis,
+        largest=largest,
+    )
+    assert_matches_oracle(model, {"x": x})
+
+
+def test_topk_k_equal_to_the_axis_length():
+    x = np.array([[3.0, 1.0, 2.0]], dtype=np.float32)
+    k = np.array([3], dtype=np.int64)
+    model = make_single_node_model(
+        "TopK", {"x": x}, 11, outputs=("values", "indices"), initializers={"k": k}
+    )
+    assert_matches_oracle(model, {"x": x})

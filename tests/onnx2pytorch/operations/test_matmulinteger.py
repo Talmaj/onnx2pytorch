@@ -4,6 +4,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from tests.onnx2pytorch.differential import assert_no_runtime_oracle
 
 
 def build_model(a, b, a_zero_point=None, b_zero_point=None):
@@ -79,13 +80,20 @@ def test_matmul_integer_scalar_zero_points():
 
 
 def test_matmul_integer_per_row_zero_point():
+    """Per-row zero points, whose oracle has to be composed out of per-row runs.
+
+    Neither runtime accepts the 1-D zero point the spec allows here, so the
+    oracle is one onnxruntime run per row. That is exact rather than an
+    approximation: row r of the output depends only on a[r] and the r-th zero
+    point, so a run over that row computes the same integers as the full node.
+    """
     np.random.seed(3)
     a = np.random.randint(0, 255, size=(4, 3)).astype(np.uint8)
     b = np.random.randint(0, 255, size=(3, 2)).astype(np.uint8)
     a_zero_point = np.random.randint(0, 255, size=(4,)).astype(np.uint8)
 
-    # onnxruntime rejects per-row zero points, so the oracle is one onnxruntime
-    # run per row with that row's scalar zero point
+    assert_no_runtime_oracle(*build_model(a, b, a_zero_point))
+
     rows = []
     for row, zero_point in enumerate(a_zero_point):
         row_model, row_feed = build_model(

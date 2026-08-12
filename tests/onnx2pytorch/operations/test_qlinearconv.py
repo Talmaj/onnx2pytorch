@@ -1,5 +1,6 @@
 import numpy as np
 import onnxruntime as ort
+import pytest
 import torch
 from onnx import helper, TensorProto
 
@@ -151,3 +152,10 @@ def test_qlinear_conv_int8():
         None,
     ]
     check_qlinear_conv(arrays, kernel_shape=[3, 3])
+
+
+@pytest.mark.parametrize("auto_pad", ["SAME_UPPER", "SAME_LOWER", "VALID"])
+def test_qlinear_conv_auto_pad_without_kernel_shape(auto_pad):
+    """kernel_shape is optional, it can be read off W, but the padding was built
+    eagerly from the attribute and so came up against a None kernel size."""
+    check_qlinear_conv(make_inputs((1, 1, 5, 5), (1, 1, 3, 3), 4), auto_pad=auto_pad)

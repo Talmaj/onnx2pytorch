@@ -220,7 +220,7 @@ class ConvertModel(nn.Module):
                             if in_op_id in activations
                             # if in_op_id not in activations neither in parameters
                             # then it must be the initial input
-                            else get_init_parameter([self], in_op_id, inputs[0])
+                            else get_init_parameter([self], in_op_id)
                         )
                     )
                     for in_op_id in node.input
@@ -254,7 +254,11 @@ class ConvertModel(nn.Module):
                 if in_op_id in still_needed_by:
                     still_needed_by[in_op_id].discard(out_op_id)
                     if len(still_needed_by[in_op_id]) == 0:
-                        if in_op_id in activations:
+                        # A graph output outlives its last consumer
+                        if (
+                            in_op_id in activations
+                            and in_op_id not in self.output_names
+                        ):
                             del activations[in_op_id]
 
             if self.debug:

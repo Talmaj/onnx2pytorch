@@ -39,13 +39,22 @@ def onnx_model_outputs(onnx_model_path, onnx_model, onnx_inputs):
 
 
 def pytest_terminal_summary(terminalreporter):
-    """Report the opset matrix combinations that no runtime could adjudicate."""
+    """Report the opset matrix combinations that no runtime could adjudicate.
+
+    These xfail rather than fail, so without this report they would be
+    indistinguishable from passing cases. What the converter does for them is
+    unverified, and the count is the size of that hole.
+    """
     from tests.onnx2pytorch.opset_matrix import NO_ORACLE
 
     if not NO_ORACLE:
         return
-    terminalreporter.write_sep("=", "opset matrix combinations without an oracle")
-    for op_type, opset, name, reason in NO_ORACLE:
+    terminalreporter.write_sep(
+        "=",
+        "{} opset matrix combinations left unverified, no runtime could run "
+        "them".format(len(NO_ORACLE)),
+    )
+    for op_type, opset, name, reason in sorted(NO_ORACLE):
         terminalreporter.write_line(
             "{}-{}-{}: {}".format(op_type, opset, name, reason.splitlines()[0][:160])
         )

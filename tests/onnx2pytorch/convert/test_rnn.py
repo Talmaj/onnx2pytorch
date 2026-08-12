@@ -97,3 +97,40 @@ def test_rnn_exported_from_torch():
         o2p_output, o2p_h_n = o2p_rnn(input, h_0)
     torch.testing.assert_close(o2p_output, output, rtol=1e-6, atol=1e-6)
     torch.testing.assert_close(o2p_h_n, h_n, rtol=1e-6, atol=1e-6)
+
+
+@pytest.mark.parametrize("op_type", ["RNN", "GRU", "LSTM"])
+def test_recurrent_runtime_weights_are_rejected(op_type):
+    """W, R, B and P are read out of the initializers to fill the torch module,
+    so a graph that computes them instead used to be silently converted with
+    whatever the initializer lookup happened to return."""
+    hidden_size, input_size = 5, 3
+    gates = {"RNN": 1, "GRU": 3, "LSTM": 4}[op_type]
+    nodes = [
+        helper.make_node("Identity", ["W_in"], ["W"]),
+        helper.make_node(
+            op_type,
+            inputs=["X", "W", "R"],
+            outputs=["Y"],
+            hidden_size=hidden_size,
+        ),
+    ]
+    rng = np.random.RandomState(0)
+    r = rng.randn(1, gates * hidden_size, hidden_size).astype(np.float32)
+    graph = helper.make_graph(
+        nodes,
+        "runtime_weights",
+        [
+            helper.make_tensor_value_info(
+                "X", TensorProto.FLOAT, [None, None, input_size]
+            ),
+            helper.make_tensor_value_info(
+                "W_in", TensorProto.FLOAT, [1, gates * hidden_size, input_size]
+            ),
+        ],
+        [helper.make_tensor_value_info("Y", TensorProto.FLOAT, None)],
+        [numpy_helper.from_array(r, "R")],
+    )
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 14)])
+    with pytest.raises(NotImplementedError):
+        ConvertModel(model)

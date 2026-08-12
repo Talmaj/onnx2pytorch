@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from onnx2pytorch.utils import lowest_value
+
 
 class AutoPad(nn.Module):
     """
@@ -25,11 +27,10 @@ class AutoPad(nn.Module):
         if mode not in ("SAME_UPPER", "SAME_LOWER", "VALID"):
             raise ValueError(f"Unsupported auto_pad mode: {mode}")
 
-    def forward(self, x):
-        """Compute padding based on input shape."""
+    def pads(self, x):
+        """The (before, after) pad per spatial dimension for this input."""
         if self.mode == "VALID":
-            # No padding
-            return x
+            return [(0, 0)] * (x.dim() - 2)
 
         # Get spatial dimensions (H, W for 2D, H for 1D, etc.)
         spatial_dims = x.shape[2:]
@@ -67,18 +68,26 @@ class AutoPad(nn.Module):
                 pad_after = total_pad // 2
                 pad_before = total_pad - pad_after
 
-            pads.extend([pad_before, pad_after])
+            pads.append((pad_before, pad_after))
+
+        return pads
+
+    def forward(self, x):
+        """Compute padding based on input shape."""
+        pads = self.pads(x)
 
         # PyTorch padding order is reversed (last dimension first)
         # For 2D: [left, right, top, bottom]
         pads_reversed = []
-        for i in range(ndim - 1, -1, -1):
-            pads_reversed.extend([pads[i * 2], pads[i * 2 + 1]])
+        for before, after in reversed(pads):
+            pads_reversed.extend([before, after])
 
         # Apply padding
         if any(p > 0 for p in pads_reversed):
-            x = torch.nn.functional.pad(
-                x, pads_reversed, mode="constant", value=self.value
-            )
+            value = self.value
+            if value == float("-inf"):
+                # An integer input cannot hold -inf, use its lowest value
+                value = lowest_value(x.dtype)
+            x = torch.nn.functional.pad(x, pads_reversed, mode="constant", value=value)
 
         return x

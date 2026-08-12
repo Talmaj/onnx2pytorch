@@ -19,13 +19,16 @@ class QLinearConv(nn.Module):
 
         self.padding = 0
         self.pad_layer = None
+        self.auto_pad = auto_pad
         if auto_pad is not None:
-            self.pad_layer = AutoPad(
-                kernel_size=kernel_size,
-                stride=stride,
-                dilation=dilation,
-                mode=auto_pad,
-            )
+            # kernel_shape is optional, without it the pad follows from W
+            if kernel_size is not None:
+                self.pad_layer = AutoPad(
+                    kernel_size=kernel_size,
+                    stride=stride,
+                    dilation=dilation,
+                    mode=auto_pad,
+                )
         elif isinstance(padding, nn.Module):
             self.pad_layer = padding
         else:
@@ -49,6 +52,13 @@ class QLinearConv(nn.Module):
             [-1] + [1] * (w.ndim - 1)
         )
 
+        if self.pad_layer is None and self.auto_pad is not None:
+            self.pad_layer = AutoPad(
+                kernel_size=tuple(w.shape[2:]),
+                stride=self.stride,
+                dilation=self.dilation,
+                mode=self.auto_pad,
+            )
         if self.pad_layer is not None:
             x = self.pad_layer(x)
 

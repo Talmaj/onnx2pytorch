@@ -19,6 +19,16 @@ onnx_model = onnx.load(path_to_onnx_model)
 pytorch_model = ConvertModel(onnx_model)
 ```
 
+## Operator coverage
+[ONNX_OPERATOR_CHECKLIST.md](ONNX_OPERATOR_CHECKLIST.md) lists every `ai.onnx` operator the
+converter implements, along with the ones that are only partially supported. Operators and
+attributes that cannot be expressed in PyTorch raise rather than returning a wrong tensor.
+
+Each operator is tested differentially against onnxruntime, falling back to onnx's
+`ReferenceEvaluator`, at every schema revision it exists in; see
+`tests/onnx2pytorch/opset_matrix.py`. Combinations that neither runtime can run are reported at
+the end of a test run, since the converter's behaviour for those is unverified.
+
 Currently supported and tested models from [onnx_zoo](https://github.com/onnx/models):
 - [MobileNet](https://github.com/onnx/models/tree/master/vision/classification/mobilenet)
 - [ResNet](https://github.com/onnx/models/tree/master/vision/classification/resnet)

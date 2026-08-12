@@ -12,10 +12,11 @@ class Reshape(Operator):
     smaller pruned input in the following passes.
     """
 
-    def __init__(self, enable_pruning, shape=None, keep_size=True):
+    def __init__(self, enable_pruning, shape=None, keep_size=True, allowzero=0):
         super().__init__()
         self.enable_pruning = enable_pruning
         self.shape = shape
+        self.allowzero = bool(allowzero)
         self.initial_input_shape = None
         self.feature_dim = -1
         self.input_indices = None
@@ -24,8 +25,12 @@ class Reshape(Operator):
 
     def forward(self, input: torch.Tensor, shape=None):
         shape = shape if shape is not None else self.shape
+        # A zero copies the input dimension, unless allowzero asks for it as is.
         # This raises RuntimeWarning: iterating over a tensor.
-        shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
+        if not self.allowzero:
+            shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
+        else:
+            shape = list(shape)
 
         if not self.enable_pruning:
             return torch.reshape(input, tuple(shape))

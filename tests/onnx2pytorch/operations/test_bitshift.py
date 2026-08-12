@@ -6,6 +6,10 @@ from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
 from onnx2pytorch.operations.bitshift import BitShift
+from tests.onnx2pytorch.differential import (
+    assert_matches_oracle,
+    make_single_node_model,
+)
 
 
 def check_bitshift(x, y, direction):
@@ -82,3 +86,15 @@ def test_bitshift_right_int64():
     y = torch.tensor([1, 2, 3], dtype=torch.int64)
     exp_z = torch.tensor([8, 1, 0], dtype=torch.int64)
     assert torch.equal(op(x, y), exp_z)
+
+
+@pytest.mark.parametrize("dtype", [np.uint8, np.uint16, np.uint32])
+@pytest.mark.parametrize("direction", ["LEFT", "RIGHT"])
+def test_bitshift_unsigned_widths(dtype, direction):
+    """Only uint8 shifts natively in torch, the wider types raised."""
+    x = np.array([1, 2, 255, 7], dtype=dtype)
+    y = np.array([1, 2, 1, 3], dtype=dtype)
+    model = make_single_node_model(
+        "BitShift", {"x": x, "y": y}, 11, direction=direction
+    )
+    assert_matches_oracle(model, {"x": x, "y": y})

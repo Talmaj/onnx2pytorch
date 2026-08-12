@@ -153,12 +153,13 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
         layer = AveragePool(layer, pad_layer)
         pad_layer = None
 
+    if layer_type == "MaxPool" and len(node.output) > 1:
+        # The wrapper pads itself, it has to undo the pad offset in the indices
+        layer = MaxPool(layer, storage_order, pad_layer)
+        pad_layer = None
+
     if pad_layer is not None:
         layer = nn.Sequential(pad_layer, layer)
-
-    if layer_type == "MaxPool" and len(node.output) > 1:
-        # ONNX indices are flattened over channels too, torch's are not
-        layer = MaxPool(layer, storage_order)
 
     return layer
 
@@ -224,6 +225,23 @@ def extract_sequence_lens(par_name, weights):
     if par_name not in weights:
         raise NotImplementedError("sequence_lens has to be a constant.")
     return torch.tensor(numpy_helper.to_array(weights[par_name]))
+
+
+def check_rnn_inputs_are_constant(node, weights, names):
+    """
+    Reject recurrent inputs that do not come from an initializer.
+
+    The weights are baked into a torch module at conversion time, so they cannot
+    arrive at runtime. Only initial_h and initial_c can, and the wrapper's
+    forward relies on that: it reads the remaining inputs by position.
+    """
+    for index, name in names.items():
+        if index < len(node.input):
+            par_name = node.input[index]
+            if par_name != "" and par_name not in weights:
+                raise NotImplementedError(
+                    "{} {} has to be a constant.".format(node.op_type, name)
+                )
 
 
 def extract_and_load_params_gru(node, weights):
@@ -297,6 +315,7 @@ def extract_and_load_params_lstm(node, weights):
 
 def convert_lstm_layer(node, weights):
     """Convert LSTM layer from onnx node and params."""
+    check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B", 7: "P"})
     params_tuple = extract_and_load_params_lstm(node, weights)
     (X, W, R, B, sequence_lens, initial_h, initial_c, P) = params_tuple
     if initial_h is not None:
@@ -470,6 +489,7 @@ def convert_lstm_layer(node, weights):
 
 def convert_gru_layer(node, weights):
     """Convert GRU layer from onnx node and params."""
+    check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B"})
     params_tuple = extract_and_load_params_gru(node, weights)
     (X, W, R, B, sequence_lens, initial_h) = params_tuple
     if initial_h is not None:
@@ -653,6 +673,7 @@ def convert_gru_layer(node, weights):
 def convert_rnn_layer(node, weights):
     """Convert RNN layer from onnx node and params."""
     # ONNX RNN has the same input layout as GRU
+    check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B"})
     params_tuple = extract_and_load_params_gru(node, weights)
     (X, W, R, B, sequence_lens, initial_h) = params_tuple
     if initial_h is not None:

@@ -43,3 +43,23 @@ def test_flatten_negative_axis(axis):
     x = np.random.randn(2, 3, 4, 5).astype(np.float32)
     model = make_single_node_model("Flatten", {"x": x}, 13, axis=axis)
     assert_matches_oracle(model, {"x": x})
+
+
+@pytest.mark.parametrize(
+    "shape,axis",
+    [
+        ((0, 3, 4), 1),
+        ((2, 0, 4), 1),
+        ((0, 3), 1),
+        ((2, 3, 0), 2),
+        ((0,), 0),
+        ((0, 3, 4), 0),
+        ((2, 0, 4), 3),
+    ],
+)
+def test_flatten_zero_sized_dimension(shape, axis):
+    """One side of the reshape was inferred, which cannot be done when the other
+    side is zero."""
+    x = np.zeros(shape, dtype=np.float32)
+    model = make_single_node_model("Flatten", {"x": x}, 13, axis=axis)
+    assert_matches_oracle(model, {"x": x})

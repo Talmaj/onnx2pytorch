@@ -15,7 +15,11 @@ class TopK(nn.Module):
         k = self.k if K is None else int(K)
         if k is None:
             raise TypeError("forward() missing 1 required positional argument: 'K'")
-        return torch.topk(X, k, dim=self.axis, largest=self.largest, sorted=self.sorted)
+        # A stable sort rather than torch.topk, because onnx breaks ties on the
+        # lower index and torch.topk gives no such guarantee.
+        dim = self.axis % X.dim()
+        values, indices = torch.sort(X, dim=dim, descending=self.largest, stable=True)
+        return values.narrow(dim, 0, k), indices.narrow(dim, 0, k)
 
     def extra_repr(self) -> str:
         return "axis={}, largest={}, sorted={}".format(

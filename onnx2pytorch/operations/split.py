@@ -44,14 +44,11 @@ class Split(Operator):
     def _get_sections(self, input):
         """Calculate sections from number of splits."""
         dim_size = input[0].shape[self.dim]
-        assert (
-            dim_size % self.number_of_splits == 0
-        ), "Dimension size {} not equally divisible by {}.".format(
-            dim_size, self.number_of_splits
-        )
-        s = dim_size // self.number_of_splits
-        sections = tuple(s for _ in range(self.number_of_splits))
-        return sections
+        # ONNX takes as many equal chunks as fit and leaves the rest to the last
+        # one, which is how num_outputs splits an indivisible dimension.
+        chunk = -(-dim_size // self.number_of_splits)
+        sections = [chunk] * (self.number_of_splits - 1)
+        return tuple(sections + [dim_size - sum(sections)])
 
     def forward(self, *input):
         if not self.enable_pruning and len(input) == 2:

@@ -129,6 +129,25 @@ def run_oracle(model, inputs):
         pytest.skip("No oracle for this case: {}".format(error))
 
 
+def assert_no_runtime_oracle(model, inputs):
+    """Assert that neither runtime can run this node.
+
+    Some spec-legal nodes (per-axis quantization above all) are rejected by both
+    onnxruntime and the onnx reference evaluator, which forces a test to build
+    its expected output from several runs of a form they do accept. Asserting the
+    rejection keeps that detour honest: once a runtime grows the missing support
+    the test fails and the real node can be used as the oracle instead.
+    """
+    try:
+        run_oracle_strict(model, inputs)
+    except NoOracle:
+        return
+    raise AssertionError(
+        "a runtime can now run this node directly, use it as the oracle instead "
+        "of composing one out of several runs"
+    )
+
+
 def to_torch(value):
     if value.dtype.kind in ("O", "S", "U"):
         return value
@@ -148,6 +167,11 @@ def assert_outputs_match(expected, actual, rtol=1e-5, atol=1e-6):
     assert len(actual) == len(expected)
     for exp, act in zip(expected, actual):
         exp = np.asarray(exp)
+        # ONNX pins the output type of every operator, so a widened integer or a
+        # double where a float belongs is a divergence like any other.
+        assert np.asarray(act).dtype == exp.dtype, "expected {}, got {}".format(
+            exp.dtype, np.asarray(act).dtype
+        )
         if exp.dtype == bool or exp.dtype.kind in ("O", "S", "U", "i", "u"):
             np.testing.assert_array_equal(act, exp)
         else:

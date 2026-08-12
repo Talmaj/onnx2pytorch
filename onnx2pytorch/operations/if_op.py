@@ -18,8 +18,9 @@ class If(SubgraphOperator):
         batch_dim,
         then_branch: onnx.GraphProto,
         else_branch: onnx.GraphProto,
+        enable_pruning=False,
     ):
-        super().__init__(opset_version, batch_dim)
+        super().__init__(opset_version, batch_dim, enable_pruning=enable_pruning)
 
         self.then_branch = then_branch
         self.else_branch = else_branch
@@ -72,7 +73,6 @@ class If(SubgraphOperator):
             mapping,
             enclosing_modules + (self,),
             dict(enclosing_activations),
-            None,
             prefix,
         )
         return [activations[name] for name in output_names]

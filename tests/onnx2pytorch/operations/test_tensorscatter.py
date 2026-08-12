@@ -88,8 +88,16 @@ def test_tensor_scatter_circular():
 
 
 def test_tensor_scatter_circular_batch_exceeds_max_sequence_length():
-    # Only the sequence position wraps: the spec pseudocode also applies the
-    # modulo to the prefix indices, which onnxruntime confirms is a typo.
+    """A batch larger than max_sequence_length, where the spec pseudocode misleads.
+
+    The prose defines circular mode as "the update index is modulo
+    max_sequence_length", but the pseudocode writes
+    ``cache_idx = tuple(np.mod(np.asarray(cache_idx), max_sequence_length))``,
+    which also wraps the batch and head indices in the prefix. That only shows up
+    once a prefix dimension exceeds max_sequence_length, as here, and it would
+    make the operator scatter into the wrong sample. onnxruntime wraps the
+    sequence position alone, which is what the prose describes.
+    """
     past_cache = make_cache((7, 2, 3, 3), 14)
     update = make_cache((7, 2, 2, 3), 15)
     write_indices = np.array([2, 1, 0, 2, 1, 0, 2], dtype=np.int64)
