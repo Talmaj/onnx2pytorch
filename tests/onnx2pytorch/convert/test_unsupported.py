@@ -10,7 +10,13 @@ from onnx import defs, helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
 from onnx2pytorch.convert.operations import convert_operations
-from tests.onnx2pytorch.differential import make_single_node_model
+from tests.onnx2pytorch.differential import (
+    assert_no_runtime_oracle,
+    assert_outputs_match,
+    make_single_node_model,
+    run_converted,
+    run_oracle,
+)
 
 
 def test_scan_opset_8_is_rejected():
@@ -63,6 +69,33 @@ def test_batch_normalization_non_spatial_is_rejected():
     )
     with pytest.raises(NotImplementedError, match="spatial=0"):
         ConvertModel(model)
+
+
+def test_batch_normalization_non_spatial_per_channel_is_accepted():
+    """spatial=0 next to 1D parameters is per channel, so it must not be rejected.
+
+    resnet18v1 from the model zoo sets spatial=0 on all 20 nodes while shipping
+    per-channel parameters, which only onnxruntime's Conv+BatchNormalization
+    fusion lets it run at all. With per-channel parameters the attribute cannot
+    mean anything else, so the rejection has to key off the parameter rank.
+    """
+    np.random.seed(0)
+    x = np.random.randn(2, 3, 4, 4).astype(np.float32)
+    params = {
+        "scale": np.random.randn(3).astype(np.float32),
+        "bias": np.random.randn(3).astype(np.float32),
+        "mean": np.random.randn(3).astype(np.float32),
+        "var": np.abs(np.random.randn(3).astype(np.float32)) + 0.1,
+    }
+    model = make_single_node_model(
+        "BatchNormalization", {"x": x}, 8, initializers=params, spatial=0
+    )
+    # Both runtimes reject the unfused node, so spatial=1 has to stand in
+    assert_no_runtime_oracle(model, {"x": x})
+    spatial = make_single_node_model(
+        "BatchNormalization", {"x": x}, 8, initializers=params, spatial=1
+    )
+    assert_outputs_match(run_oracle(spatial, {"x": x}), run_converted(model, {"x": x}))
 
 
 def test_pad_with_unknown_mode_is_rejected():
