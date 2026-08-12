@@ -5,6 +5,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import StringSplit
 
 
 def check_string_split(x, **attrs):
@@ -48,8 +49,6 @@ def test_string_split_empty_delimiter_is_whitespace():
 
 
 def test_string_split_non_space_whitespace():
-    from onnx2pytorch.operations import StringSplit
-
     # The spec splits on any consecutive whitespace, onnxruntime only on spaces
     substrings, length = StringSplit()(np.array(["a\tb", "c"], dtype=object))
     np.testing.assert_array_equal(substrings, np.array([["a", "b"], ["c", ""]]))

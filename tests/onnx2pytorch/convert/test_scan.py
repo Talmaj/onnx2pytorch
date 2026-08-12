@@ -2,7 +2,7 @@ import numpy as np
 import onnxruntime as ort
 import pytest
 import torch
-from onnx import helper, TensorProto
+from onnx import helper, numpy_helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -249,7 +249,6 @@ def test_scan_matmul_state():
 
 def test_scan_with_body_initializer():
     np.random.seed(11)
-    from onnx import numpy_helper
 
     offset = np.array([0.5, -0.5], dtype=np.float32)
     body = helper.make_graph(

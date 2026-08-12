@@ -7,6 +7,7 @@ import numpy as np
 import onnxruntime as ort
 
 from onnx2pytorch.utils import get_inputs_sample
+from tests.onnx2pytorch.opset_matrix import NO_ORACLE
 
 RANDOM_SEED = 100
 FIXTURES_DIR = os.path.join(
@@ -45,8 +46,6 @@ def pytest_terminal_summary(terminalreporter):
     indistinguishable from passing cases. What the converter does for them is
     unverified, and the count is the size of that hole.
     """
-    from tests.onnx2pytorch.opset_matrix import NO_ORACLE
-
     if not NO_ORACLE:
         return
     terminalreporter.write_sep(

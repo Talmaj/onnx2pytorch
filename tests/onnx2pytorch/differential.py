@@ -5,6 +5,7 @@ import onnx
 import pytest
 import torch
 from onnx import helper, numpy_helper
+from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -102,8 +103,6 @@ def run_onnxruntime(model, inputs):
 
 
 def run_reference(model, inputs):
-    from onnx.reference import ReferenceEvaluator
-
     return ReferenceEvaluator(model).run(None, {k: v for k, v in inputs.items()})
 
 

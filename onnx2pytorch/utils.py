@@ -1,9 +1,9 @@
 import io
 import math
 
-import torch
 import numpy as np
 import onnx
+import torch
 
 from onnx2pytorch.dtypes import ONNX_DTYPE_TO_TORCH
 

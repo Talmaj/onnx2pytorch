@@ -5,6 +5,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import OptionalGetElement
 
 
 def check_optional_get_element(nodes, x):
@@ -58,7 +59,5 @@ def test_optional_get_element_followed_by_computation():
 
 
 def test_optional_get_element_empty_optional_raises():
-    from onnx2pytorch.operations import OptionalGetElement
-
     with pytest.raises(ValueError, match="empty optional"):
         OptionalGetElement()(None)

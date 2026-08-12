@@ -1,11 +1,15 @@
 """Cases where the converter has to fail loudly rather than diverge silently."""
 
+import inspect
+import re
+
 import numpy as np
 import onnx
 import pytest
-from onnx import helper, TensorProto
+from onnx import defs, helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.convert.operations import convert_operations
 from tests.onnx2pytorch.differential import make_single_node_model
 
 
@@ -81,13 +85,6 @@ def test_no_onnx_operator_relies_on_the_torch_name_fallback():
     Every ai.onnx operator must be dispatched explicitly instead, so that a new
     onnx release cannot silently start resolving an operator by name alone.
     """
-    import inspect
-    import re
-
-    from onnx import defs
-
-    from onnx2pytorch.convert.operations import convert_operations
-
     source = inspect.getsource(convert_operations)
     dispatched = set(re.findall(r'node\.op_type == "([A-Za-z0-9_]+)"', source))
     schemas = {

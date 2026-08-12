@@ -5,6 +5,7 @@ from onnx import helper, TensorProto
 from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import LinearAttention
 
 
 def check_linear_attention(inputs, **attrs):
@@ -133,7 +134,5 @@ def test_linear_attention_different_value_dim():
 
 
 def test_linear_attention_unsupported_update_rule():
-    from onnx2pytorch.operations import LinearAttention
-
     with pytest.raises(ValueError, match="update_rule"):
         LinearAttention(q_num_heads=2, kv_num_heads=2, update_rule="unknown")

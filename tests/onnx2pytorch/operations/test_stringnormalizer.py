@@ -5,6 +5,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import StringNormalizer
 
 
 def check_string_normalizer(x, **attrs):
@@ -113,15 +114,11 @@ def test_string_normalizer_locale_is_ignored():
 
 
 def test_string_normalizer_invalid_case_change_action():
-    from onnx2pytorch.operations import StringNormalizer
-
     with pytest.raises(NotImplementedError):
         StringNormalizer(case_change_action="TITLE")
 
 
 def test_string_normalizer_unsupported_shape():
-    from onnx2pytorch.operations import StringNormalizer
-
     x = np.array([["a"], ["b"]], dtype=object)
     with pytest.raises(ValueError):
         StringNormalizer()(x)

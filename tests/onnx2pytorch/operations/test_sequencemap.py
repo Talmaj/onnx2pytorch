@@ -2,7 +2,7 @@ import numpy as np
 import onnxruntime as ort
 import pytest
 import torch
-from onnx import helper, TensorProto
+from onnx import helper, numpy_helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
 
@@ -167,8 +167,6 @@ def test_sequence_map_multi_node_body():
 
 
 def test_sequence_map_body_with_initializer():
-    from onnx import numpy_helper
-
     offset = np.array([1.0, 2.0], dtype=np.float32)
     body = helper.make_graph(
         [helper.make_node("Add", ["in0", "offset"], ["out0"])],

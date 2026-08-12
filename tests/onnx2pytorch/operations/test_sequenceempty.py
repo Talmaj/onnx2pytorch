@@ -5,6 +5,7 @@ import torch
 from onnx import helper, TensorProto
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import SequenceEmpty
 
 
 def check_sequence_empty(x, **attrs):
@@ -48,7 +49,5 @@ def test_sequence_empty_dtype(dtype):
 
 
 def test_sequence_empty_module_returns_empty_list():
-    from onnx2pytorch.operations import SequenceEmpty
-
     assert SequenceEmpty()() == []
     assert SequenceEmpty(dtype=TensorProto.INT64)() == []

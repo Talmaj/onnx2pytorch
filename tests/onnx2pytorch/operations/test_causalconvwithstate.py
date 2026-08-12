@@ -5,6 +5,7 @@ from onnx import helper, numpy_helper, TensorProto
 from onnx.reference import ReferenceEvaluator
 
 from onnx2pytorch.convert import ConvertModel
+from onnx2pytorch.operations import CausalConvWithState
 
 
 def check_causal_conv_with_state(
@@ -122,7 +123,6 @@ def test_causal_conv_with_state_weight_initializer():
 def test_causal_conv_with_state_streaming_matches_full_sequence():
     """Feeding chunks while carrying present_state matches one full-sequence call."""
     x, w = make_inputs(length=6, kernel_size=3, seed=7)
-    from onnx2pytorch.operations import CausalConvWithState
 
     op = CausalConvWithState()
     with torch.no_grad():
@@ -139,7 +139,5 @@ def test_causal_conv_with_state_streaming_matches_full_sequence():
 
 
 def test_causal_conv_with_state_unsupported_activation():
-    from onnx2pytorch.operations import CausalConvWithState
-
     with pytest.raises(ValueError, match="activation"):
         CausalConvWithState(activation="relu")
