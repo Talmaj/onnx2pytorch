@@ -109,8 +109,30 @@ def test_string_normalizer_2d(case_change_action):
 
 
 def test_string_normalizer_locale_is_ignored():
+    # ORT constructs a C++ locale from this attribute and fails on many CI
+    # images (missing en_US), so assert directly that we accept and ignore it.
     x = np.array(["Monday", "tuesday"], dtype=object)
-    check_string_normalizer(x, case_change_action="UPPER", locale="en_US")
+    expected = np.array(["MONDAY", "TUESDAY"], dtype=object)
+    np.testing.assert_array_equal(
+        StringNormalizer(case_change_action="UPPER", locale="en_US")(x), expected
+    )
+    node = helper.make_node(
+        "StringNormalizer",
+        inputs=["x"],
+        outputs=["y"],
+        case_change_action="UPPER",
+        locale="en_US",
+    )
+    graph = helper.make_graph(
+        [node],
+        "stringnormalizer_locale_test",
+        [helper.make_tensor_value_info("x", TensorProto.STRING, list(x.shape))],
+        [helper.make_tensor_value_info("y", TensorProto.STRING, None)],
+    )
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 10)])
+    with torch.no_grad():
+        y = ConvertModel(model)(x)
+    np.testing.assert_array_equal(y, expected)
 
 
 def test_string_normalizer_invalid_case_change_action():

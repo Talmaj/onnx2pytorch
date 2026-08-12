@@ -26,7 +26,9 @@ def test_onehot(indices, axis):
     output_type = torch.float32
     depth = torch.tensor([10], dtype=torch.float32)
     values = torch.tensor([off_value, on_value], dtype=output_type)
-    y = one_hot(indices.numpy(), depth.numpy(), axis=axis, dtype=np.float32)
+    # onnx's reference helper calls np.arange(depth); numpy>=2.5 rejects a
+    # 1-d array here, so pass a python scalar.
+    y = one_hot(indices.numpy(), int(depth), axis=axis, dtype=np.float32)
     y = y * (on_value - off_value) + off_value
     y = torch.tensor(y)
 
