@@ -11,6 +11,7 @@ from onnx import numpy_helper
 from torch.nn.modules.linear import Identity
 
 from onnx2pytorch.convert.attribute import extract_attributes
+from onnx2pytorch.convert.fold import fold_constants
 from onnx2pytorch.convert.layer import (
     convert_layer,
     convert_linear_layer,
@@ -84,7 +85,9 @@ def convert_binary_operation(node, torch_op, op):
     return op
 
 
-def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True):
+def convert_operations(
+    onnx_graph, opset_version, batch_dim=0, enable_pruning=True, constants=None
+):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
@@ -104,7 +107,9 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
     -------
     iterator: (op_id, op_name, op)
     """
-    weights = {tensor.name: tensor for tensor in onnx_graph.initializer}
+    # Constant nodes and constants inherited from an enclosing graph are
+    # treated like initializers, so Conv/Gemm/BatchNorm can bake them in.
+    weights = fold_constants(onnx_graph, constants)
 
     for i, node in enumerate(onnx_graph.node):
         # extract only useful inputs
@@ -186,11 +191,11 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "ConstantOfShape":
             op = ConstantOfShape(**extract_attributes(node))
         elif node.op_type == "Conv":
-            op = convert_layer(node, "Conv", params)
+            op = convert_layer(node, "Conv", params, weights=weights)
         elif node.op_type == "ConvInteger":
             op = ConvInteger(**extract_attributes(node))
         elif node.op_type == "ConvTranspose":
-            op = convert_layer(node, "ConvTranspose", params)
+            op = convert_layer(node, "ConvTranspose", params, weights=weights)
         elif node.op_type == "Cos":
             op = OperatorWrapper(torch.cos)
         elif node.op_type == "Cosh":
@@ -275,6 +280,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 opset_version=opset_version,
                 batch_dim=batch_dim,
                 enable_pruning=enable_pruning,
+                inherited_constants=weights,
                 **extract_attributes(node),
             )
         elif node.op_type == "ImageDecoder":
@@ -304,6 +310,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 opset_version=opset_version,
                 batch_dim=batch_dim,
                 enable_pruning=enable_pruning,
+                inherited_constants=weights,
                 **extract_attributes(node),
             )
         elif node.op_type == "LpNormalization":
@@ -471,6 +478,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 opset_version=opset_version,
                 batch_dim=batch_dim,
                 enable_pruning=enable_pruning,
+                inherited_constants=weights,
                 **extract_attributes(node),
             )
         elif node.op_type == "Scatter":
@@ -498,6 +506,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 opset_version=opset_version,
                 batch_dim=batch_dim,
                 enable_pruning=enable_pruning,
+                inherited_constants=weights,
                 **extract_attributes(node),
             )
         elif node.op_type == "Shape":
