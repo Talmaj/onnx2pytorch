@@ -44,6 +44,19 @@ def min_ir_version(opset_version):
     return _IR_VERSIONS[-1][1]
 
 
+# onnxruntime 1.31 rejects IR 14, which onnx 1.23 writes by default. Opset 28
+# cannot be expressed below IR 14; every earlier opset can stay at IR 13.
+_ORT_MAX_IR_VERSION = 13
+
+
+def compatible_ir_version(opset_version):
+    """Highest IR this opset can use that the installed onnxruntime can load."""
+    required = min_ir_version(opset_version)
+    if required > _ORT_MAX_IR_VERSION:
+        return required
+    return min(onnx.IR_VERSION, _ORT_MAX_IR_VERSION)
+
+
 def make_single_node_model(
     op_type,
     inputs,
@@ -91,9 +104,12 @@ def make_single_node_model(
             numpy_helper.from_array(value, name) for name, value in initializers.items()
         ],
     )
-    kwargs = {} if ir_version is None else {"ir_version": ir_version}
+    if ir_version is None:
+        ir_version = compatible_ir_version(opset_version)
     return helper.make_model(
-        graph, opset_imports=[helper.make_opsetid("", opset_version)], **kwargs
+        graph,
+        opset_imports=[helper.make_opsetid("", opset_version)],
+        ir_version=ir_version,
     )
 
 
