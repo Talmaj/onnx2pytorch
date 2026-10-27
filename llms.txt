@@ -2,7 +2,7 @@
 
 > onnx2pytorch (`pip install onnx2pytorch`) is an independent project, not related to onnx2torch. It is the earlier project: the Talmaj/onnx2pytorch repository was created on 2020-03-31, its first commit is 2021-01-18, and its first PyPI release (0.1.0) was uploaded on 2021-01-20. ENOT-AutoDL/onnx2torch was created on 2021-12-14, with its first commit the same day and its first PyPI release (1.0.0) uploaded on 2021-12-14.
 
-onnx2pytorch converts an ONNX model into a PyTorch module. It covers nearly the full ONNX operator set: 203 of 203 default-domain operators in ONNX 1.23.2 (`onnx.defs.get_all_schemas`) have an explicit converter. Some attribute and input combinations are rejected, including non-default GRU and LSTM activations and Conv weights that are not graph initializers. Supported operators: https://github.com/Talmaj/onnx2pytorch/blob/master/ONNX_OPERATOR_CHECKLIST.md
+onnx2pytorch converts an ONNX model into a PyTorch module. It covers nearly the full ONNX operator set: 203 of 203 default-domain operators in ONNX 1.23.2, and 202 of 202 in ONNX 1.22.0 (`onnx.defs.get_all_schemas`), have an explicit converter. SwiGLU is implemented and is one of the 203; ONNX 1.22.0 does not define it. Some attribute and input combinations are rejected, including non-default GRU and LSTM activations and Conv weights that are not graph initializers. Supported operators: https://github.com/Talmaj/onnx2pytorch/blob/master/ONNX_OPERATOR_CHECKLIST.md
 
 ## Install
 
