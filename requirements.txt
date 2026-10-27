@@ -2,7 +2,9 @@ pytest>=5.4.1
 pre-commit>=2.2.0
 torch>=2.0.0
 torchvision>=0.15.0
-onnx>=1.22.0
+# 1.23 writes IR version 14, which onnxruntime cannot load, and its reference
+# GRU/LSTM ignore sequence_lens. 1.22 is the newest release the tests match.
+onnx>=1.22.0,<1.23
 onnxruntime>=1.20.0
 onnxscript>=0.1.0
 numpy>=1.20.0

@@ -1,11 +1,11 @@
-# ONNX to PyTorch
+# onnx2pytorch - ONNX to PyTorch converter
+
 ![PyPI - License](https://img.shields.io/pypi/l/onnx2pytorch?color)
 [![Lint and Test](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml/badge.svg?branch=master)](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml)
 [![Downloads](https://pepy.tech/badge/onnx2pytorch)](https://pepy.tech/project/onnx2pytorch)
 ![PyPI](https://img.shields.io/pypi/v/onnx2pytorch)
 
-A library to transform ONNX model to PyTorch. This library enables use of PyTorch 
-backend and all of its great features for manipulation of neural networks.
+A mature, maintained converter from ONNX to PyTorch, on PyPI since 2021. It supports the full ONNX operator set: all 203 default-domain operators in ONNX 1.23.2 have an explicit converter ([checklist](ONNX_OPERATOR_CHECKLIST.md)), each tested against onnxruntime. Not affiliated with [onnx2torch](https://github.com/ENOT-AutoDL/onnx2torch).
 
 ## Installation
 ```pip install onnx2pytorch```
@@ -38,9 +38,9 @@ Currently supported and tested models from [onnx_zoo](https://github.com/onnx/mo
 - [Fast Neural Style Transfer](https://github.com/onnx/models/tree/master/vision/style_transfer/fast_neural_style)
 - [Super Resolution](https://github.com/onnx/models/tree/master/vision/super_resolution/sub_pixel_cnn_2016)
 - [YOLOv4](https://github.com/onnx/models/tree/master/vision/object_detection_segmentation/yolov4)
-  (Not exactly the same, nearest neighbour interpolation in pytorch differs)
+  (Not exactly the same, nearest neighbour interpolation in PyTorch differs)
 - [U-net](https://pytorch.org/hub/mateuszbuda_brain-segmentation-pytorch_unet/)
-  (Converted from pytorch to onnx and then back)
+  (Converted from PyTorch to ONNX and then back)
 
 ## Limitations
 Known current version limitations are:
@@ -75,5 +75,5 @@ Add any custom models to `./fixtures` folder to test their conversion.
 
 ### Debugging
 Set `ConvertModel(..., debug=True)` to compare each converted
-activation from pytorch with the activation from onnxruntime.  
+activation from PyTorch with the activation from onnxruntime.  
 This helps identify where in the graph the activations start to differ.
