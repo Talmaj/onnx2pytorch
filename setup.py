@@ -21,21 +21,18 @@ PACKAGES = find_packages(exclude=("tests.*", "tests"))
 setup(
     name="onnx2pytorch",
     version=version,
-    description=(
-        "onnx2pytorch converts ONNX models to PyTorch modules. "
-        "Independent project, not related to onnx2torch."
-    ),
+    description="onnx2pytorch converts ONNX models to PyTorch modules.",
     license="apache-2.0",
     author="Talmaj Marinc",
     packages=PACKAGES,
     install_requires=["torch>=2.0.0", "onnx>=1.16.0", "torchvision>=0.15.0"],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://talmaj.com",
+    url="https://github.com/ToriML/onnx2pytorch",
     project_urls={
         "Source": "https://github.com/Talmaj/onnx2pytorch",
         "Issues": "https://github.com/Talmaj/onnx2pytorch/issues",
-        "Homepage": "https://talmaj.com",
+        "Homepage": "https://github.com/Talmaj/onnx2pytorch",
     },
     keywords=[
         "onnx",

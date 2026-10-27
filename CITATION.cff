@@ -6,7 +6,7 @@ version: 0.6.0
 date-released: 2026-08-12
 license: Apache-2.0
 repository-code: https://github.com/Talmaj/onnx2pytorch
-url: https://talmaj.com
+url: https://github.com/Talmaj/onnx2pytorch
 authors:
   - given-names: Talmaj
     family-names: Marinč
