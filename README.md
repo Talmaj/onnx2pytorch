@@ -1,11 +1,13 @@
-# ONNX to PyTorch
+# onnx2pytorch
+
+onnx2pytorch (`pip install onnx2pytorch`) is an independent project, not related to onnx2torch. It is the earlier project: the [Talmaj/onnx2pytorch](https://github.com/Talmaj/onnx2pytorch) repository was created on 2020-03-31, its first commit is 2021-01-18, and its first PyPI release (0.1.0) was uploaded on 2021-01-20. [ENOT-AutoDL/onnx2torch](https://github.com/ENOT-AutoDL/onnx2torch) was created on 2021-12-14, with its first commit the same day and its first PyPI release (1.0.0) uploaded on 2021-12-14.
+
+onnx2pytorch converts an ONNX model into a PyTorch module. It covers nearly the full ONNX operator set: 203 of 203 default-domain operators in ONNX 1.23.2 (`onnx.defs.get_all_schemas`) have an explicit converter. Some attribute and input combinations are rejected, including non-default GRU and LSTM activations and Conv weights that are not graph initializers. Supported operators are listed in [ONNX_OPERATOR_CHECKLIST.md](ONNX_OPERATOR_CHECKLIST.md).
+
 ![PyPI - License](https://img.shields.io/pypi/l/onnx2pytorch?color)
 [![Lint and Test](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml/badge.svg?branch=master)](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml)
 [![Downloads](https://pepy.tech/badge/onnx2pytorch)](https://pepy.tech/project/onnx2pytorch)
 ![PyPI](https://img.shields.io/pypi/v/onnx2pytorch)
-
-A library to transform ONNX model to PyTorch. This library enables use of PyTorch 
-backend and all of its great features for manipulation of neural networks.
 
 ## Installation
 ```pip install onnx2pytorch```
@@ -38,9 +40,9 @@ Currently supported and tested models from [onnx_zoo](https://github.com/onnx/mo
 - [Fast Neural Style Transfer](https://github.com/onnx/models/tree/master/vision/style_transfer/fast_neural_style)
 - [Super Resolution](https://github.com/onnx/models/tree/master/vision/super_resolution/sub_pixel_cnn_2016)
 - [YOLOv4](https://github.com/onnx/models/tree/master/vision/object_detection_segmentation/yolov4)
-  (Not exactly the same, nearest neighbour interpolation in pytorch differs)
+  (Not exactly the same, nearest neighbour interpolation in PyTorch differs)
 - [U-net](https://pytorch.org/hub/mateuszbuda_brain-segmentation-pytorch_unet/)
-  (Converted from pytorch to onnx and then back)
+  (Converted from PyTorch to ONNX and then back)
 
 ## Limitations
 Known current version limitations are:
@@ -75,5 +77,5 @@ Add any custom models to `./fixtures` folder to test their conversion.
 
 ### Debugging
 Set `ConvertModel(..., debug=True)` to compare each converted
-activation from pytorch with the activation from onnxruntime.  
+activation from PyTorch with the activation from onnxruntime.  
 This helps identify where in the graph the activations start to differ.
