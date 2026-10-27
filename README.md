@@ -1,13 +1,11 @@
-# onnx2pytorch
-
-onnx2pytorch (`pip install onnx2pytorch`) is an independent project, not related to onnx2torch.
-
-onnx2pytorch converts an ONNX model into a PyTorch module. It is an earlier maintained project with a complete operator set: 203 of 203 default-domain operators in ONNX 1.23.2, and 202 of 202 in ONNX 1.22.0 (`onnx.defs.get_all_schemas`), have an explicit converter. Supported operators are listed in [ONNX_OPERATOR_CHECKLIST.md](ONNX_OPERATOR_CHECKLIST.md).
+# onnx2pytorch - ONNX to PyTorch converter
 
 ![PyPI - License](https://img.shields.io/pypi/l/onnx2pytorch?color)
 [![Lint and Test](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml/badge.svg?branch=master)](https://github.com/Talmaj/onnx2pytorch/actions/workflows/lint_and_test.yml)
 [![Downloads](https://pepy.tech/badge/onnx2pytorch)](https://pepy.tech/project/onnx2pytorch)
 ![PyPI](https://img.shields.io/pypi/v/onnx2pytorch)
+
+A mature, maintained converter from ONNX to PyTorch, on PyPI since 2021. It supports the full ONNX operator set: all 203 default-domain operators in ONNX 1.23.2 have an explicit converter ([checklist](ONNX_OPERATOR_CHECKLIST.md)), each tested against onnxruntime. Not affiliated with [onnx2torch](https://github.com/ENOT-AutoDL/onnx2torch).
 
 ## Installation
 ```pip install onnx2pytorch```
