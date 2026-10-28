@@ -31,7 +31,6 @@ from onnx2pytorch.utils import (
     OMITTED_INPUT,
 )
 
-
 SUBGRAPH_OP_TYPES = ("Loop", "Scan", "SequenceMap", "If")
 
 DEFAULT_DOMAINS = ("", "ai.onnx")
@@ -55,6 +54,21 @@ def get_opset_version(onnx_model):
             ", ".join(repr(d) for d in versions) or "none"
         )
     )
+
+
+def _mark_subgraph_uses(graph, module, mapping, dependent, needed_by):
+    """Remember which outer values a subgraph, however deeply nested, reads.
+
+    The dependent is the outermost subgraph operator. Its forward is what
+    copies those values in, so they have to stay alive until that operator runs.
+    """
+    for node in graph.node:
+        for in_op_id in node.input:
+            needed_by[in_op_id].add(dependent)
+        if node.op_type in SUBGRAPH_OP_TYPES and node.output:
+            inner = getattr(module, mapping[node.output[0]])
+            for body, inner_mapping in inner.subgraph_mappings:
+                _mark_subgraph_uses(body, inner, inner_mapping, dependent, needed_by)
 
 
 def compute_activation_dependencies(onnx_graph, model, mapping):
@@ -81,26 +95,11 @@ def compute_activation_dependencies(onnx_graph, model, mapping):
         for in_op_id in node.input:
             needed_by[in_op_id].add(out_op_id)
         if node.op_type in SUBGRAPH_OP_TYPES:
-            # Look at nodes in the subgraph(s)
-            l1 = getattr(model, mapping[out_op_id])  # If, Loop, Scan or SequenceMap
-            for body_l1, mapping_l1 in l1.subgraph_mappings:
-                for node_l1 in body_l1.node:
-                    for in_op_id in node_l1.input:
-                        # Treating node (outer loop) as dependent, not node_l1
-                        needed_by[in_op_id].add(out_op_id)
-                    if node_l1.op_type in SUBGRAPH_OP_TYPES:
-                        l2 = getattr(l1, mapping_l1[node_l1.output[0]])
-                        for body_l2, _ in l2.subgraph_mappings:
-                            for node_l2 in body_l2.node:
-                                for in_op_id in node_l2.input:
-                                    # Treating node (outer loop) as dependent
-                                    needed_by[in_op_id].add(out_op_id)
-                                if node_l2.op_type in SUBGRAPH_OP_TYPES:
-                                    # TODO: make this recursive for nested loops
-                                    raise NotImplementedError(
-                                        "Activation garbage collection not implemented "
-                                        "for >2 nested loops."
-                                    )
+            # If, Loop, Scan or SequenceMap. Nested bodies keep the outer node
+            # as the dependent, since that is the node the top-level loop runs.
+            container = getattr(model, mapping[out_op_id])
+            for body, body_mapping in container.subgraph_mappings:
+                _mark_subgraph_uses(body, container, body_mapping, out_op_id, needed_by)
     needed_by.default_factory = None
     return needed_by
 

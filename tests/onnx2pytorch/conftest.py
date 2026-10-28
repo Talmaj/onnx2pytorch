@@ -65,6 +65,11 @@ def onnx_model_outputs(onnx_model_path, onnx_model, onnx_inputs):
     return onnx_output
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "network: downloads a model")
+    config.addinivalue_line("markers", "slow: loads a full model")
+
+
 def pytest_terminal_summary(terminalreporter):
     """Report the opset matrix combinations that no runtime could adjudicate.
 

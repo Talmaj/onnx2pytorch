@@ -24,6 +24,7 @@ class Loop(nn.Module):
         batch_dim,
         body: onnx.GraphProto,
         enable_pruning=False,
+        inherited_constants=None,
     ):
         super().__init__()
         self.ops = import_module("onnx2pytorch.convert.operations")
@@ -38,7 +39,7 @@ class Loop(nn.Module):
         # Creates mapping from node (identified by first output) to submodule
         self.mapping = {}
         for op_id, op_name, op in self.ops.convert_operations(
-            body, opset_version, batch_dim, enable_pruning
+            body, opset_version, batch_dim, enable_pruning, inherited_constants
         ):
             setattr(self, op_name, op)
             self.mapping[op_id] = op_name

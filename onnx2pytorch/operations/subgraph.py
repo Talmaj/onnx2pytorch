@@ -1,3 +1,4 @@
+import contextvars
 from functools import partial
 from importlib import import_module
 
@@ -6,6 +7,10 @@ import torch
 from onnx import numpy_helper
 from torch import nn
 from torch.nn.modules.linear import Identity
+
+# Branch initializers are stored as ``then_`` / ``else_`` buffers on the If
+# module. A nested subgraph has to see the branch it is running inside.
+_ACTIVE_PREFIXES = contextvars.ContextVar("onnx2pytorch_branch_prefixes", default=())
 
 from onnx2pytorch.operations.loop import Loop
 from onnx2pytorch.utils import (
@@ -29,6 +34,7 @@ class SubgraphOperator(nn.Module):
         batch_dim,
         body: onnx.GraphProto = None,
         enable_pruning=False,
+        inherited_constants=None,
     ):
         super().__init__()
         self.ops = import_module("onnx2pytorch.convert.operations")
@@ -37,6 +43,7 @@ class SubgraphOperator(nn.Module):
         self.opset_version = opset_version
         self.batch_dim = batch_dim
         self.enable_pruning = enable_pruning
+        self.inherited_constants = inherited_constants or {}
 
         if body is not None:
             self.body = body
@@ -53,7 +60,11 @@ class SubgraphOperator(nn.Module):
         """Convert a subgraph's nodes to submodules and its initializers to buffers."""
         mapping = {}
         for op_id, op_name, op in self.ops.convert_operations(
-            graph, self.opset_version, self.batch_dim, self.enable_pruning
+            graph,
+            self.opset_version,
+            self.batch_dim,
+            self.enable_pruning,
+            self.inherited_constants,
         ):
             submodule_name = prefix + op_name
             setattr(self, submodule_name, op)
@@ -86,15 +97,25 @@ class SubgraphOperator(nn.Module):
         prefix: str
             Prefix under which this subgraph's initializers were registered.
         """
+        prefixes = _ACTIVE_PREFIXES.get()
+        if prefix:
+            prefixes = prefixes + (prefix,)
+        token = _ACTIVE_PREFIXES.set(prefixes)
+        try:
+            return self._execute_nodes(graph, mapping, buffer_modules, activations)
+        finally:
+            _ACTIVE_PREFIXES.reset(token)
 
+    def _execute_nodes(self, graph, mapping, buffer_modules, activations):
         def resolve(in_op_id):
             if in_op_id == "":
                 return OMITTED_INPUT
             if in_op_id in activations:
                 return activations[in_op_id]
-            if prefix:
+            # Innermost branch first, so a nested initializer shadows an outer one.
+            for active in reversed(_ACTIVE_PREFIXES.get()):
                 param = self.ops.get_init_parameter(
-                    buffer_modules, prefix + in_op_id, None
+                    buffer_modules, active + in_op_id, None
                 )
                 if param is not None:
                     return param

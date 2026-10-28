@@ -16,6 +16,9 @@ from onnx2pytorch.operations import (
     RNNWrapper,
     Transpose,
 )
+from onnx2pytorch.operations.dynamicconv import DynamicConv
+from onnx2pytorch.operations.dynamicgemm import DynamicGemm
+from onnx2pytorch.operations.recurrent import OnnxRecurrent
 from onnx2pytorch.convert.attribute import extract_attributes, extract_attr_values
 from onnx2pytorch.utils import as_tuple
 
@@ -47,7 +50,41 @@ def load_params(layer, weight, bias):
         layer.bias.data = torch.tensor(numpy_helper.to_array(bias))
 
 
-def convert_layer(node, layer_type, params=None, opset_version=None):
+def _conv_param(weights, node, index):
+    """The initializer/constant at a conv input, or None when it is computed."""
+    if weights is None or index >= len(node.input):
+        return None
+    name = node.input[index]
+    if not name or name not in weights:
+        return None
+    return weights[name]
+
+
+def _dynamic_conv(
+    layer_type, kwargs, pad_layer, transpose_pads, output_shape, auto_pad
+):
+    kernel_size = kwargs.get("kernel_size")
+    ndim = None if kernel_size is None else len(tuple(kernel_size))
+    padding = kwargs.get("padding", 0)
+    if isinstance(padding, nn.Module):
+        padding = 0
+    return DynamicConv(
+        ndim=ndim,
+        stride=kwargs.get("stride", 1),
+        padding=padding,
+        dilation=kwargs.get("dilation", 1),
+        groups=kwargs.get("groups", 1),
+        transposed=layer_type == "ConvTranspose",
+        output_padding=kwargs.get("output_padding", 0),
+        pad_layer=pad_layer,
+        transpose_pads=transpose_pads,
+        output_shape=output_shape,
+        auto_pad=auto_pad,
+        kernel_size=kernel_size,
+    )
+
+
+def convert_layer(node, layer_type, params=None, opset_version=None, weights=None):
     """Use to convert Conv, MaxPool, AvgPool layers."""
     assert layer_type in [
         "Conv",
@@ -59,21 +96,32 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
     if layer_type in ("MaxPool", "AvgPool"):
         # ONNX strides default to 1, torch's pooling layers default to kernel_size
         kwargs.setdefault("stride", 1)
-    if "kernel_size" not in kwargs and params:
+    weight_proto = _conv_param(weights, node, 1)
+    if weight_proto is None and params and layer_type in ("Conv", "ConvTranspose"):
+        weight_proto = params[0]
+    if "kernel_size" not in kwargs and weight_proto is not None:
         # kernel_shape is optional for the convolutions, it follows from the weight
-        kwargs["kernel_size"] = tuple(params[0].dims[2:])
-    kernel_size_length = len(kwargs["kernel_size"])
-    try:
-        layer = getattr(nn, "{}{}d".format(layer_type, kernel_size_length))
-    except AttributeError:
-        raise ValueError(
-            "Unexpected length of kernel_size dimension: {}".format(kernel_size_length)
-        )
+        kwargs["kernel_size"] = tuple(weight_proto.dims[2:])
+    if kwargs.get("kernel_size") is None and layer_type in ("Conv", "ConvTranspose"):
+        kernel_size_length = None
+        layer = None
+    else:
+        kernel_size_length = len(kwargs["kernel_size"])
+        try:
+            layer = getattr(nn, "{}{}d".format(layer_type, kernel_size_length))
+        except AttributeError:
+            raise ValueError(
+                "Unexpected length of kernel_size dimension: {}".format(
+                    kernel_size_length
+                )
+            )
 
     storage_order = kwargs.pop("storage_order", 0)
 
     # Handle auto_pad attribute
     pad_layer = None
+    transpose_pads = None
+    output_shape = None
     auto_pad = kwargs.pop("auto_pad", "NOTSET")
     if layer_type == "ConvTranspose":
         # ConvTranspose never pads its input, the pads are cropped off the output
@@ -86,6 +134,12 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
     elif auto_pad in ("SAME_UPPER", "SAME_LOWER"):
         # Create dynamic padding layer
         # Note: explicit pads are ignored when auto_pad is not NOTSET (per ONNX spec)
+        if kwargs.get("kernel_size") is None:
+            raise NotImplementedError(
+                "{} auto_pad={} with a dynamic weight and no kernel_shape.".format(
+                    layer_type, auto_pad
+                )
+            )
         pad_layer = AutoPad(
             kernel_size=kwargs["kernel_size"],
             stride=kwargs.get("stride", 1),
@@ -121,6 +175,28 @@ def convert_layer(node, layer_type, params=None, opset_version=None):
         else:
             # A materialised pad reaches the pool as a value, corrected for below
             kwargs["count_include_pad"] = pad_layer is not None or count_include_pad
+
+    weight_dynamic = (
+        layer_type in ("Conv", "ConvTranspose")
+        and weights is not None
+        and _conv_param(weights, node, 1) is None
+    )
+    bias_name = node.input[2] if len(node.input) > 2 else ""
+    bias_dynamic = (
+        layer_type in ("Conv", "ConvTranspose")
+        and weights is not None
+        and bool(bias_name)
+        and _conv_param(weights, node, 2) is None
+    )
+    if weight_dynamic or bias_dynamic:
+        # The weight tensor is an input of this module, resolved at runtime.
+        return _dynamic_conv(
+            layer_type, kwargs, pad_layer, transpose_pads, output_shape, auto_pad
+        )
+    if layer_type in ("Conv", "ConvTranspose") and weights is not None:
+        static_weight = _conv_param(weights, node, 1)
+        static_bias = _conv_param(weights, node, 2)
+        params = [param for param in (static_weight, static_bias) if param is not None]
 
     if dilated_pool is not None:
         layer = dilated_pool
@@ -197,6 +273,23 @@ def convert_linear_layer(node, params):
     )
     dc.update(extract_attributes(node))
 
+    weight_name = node.input[1] if len(node.input) > 1 else ""
+    # Unnamed params are the historical [weight, bias] argument. Named ones are
+    # the initializers actually wired to this node, so a constant bias next to
+    # a computed weight must not be mistaken for that weight.
+    param_names = {param.name for param in params if param.name}
+    weight_is_constant = bool(params) and (
+        not param_names or weight_name in param_names
+    )
+    if not weight_is_constant:
+        # B is a graph or loop input. A functional Gemm consumes it at runtime.
+        return DynamicGemm(
+            transpose_activation=dc.get("transpose_activation", False),
+            transpose_weight=dc.get("transpose_weight", True),
+            weight_multiplier=dc.get("weight_multiplier", 1),
+            bias_multiplier=dc.get("bias_multiplier", 1),
+        )
+
     kwargs = {}
     weight, bias = extract_params(params)
     kwargs["bias"] = bias is not None
@@ -221,9 +314,122 @@ def convert_linear_layer(node, params):
     return layer
 
 
-def extract_sequence_lens(par_name, weights):
+_DEFAULT_ACTIVATIONS = {
+    "RNN": ["tanh"],
+    "GRU": ["sigmoid", "tanh"],
+    "LSTM": ["sigmoid", "tanh", "tanh"],
+}
+
+
+def _lowered(values):
+    if values is None:
+        return None
+    return [value.lower() for value in values]
+
+
+def _torch_activations(op_type, activations, bidirectional):
+    """Whether nn.RNN/GRU/LSTM already implements this activation list.
+
+    The comparison is case-insensitive. A bidirectional node may repeat the
+    per-direction list. RNN's ReLU is the other nonlinearity torch implements.
+    """
+    if activations is None:
+        return True
+    lowered = _lowered(activations)
+    defaults = _DEFAULT_ACTIVATIONS[op_type]
+    if lowered == defaults:
+        return True
+    if bidirectional and lowered == defaults + defaults:
+        return True
+    if op_type == "RNN" and set(lowered) == {"relu"} and len(lowered) in (1, 2):
+        if bidirectional or len(lowered) == 1:
+            return True
+    return False
+
+
+def _needs_recurrent_fallback(op_type, dc, peephole=False):
+    """Attributes that the torch recurrent modules cannot express."""
+    if dc.get("clip") is not None:
+        return True
+    if dc.get("activation_alpha"):
+        return True
+    if dc.get("activation_beta"):
+        return True
+    if peephole:
+        return True
+    if op_type == "LSTM" and dc.get("input_forget"):
+        return True
+    return not _torch_activations(
+        op_type, dc.get("activations"), dc.get("direction") == "bidirectional"
+    )
+
+
+def _recurrent_attributes(node, op_type, defaults):
+    dc = dict(defaults)
+    dc.update(extract_attributes(node))
+    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
+        raise ValueError("{} direction {}.".format(op_type, dc["direction"]))
+    if dc["hidden_size"] is None:
+        raise ValueError("{} hidden_size is None.".format(op_type))
+    if dc["layout"] not in (0, 1):
+        raise NotImplementedError("{} layout={}.".format(op_type, dc["layout"]))
+    return dc
+
+
+def _runtime_input(node, weights, index):
+    if index >= len(node.input):
+        return False
+    name = node.input[index]
+    return bool(name) and name not in weights
+
+
+def _check_lstm_state_inputs(node, weights):
+    """Runtime initial_c cannot follow a constant or omitted initial_h.
+
+    Standard layers receive only the inputs that are real activations, in
+    order, so a constant initial_h would make a runtime initial_c arrive as h_0.
+    """
+    initial_h = _runtime_input(node, weights, 5)
+    initial_c = _runtime_input(node, weights, 6)
+    if initial_c and not initial_h:
+        raise NotImplementedError(
+            "LSTM initial_c is a runtime input but initial_h is not "
+            "(initial_h={}, initial_c={}).".format(
+                node.input[5] if len(node.input) > 5 else "",
+                node.input[6],
+            )
+        )
+
+
+def _build_fallback(
+    op_type, dc, W, R, B, sequence_lens, initial_h, initial_c=None, peephole=None
+):
+    return OnnxRecurrent(
+        op_type,
+        W,
+        R,
+        B,
+        peephole,
+        hidden_size=dc["hidden_size"],
+        direction=dc["direction"],
+        activations=dc.get("activations"),
+        activation_alpha=dc.get("activation_alpha"),
+        activation_beta=dc.get("activation_beta"),
+        clip=dc.get("clip"),
+        layout=dc["layout"],
+        linear_before_reset=dc.get("linear_before_reset", 0),
+        input_forget=dc.get("input_forget", 0),
+        sequence_lens=sequence_lens,
+        initial_h=initial_h,
+        initial_c=initial_c,
+    )
+
+
+def extract_sequence_lens(par_name, weights, op_type):
     if par_name not in weights:
-        raise NotImplementedError("sequence_lens has to be a constant.")
+        raise NotImplementedError(
+            "{} sequence_lens has to be a constant.".format(op_type)
+        )
     return torch.tensor(numpy_helper.to_array(weights[par_name]))
 
 
@@ -268,7 +474,7 @@ def extract_and_load_params_gru(node, weights):
                 B = torch.tensor(numpy_helper.to_array(weights[par_name]))
         elif par_ix == 4:
             if par_name != "":
-                sequence_lens = extract_sequence_lens(par_name, weights)
+                sequence_lens = extract_sequence_lens(par_name, weights, node.op_type)
         elif par_ix == 5:
             if par_name != "" and par_name in weights:
                 initial_h = torch.tensor(numpy_helper.to_array(weights[par_name]))
@@ -300,7 +506,7 @@ def extract_and_load_params_lstm(node, weights):
                 B = torch.tensor(numpy_helper.to_array(weights[par_name]))
         elif par_ix == 4:
             if par_name != "":
-                sequence_lens = extract_sequence_lens(par_name, weights)
+                sequence_lens = extract_sequence_lens(par_name, weights, node.op_type)
         elif par_ix == 5:
             if par_name != "" and par_name in weights:
                 initial_h = torch.tensor(numpy_helper.to_array(weights[par_name]))
@@ -317,47 +523,34 @@ def convert_lstm_layer(node, weights):
     """Convert LSTM layer from onnx node and params."""
     check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B", 7: "P"})
     params_tuple = extract_and_load_params_lstm(node, weights)
-    (X, W, R, B, sequence_lens, initial_h, initial_c, P) = params_tuple
-    if initial_h is not None:
-        raise NotImplementedError("LSTM initial_h not yet implemented.")
-    if initial_c is not None:
-        raise NotImplementedError("LSTM initial_c not yet implemented.")
-    if P is not None:
-        raise NotImplementedError("LSTM P not yet implemented.")
+    X, W, R, B, sequence_lens, initial_h, initial_c, P = params_tuple
+    _check_lstm_state_inputs(node, weights)
 
-    dc = dict(
-        activation_alpha=None,
-        activation_beta=None,
-        activations=None,
-        clip=None,
-        direction="forward",
-        hidden_size=None,
-        input_forget=0,
-        layout=0,
+    dc = _recurrent_attributes(
+        node,
+        "LSTM",
+        dict(
+            activation_alpha=None,
+            activation_beta=None,
+            activations=None,
+            clip=None,
+            direction="forward",
+            hidden_size=None,
+            input_forget=0,
+            layout=0,
+        ),
     )
-    dc.update(extract_attributes(node))
-    if dc["activation_alpha"] is not None:
-        raise NotImplementedError(
-            "LSTM activation_alpha {}.".format(dc["activation_alpha"])
-        )
-    if dc["activation_beta"] is not None:
-        raise NotImplementedError(
-            "LSTM activation_beta {}.".format(dc["activation_beta"])
-        )
-    if dc["activations"] is not None:
-        # TODO allow if torch-compatible activations are set explicitly
-        raise NotImplementedError("LSTM activations {}.".format(dc["activations"]))
-    if dc["clip"] is not None:
-        raise NotImplementedError("LSTM clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
-        raise ValueError("LSTM direction {}.".format(dc["direction"]))
-    if dc["hidden_size"] is None:
-        raise ValueError("LSTM hidden_size is None.")
-    if dc["input_forget"] != 0:
-        raise NotImplementedError("LSTM input_forget {}.".format(dc["input_forget"]))
-    if dc["layout"] != 0:
-        raise NotImplementedError(
-            "LSTM not implemented for layout={}".format(dc["layout"])
+    if _needs_recurrent_fallback("LSTM", dc, peephole=P is not None):
+        return _build_fallback(
+            "LSTM",
+            dc,
+            W,
+            R,
+            B,
+            sequence_lens,
+            initial_h,
+            initial_c,
+            P,
         )
 
     kwargs = {
@@ -483,6 +676,9 @@ def convert_lstm_layer(node, weights):
         lstm_layer,
         reverse=dc["direction"] == "reverse",
         sequence_lens=sequence_lens,
+        layout=dc["layout"],
+        initial_h=initial_h,
+        initial_c=initial_c,
     )
     return layer
 
@@ -491,43 +687,25 @@ def convert_gru_layer(node, weights):
     """Convert GRU layer from onnx node and params."""
     check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B"})
     params_tuple = extract_and_load_params_gru(node, weights)
-    (X, W, R, B, sequence_lens, initial_h) = params_tuple
-    if initial_h is not None:
-        raise NotImplementedError("GRU initial_h not yet implemented.")
+    X, W, R, B, sequence_lens, initial_h = params_tuple
 
-    dc = dict(
-        activation_alpha=None,
-        activation_beta=None,
-        activations=None,
-        clip=None,
-        direction="forward",
-        hidden_size=None,
-        layout=0,
-        linear_before_reset=0,  # ONNX spec default
+    dc = _recurrent_attributes(
+        node,
+        "GRU",
+        dict(
+            activation_alpha=None,
+            activation_beta=None,
+            activations=None,
+            clip=None,
+            direction="forward",
+            hidden_size=None,
+            layout=0,
+            linear_before_reset=0,  # ONNX spec default
+        ),
     )
-    dc.update(extract_attributes(node))
-    if dc["activation_alpha"] is not None:
-        raise NotImplementedError(
-            "GRU activation_alpha {}.".format(dc["activation_alpha"])
-        )
-    if dc["activation_beta"] is not None:
-        raise NotImplementedError(
-            "GRU activation_beta {}.".format(dc["activation_beta"])
-        )
-    if dc["activations"] is not None:
-        # TODO allow if torch-compatible activations are set explicitly
-        raise NotImplementedError("GRU activations {}.".format(dc["activations"]))
-    if dc["clip"] is not None:
-        raise NotImplementedError("GRU clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
-        raise ValueError("GRU direction {}.".format(dc["direction"]))
-    if dc["hidden_size"] is None:
-        raise ValueError("GRU hidden_size is None.")
-    if dc["layout"] != 0:
-        raise NotImplementedError(
-            "GRU not implemented for layout={}".format(dc["layout"])
-        )
-    # linear_before_reset is now supported for both 0 and 1
+    if _needs_recurrent_fallback("GRU", dc):
+        return _build_fallback("GRU", dc, W, R, B, sequence_lens, initial_h)
+    # linear_before_reset is supported for both 0 and 1 on the torch GRU path
 
     kwargs = {
         "input_size": W.shape[2],
@@ -666,6 +844,8 @@ def convert_gru_layer(node, weights):
         linear_before_reset=dc["linear_before_reset"],
         reverse=dc["direction"] == "reverse",
         sequence_lens=sequence_lens,
+        layout=dc["layout"],
+        initial_h=initial_h,
     )
     return layer
 
@@ -675,45 +855,29 @@ def convert_rnn_layer(node, weights):
     # ONNX RNN has the same input layout as GRU
     check_rnn_inputs_are_constant(node, weights, {1: "W", 2: "R", 3: "B"})
     params_tuple = extract_and_load_params_gru(node, weights)
-    (X, W, R, B, sequence_lens, initial_h) = params_tuple
-    if initial_h is not None:
-        raise NotImplementedError("RNN initial_h not yet implemented.")
+    X, W, R, B, sequence_lens, initial_h = params_tuple
 
-    dc = dict(
-        activation_alpha=None,
-        activation_beta=None,
-        activations=None,
-        clip=None,
-        direction="forward",
-        hidden_size=None,
-        layout=0,
+    dc = _recurrent_attributes(
+        node,
+        "RNN",
+        dict(
+            activation_alpha=None,
+            activation_beta=None,
+            activations=None,
+            clip=None,
+            direction="forward",
+            hidden_size=None,
+            layout=0,
+        ),
     )
-    dc.update(extract_attributes(node))
-    if dc["activation_alpha"] is not None:
-        raise NotImplementedError(
-            "RNN activation_alpha {}.".format(dc["activation_alpha"])
-        )
-    if dc["activation_beta"] is not None:
-        raise NotImplementedError(
-            "RNN activation_beta {}.".format(dc["activation_beta"])
-        )
-    if dc["clip"] is not None:
-        raise NotImplementedError("RNN clip {}".format(dc["clip"]))
-    if dc["direction"] not in ("forward", "reverse", "bidirectional"):
-        raise ValueError("RNN direction {}.".format(dc["direction"]))
-    if dc["hidden_size"] is None:
-        raise ValueError("RNN hidden_size is None.")
-    if dc["layout"] != 0:
-        raise NotImplementedError(
-            "RNN not implemented for layout={}".format(dc["layout"])
-        )
+    if _needs_recurrent_fallback("RNN", dc):
+        return _build_fallback("RNN", dc, W, R, B, sequence_lens, initial_h)
 
     nonlinearity = "tanh"
-    if dc["activations"] is not None:
-        activations = set(a.lower() for a in dc["activations"])
-        if activations not in ({"tanh"}, {"relu"}):
-            raise NotImplementedError("RNN activations {}.".format(dc["activations"]))
-        nonlinearity = activations.pop()
+    if dc["activations"] is not None and set(a.lower() for a in dc["activations"]) == {
+        "relu"
+    }:
+        nonlinearity = "relu"
 
     kwargs = {
         "input_size": W.shape[2],
@@ -748,5 +912,7 @@ def convert_rnn_layer(node, weights):
         rnn_layer,
         reverse=dc["direction"] == "reverse",
         sequence_lens=sequence_lens,
+        layout=dc["layout"],
+        initial_h=initial_h,
     )
     return layer

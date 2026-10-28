@@ -1,7 +1,13 @@
 import torch
 from torch import nn
 
-from onnx2pytorch.operations.rnnutils import reverse_sequences, run_padded, step_mask
+from onnx2pytorch.operations.rnnutils import (
+    prepare_layout_input,
+    prepare_layout_output,
+    reverse_sequences,
+    run_padded,
+    step_mask,
+)
 
 
 class GRUWrapper(nn.Module):
@@ -14,15 +20,23 @@ class GRUWrapper(nn.Module):
     """
 
     def __init__(
-        self, gru_module, linear_before_reset=1, reverse=False, sequence_lens=None
+        self,
+        gru_module,
+        linear_before_reset=1,
+        reverse=False,
+        sequence_lens=None,
+        layout=0,
+        initial_h=None,
     ):
         super().__init__()
         self.gru = gru_module
         self.linear_before_reset = linear_before_reset
         self.reverse = reverse
+        self.layout = layout
         self.register_buffer(
             "sequence_lens", None if sequence_lens is None else sequence_lens.long()
         )
+        self.register_buffer("initial_h", initial_h)
 
         # For linear_before_reset=0, we need custom forward pass
         if linear_before_reset == 0 and isinstance(gru_module, nn.GRU):
@@ -32,7 +46,10 @@ class GRUWrapper(nn.Module):
             self.bidirectional = gru_module.bidirectional
 
     def forward(self, input, h_0=None):
-        (seq_len, batch, input_size) = input.shape
+        if h_0 is None or h_0.numel() == 0:
+            h_0 = self.initial_h
+        input, (h_0,) = prepare_layout_input(self.layout, input, (h_0,))
+        seq_len, batch, input_size = input.shape
         num_layers = 1
         num_directions = (
             self.gru.bidirectional + 1 if hasattr(self.gru, "bidirectional") else 1
@@ -61,7 +78,7 @@ class GRUWrapper(nn.Module):
         Y = output.view(seq_len, batch, num_directions, hidden_size).transpose(1, 2)
         # Y_h has shape (num_directions, batch_size, hidden_size)
         Y_h = h_n.view(num_layers, num_directions, batch, hidden_size).squeeze(0)
-
+        Y, (Y_h,) = prepare_layout_output(self.layout, Y, (Y_h,))
         return Y, Y_h
 
     def _forward_linear_before_reset_0(self, input, h_0, lengths=None):
@@ -206,4 +223,8 @@ class GRUWrapper(nn.Module):
             output = torch.stack(outputs_forward)
             h_n = h_forward.unsqueeze(0)
 
+        if lengths is not None:
+            # A length of zero has no steps. ORT reports a zero final state.
+            keep = (lengths > 0).to(h_n.dtype).view(1, -1, 1)
+            h_n = h_n * keep
         return output, h_n

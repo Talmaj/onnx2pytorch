@@ -19,8 +19,14 @@ class If(SubgraphOperator):
         then_branch: onnx.GraphProto,
         else_branch: onnx.GraphProto,
         enable_pruning=False,
+        inherited_constants=None,
     ):
-        super().__init__(opset_version, batch_dim, enable_pruning=enable_pruning)
+        super().__init__(
+            opset_version,
+            batch_dim,
+            enable_pruning=enable_pruning,
+            inherited_constants=inherited_constants,
+        )
 
         self.then_branch = then_branch
         self.else_branch = else_branch

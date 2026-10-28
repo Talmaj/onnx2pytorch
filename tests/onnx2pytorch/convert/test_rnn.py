@@ -41,7 +41,10 @@ def build_rnn_model(input_size, hidden_size, direction, with_bias, activations=N
         ],
         initializers,
     )
-    return helper.make_model(graph, opset_imports=[helper.make_opsetid("", 14)])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 14)])
+    # onnx>=1.16 stamps IR 14, which onnxruntime 1.30 cannot load.
+    model.ir_version = 10
+    return model
 
 
 def check_rnn(model, x):
@@ -69,8 +72,8 @@ def test_rnn_relu_activation(direction):
 
 
 def test_rnn_unsupported_activation():
-    model = build_rnn_model(3, 4, "forward", True, ["Sigmoid"])
-    with pytest.raises(NotImplementedError):
+    model = build_rnn_model(3, 4, "forward", True, ["NotAnActivation"])
+    with pytest.raises(NotImplementedError, match="activations"):
         ConvertModel(model)
 
 
@@ -132,5 +135,6 @@ def test_recurrent_runtime_weights_are_rejected(op_type):
         [numpy_helper.from_array(r, "R")],
     )
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 14)])
+    model.ir_version = 10
     with pytest.raises(NotImplementedError):
         ConvertModel(model)

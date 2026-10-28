@@ -356,30 +356,37 @@ XFAILS = {
         "pads from the undilated kernel, which contradicts its own shape "
         "inference, and onnx's reference puts all of the padding at the end"
     ),
-    ("GRU", 1, "reverse"): (
-        "no trustworthy oracle: onnxruntime has no GRU-1 kernel and onnx's "
-        "reference GRU disagrees with onnxruntime for direction=reverse"
-    ),
-    ("GRU", 3, "reverse"): (
-        "no trustworthy oracle: onnxruntime has no GRU-3 kernel and onnx's "
-        "reference GRU disagrees with onnxruntime for direction=reverse"
-    ),
-    ("GRU", None, "clip"): "cell clipping has no torch equivalent",
-    ("GRU", None, "initial_h"): "initial_h is rejected by convert_gru_layer",
-    ("GRU", None, "layout"): "layout=1 is rejected by convert_gru_layer",
-    ("LSTM", None, "clip"): "cell clipping has no torch equivalent",
-    ("LSTM", None, "initial_h"): "initial_h is rejected by convert_lstm_layer",
-    ("LSTM", None, "layout"): "layout=1 is rejected by convert_lstm_layer",
-    ("LSTM", None, "peepholes"): "torch's LSTM has no peephole connections",
-    (
-        "LSTM",
-        None,
-        "input_forget",
-    ): "torch's LSTM cannot couple the input and forget gates",
-    ("RNN", None, "clip"): "cell clipping has no torch equivalent",
-    ("RNN", None, "initial_h"): "initial_h is rejected by convert_rnn_layer",
-    ("RNN", None, "layout"): "layout=1 is rejected by convert_rnn_layer",
-    ("RNN", None, "sigmoid"): "torch's RNN only offers tanh and relu",
+    # Legacy kernels (the ones onnxruntime still runs below opset 7) do not
+    # implement clip, sequence_lens or input_forget the way the spec does.
+    **{
+        ("GRU", opset, name): (
+            "onnxruntime's legacy GRU kernel (opset < 7) disagrees with the "
+            "spec on {}".format(name)
+        )
+        for opset in (1, 3)
+        for name in (
+            "clip",
+            "sequence_lens",
+            "sequence_lens_mixed",
+            "sequence_lens_reverse",
+            "sequence_lens_bidirectional",
+            "sequence_lens_linear_before_reset",
+        )
+    },
+    **{
+        ("LSTM", 1, name): (
+            "onnxruntime's legacy LSTM kernel (opset 1) disagrees with the "
+            "spec on {}".format(name)
+        )
+        for name in (
+            "clip",
+            "sequence_lens",
+            "sequence_lens_mixed",
+            "sequence_lens_reverse",
+            "sequence_lens_bidirectional",
+            "input_forget",
+        )
+    },
     ("LRN", None, "even_size"): (
         "no oracle: onnxruntime rejects even sizes and onnx's reference LRN sums "
         "over the batch axis instead of the channel axis"

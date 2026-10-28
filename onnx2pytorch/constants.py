@@ -1,6 +1,7 @@
 from torch import nn
 from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.pooling import _MaxPoolNd
+from onnx2pytorch.operations.recurrent import OnnxRecurrent
 from onnx2pytorch.operations import (
     Attention,
     BatchNormWrapper,
@@ -25,7 +26,6 @@ from onnx2pytorch.operations import (
     Unique,
 )
 
-
 COMPOSITE_LAYERS = (nn.Sequential,)
 MULTIOUTPUT_LAYERS = (
     _MaxPoolNd,
@@ -47,6 +47,7 @@ MULTIOUTPUT_LAYERS = (
     SubgraphOperator,
     TopK,
     Unique,
+    OnnxRecurrent,
 )
 STANDARD_LAYERS = (
     _ConvNd,
@@ -54,6 +55,7 @@ STANDARD_LAYERS = (
     ConvTranspose,
     GRUWrapper,
     InstanceNormWrapper,
+    OnnxRecurrent,
     LSTMWrapper,
     RNNWrapper,
     nn.Linear,

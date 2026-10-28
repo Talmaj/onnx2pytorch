@@ -22,6 +22,31 @@ def reverse_sequences(input, lengths):
     return input.gather(0, index)
 
 
+def prepare_layout_input(layout, input, states):
+    """Transpose layout-1 (batch first) tensors into the seq-first view."""
+    if layout != 1:
+        return input, states
+    input = input.transpose(0, 1).contiguous()
+    prepared = []
+    for state in states:
+        if state is None or state.numel() == 0:
+            prepared.append(state)
+        else:
+            # (batch, num_directions, hidden) -> (num_directions, batch, hidden)
+            prepared.append(state.transpose(0, 1).contiguous())
+    return input, prepared
+
+
+def prepare_layout_output(layout, output, states):
+    """Transpose seq-first recurrent outputs back to layout 1."""
+    if layout != 1:
+        return output, states
+    # (seq, num_directions, batch, hidden) -> (batch, seq, num_directions, hidden)
+    output = output.permute(2, 0, 1, 3).contiguous()
+    prepared = [state.transpose(0, 1).contiguous() for state in states]
+    return output, prepared
+
+
 def run_padded(module, input, state, lengths):
     """Run a torch RNN module so that steps beyond each sequence length are dropped.
 
